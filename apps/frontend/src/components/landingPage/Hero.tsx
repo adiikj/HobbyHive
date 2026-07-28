@@ -78,7 +78,9 @@ function Hero() {
         <HowItWorks />
       </div>
 
-      <FAQ />
+      <div id="faq">
+        <FAQ />
+      </div>
       <Newsletter />
     </div>
   );

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa";
+import Logo from "@/components/brand/Logo";
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,7 +16,7 @@ function Header() {
     <div className="sticky top-0 z-40 w-full">
       <div className="w-full bg-beige/90 backdrop-blur-md shadow-sm flex justify-between items-center px-4 sm:px-8 h-14 sm:h-16">
         <Link href="/" className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-pink-600" aria-hidden="true" />
+          <Logo size={28} className="shrink-0" />
           <span className="text-pink-600 font-bnt font-bold text-2xl sm:text-3xl">HOBBYHIVE</span>
         </Link>
 

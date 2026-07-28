@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart, MessageCircle, Send, Home, Search, Bell, User } from "lucide-react";
+import Logo from "@/components/brand/Logo";
+import HobbyGlyph from "@/components/brand/HobbyGlyph";
+import { getHobbyColor } from "@/lib/hobbyTheme";
 
 interface MockPost {
   hobby: string;
@@ -77,6 +80,7 @@ function FeedMockup() {
   const reduceMotion = useReducedMotion();
   const post = POSTS[active];
   const nextPost = POSTS[(active + 1) % POSTS.length];
+  const activeColor = getHobbyColor(post.hobby);
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -89,26 +93,30 @@ function FeedMockup() {
   return (
     <div className="w-full max-w-md mx-auto rounded-[1.75rem] border-8 border-white bg-white shadow-xl overflow-hidden">
       {/* App header */}
-      <div className="px-5 pt-5">
+      <div className="px-5 pt-5 flex items-center gap-2">
+        <Logo size={22} className="shrink-0" />
         <p className="text-pink-600 font-bnt text-2xl">HOBBYHIVE</p>
       </div>
 
-      {/* In-app hobby tab bar, single scrollable row, never wraps */}
+      {/* In-app hobby tab bar, single scrollable row, never wraps. Each tab is themed in its own hobby color. */}
       <div className="flex gap-2 px-5 py-4 overflow-x-auto no-scrollbar">
         {POSTS.map((p, i) => {
           const isActive = i === active;
+          const color = getHobbyColor(p.hobby);
           return (
             <button
               key={p.hobby}
               type="button"
               onClick={() => setActive(i)}
               aria-pressed={isActive}
-              className={`shrink-0 font-quick text-sm px-4 py-2 rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600 ${
+              style={isActive ? { backgroundColor: color, borderColor: color } : undefined}
+              className={`shrink-0 flex items-center gap-1.5 font-quick text-sm px-4 py-2 rounded-full border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600 ${
                 isActive
-                  ? "bg-pink-600 text-white border-pink-600"
+                  ? "text-white"
                   : "bg-beige text-chblack/60 border-transparent hover:border-pink-300"
               }`}
             >
+              {!isActive && <HobbyGlyph color={color} size={10} />}
               {p.hobby}
             </button>
           );
@@ -172,9 +180,9 @@ function FeedMockup() {
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-beige to-transparent" />
       </div>
 
-      {/* Bottom nav bar */}
+      {/* Bottom nav bar: home icon reflects the active hobby's theme color */}
       <div className="flex items-center justify-around border-t border-chgrey/10 px-5 py-3">
-        <Home size={20} className="text-pink-600" />
+        <Home size={20} style={{ color: activeColor }} />
         <Search size={20} className="text-chblack/30" />
         <Bell size={20} className="text-chblack/30" />
         <User size={20} className="text-chblack/30" />
