@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Heart, MessageCircle, Send, Home, Search, Bell, User } from "lucide-react";
@@ -8,7 +8,7 @@ import { Heart, MessageCircle, Send, Home, Search, Bell, User } from "lucide-rea
 interface MockPost {
   hobby: string;
   user: string;
-  initials: string;
+  avatar: string;
   caption: string;
   image: string;
   likes: number;
@@ -19,8 +19,8 @@ const POSTS: MockPost[] = [
   {
     hobby: "Dance",
     user: "Mira K.",
-    initials: "MK",
-    caption: "Finally landed the fouetté combo without wobbling. 6 tries, worth it.",
+    avatar: "/images/3.png",
+    caption: "Whole crew finally hit this 8-count clean and in sync.",
     image: "/images/hobbies/dance-2.png",
     likes: 42,
     comments: 9,
@@ -28,8 +28,8 @@ const POSTS: MockPost[] = [
   {
     hobby: "Anime",
     user: "Devraj S.",
-    initials: "DS",
-    caption: "Ranking every OP this season — Frieren is not #1 and I have a whiteboard to prove it.",
+    avatar: "/images/1.png",
+    caption: "Rearranged the whole shelf tonight, the desk lamp finally does it justice.",
     image: "/images/hobbies/anime-2.png",
     likes: 128,
     comments: 31,
@@ -37,8 +37,8 @@ const POSTS: MockPost[] = [
   {
     hobby: "Singing",
     user: "Priya R.",
-    initials: "PR",
-    caption: "Open mic Tuesday went better than expected. Recorded the whole set.",
+    avatar: "/images/4.png",
+    caption: "Recorded a quiet acoustic session at home tonight, string lights and all.",
     image: "/images/hobbies/singing-2.png",
     likes: 76,
     comments: 14,
@@ -46,8 +46,8 @@ const POSTS: MockPost[] = [
   {
     hobby: "Gaming",
     user: "Alt+F4",
-    initials: "AF",
-    caption: "Cleared the raid on the first pull. Screenshotting this forever.",
+    avatar: "/images/2.png",
+    caption: "Full squad on the couch tonight, snacks out, controllers in hand.",
     image: "/images/hobbies/gaming-2.png",
     likes: 210,
     comments: 47,
@@ -55,8 +55,8 @@ const POSTS: MockPost[] = [
   {
     hobby: "Art",
     user: "Noor A.",
-    initials: "NA",
-    caption: "Ink wash study, three hours in. Still not happy with the water but keeping it.",
+    avatar: "/images/5.png",
+    caption: "Finally getting the light right on this mountain landscape.",
     image: "/images/hobbies/art-2.png",
     likes: 58,
     comments: 12,
@@ -64,8 +64,8 @@ const POSTS: MockPost[] = [
   {
     hobby: "Fitness",
     user: "Kabir M.",
-    initials: "KM",
-    caption: "5k PR by 40 seconds this morning. Legs are done for the week.",
+    avatar: "/images/1.png",
+    caption: "Added another rep to today's curls, arms are done.",
     image: "/images/hobbies/fitness-2.png",
     likes: 91,
     comments: 18,
@@ -78,6 +78,14 @@ function FeedMockup() {
   const post = POSTS[active];
   const nextPost = POSTS[(active + 1) % POSTS.length];
 
+  useEffect(() => {
+    if (reduceMotion) return;
+    const timer = setTimeout(() => {
+      setActive((prev) => (prev + 1) % POSTS.length);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [active, reduceMotion]);
+
   return (
     <div className="w-full max-w-md mx-auto rounded-[1.75rem] border-8 border-white bg-white shadow-xl overflow-hidden">
       {/* App header */}
@@ -85,7 +93,7 @@ function FeedMockup() {
         <p className="text-pink-600 font-bnt text-2xl">HOBBYHIVE</p>
       </div>
 
-      {/* In-app hobby tab bar — single scrollable row, never wraps */}
+      {/* In-app hobby tab bar, single scrollable row, never wraps */}
       <div className="flex gap-2 px-5 py-4 overflow-x-auto no-scrollbar">
         {POSTS.map((p, i) => {
           const isActive = i === active;
@@ -107,8 +115,8 @@ function FeedMockup() {
         })}
       </div>
 
-      {/* Feed — current post plus a faded peek of the next, so it reads as a scroll, not a single card */}
-      <div className="relative bg-gradient-to-b from-somig/30 to-beige px-5 pb-5 max-h-[420px] overflow-hidden">
+      {/* Feed: current post plus a faded peek of the next, so it reads as a scroll, not a single card */}
+      <div className="relative bg-gradient-to-b from-somig/30 to-beige p-5 max-h-[420px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={post.hobby}
@@ -119,8 +127,8 @@ function FeedMockup() {
           >
             <div className="bg-white rounded-xl shadow-md p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-semibold text-sm shrink-0">
-                  {post.initials}
+                <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
+                  <Image src={post.avatar} alt="" fill sizes="40px" className="object-cover" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold text-base leading-tight truncate">{post.user}</p>
@@ -149,8 +157,8 @@ function FeedMockup() {
 
             {/* Peek of the next post in the feed */}
             <div className="bg-white rounded-xl shadow-md p-5 mt-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center font-semibold text-sm shrink-0">
-                {nextPost.initials}
+              <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0">
+                <Image src={nextPost.avatar} alt="" fill sizes="40px" className="object-cover" />
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-base leading-tight truncate">{nextPost.user}</p>
