@@ -2,72 +2,71 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Newsletter from "./Newsletter";
+import { ChevronDown } from "lucide-react";
+import FeedMockup from "./FeedMockup";
 import About from "./About";
+import Comparison from "./Comparison";
 import Banner from "./Banner";
 import Featured from "./Featured";
 import HowItWorks from "./HowItWorks";
+import FAQ from "./FAQ";
+import Newsletter from "./Newsletter";
 
 function Hero() {
   return (
-    <div className=" w-full h-auto bg-gradient-to-r from-somig to-beige pt-12 md:pt-28 px-6 sm:px-10 md:px-16 lg:px-20 flex flex-col items-center text-center">
-      {/* Hero Content Section */}
-      <motion.div className="w-full min-h-[70vh] md:min-h-[60vh] lg:min-h-screen text-black border-b-2 border-chgrey flex flex-col items-center">
-        <motion.h1
-          className="font-bnt text-black font-semibold text-6xl md:text-7xl lg:text-8xl bg-gradient-to-b from-gray-500 to-gray-900 bg-clip-text text-transparent"
-          initial={{ opacity: 0, y: -50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-        >
-          UNLEASH YOUR PASSION AND CONNECT!
-        </motion.h1>
-
-        <motion.div
-          className="w-2/3 md:w-2/3 lg:[width:1100px] h-1 md:h-1.5 rounded-3xl bg-gradient-to-r from-chgrey to-chblack mt-2 md:mt-2 mx-auto"
-          initial={{ opacity: 0, scaleX: 0 }}
-          whileInView={{ opacity: 1, scaleX: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
-        />
-
-        <motion.p
-          className="font-pop mt-7 text-lg sm:text-xl md:text-2xl lg:text-3xl text-chblack px-4 md:px-12 lg:px-20"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
-        >
-          Discover, share, and grow with like-minded individuals from around the world in a vibrant,
-          engaging community.
-        </motion.p>
-
-        <motion.div
-          className="pt-8 font-pop flex flex-col sm:flex-row gap-4 md:gap-6 sm:gap-10 justify-center items-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.6 }}
-        >
-          <motion.button
-            className="text-md sm:text-xl p-3 px-8 sm:px-8 bg-black text-white rounded-full transition-all"
-            whileHover={{ scale: 1.1, backgroundColor: "#3B3B3B" }}
-            whileTap={{ scale: 0.95 }}
+    <div className="w-full bg-gradient-to-r from-somig to-beige">
+      <section className="relative w-full px-6 sm:px-10 md:px-16 lg:px-20 pt-14 pb-16 sm:pt-20 sm:pb-24 overflow-hidden">
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-10 items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center lg:text-left"
           >
-            <Link href="/signup">Join Now</Link>
-          </motion.button>
+            <h1 className="font-bnt font-bold text-chblack leading-[1.02] text-5xl sm:text-6xl md:text-7xl">
+              One hobby. <span className="text-pink-600">One feed.</span>
+            </h1>
+            <p className="font-pop mt-6 text-base sm:text-lg text-chblack/70 max-w-lg mx-auto lg:mx-0">
+              Pick dance, anime, gaming, art, or whatever you&apos;re into. HobbyHive shows you
+              that — and only that. No mixed feed, no algorithm guessing what else you might like.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
+              <Link
+                href="/signup"
+                className="font-quick font-semibold px-8 py-3 rounded-full bg-black text-white shadow-lg shadow-black/10 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              >
+                Join HobbyHive
+              </Link>
+              <a
+                href="#how-it-works"
+                className="group font-quick font-semibold px-6 py-3 rounded-full border-2 border-chblack/15 text-chblack flex items-center gap-1.5 hover:border-pink-500 hover:text-pink-600 transition-colors"
+              >
+                See how it works
+                <ChevronDown size={18} className="transition-transform group-hover:translate-y-0.5" />
+              </a>
+            </div>
+          </motion.div>
 
-          <motion.button
-            className="text-md sm:text-xl p-3 sm:px-8 border-2 mb-10 md:mb-0 border-black rounded-full transition-all"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
           >
-            <Link href="/choice">Explore Communities</Link>
-          </motion.button>
-        </motion.div>
-      </motion.div>
+            <FeedMockup />
+          </motion.div>
+        </div>
+      </section>
 
-      {/* Other Sections */}
       <About />
+      <Comparison />
       <Banner />
       <Featured />
-      <HowItWorks />
+
+      <div id="how-it-works">
+        <HowItWorks />
+      </div>
+
+      <FAQ />
       <Newsletter />
     </div>
   );

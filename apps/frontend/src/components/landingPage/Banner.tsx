@@ -1,82 +1,89 @@
-"use client";
+import { Heart, MessageCircle, Users } from "lucide-react";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import Card from "./Card";
+const REASONS = [
+  {
+    heading: "One hobby, zero noise",
+    description: "Your feed only ever shows the hobby you picked.",
+  },
+  {
+    heading: "Real communities, not hashtags",
+    description: "Every hobby gets its own room to post and chat in.",
+  },
+  {
+    heading: "Made by people who do the thing",
+    description: "Built so you go do your hobby, then come back to show it off.",
+  },
+];
+
+function Badge({ n }: { n: number }) {
+  return (
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-pink-600 text-white text-[11px] font-quick font-bold shrink-0">
+      {n}
+    </span>
+  );
+}
 
 function Banner() {
-  const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: false, amount: 0.3 });
-
-  const titleVariants = {
-    hidden: { opacity: 0, y: -50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
-  };
-
-  const cardContainerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.3,
-      },
-    },
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, x: -100 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.6 } },
-  };
-
   return (
-    <div
-      ref={sectionRef}
-      className="w-full h-auto mt-7 px-4 md:px-10 py-4 md:py-10 border-b-2 border-chgrey overflow-x-hidden"
-    >
-      {/* Heading Section */}
-      <motion.div
-        className="text-5xl md:text-7xl font-bnt text-center md:text-center mb-1 md:mb-3"
-        variants={titleVariants}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-      >
-        WHY CHOOSE HOBBYHIVE?
-      </motion.div>
+    <section className="w-full bg-beige py-16 sm:py-24 px-6 sm:px-10 md:px-16 lg:px-20">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="font-bnt text-chblack text-3xl sm:text-4xl mb-10 sm:mb-14 text-center">Why HobbyHive</h2>
 
-      {/* Cards Section */}
-      <motion.div
-        className="flex flex-col lg:flex-row gap-8 md:gap-20"
-        variants={cardContainerVariants}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-      >
-        <motion.div variants={cardVariants}>
-          <Card
-            img="/images/tailored.png"
-            number="1."
-            heading="Tailored Communities"
-            description="Find or create communities for any hobby you love, and make connections that matter."
-          />
-        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-center">
+          {/* Annotated feed card */}
+          <div className="relative max-w-xs mx-auto">
+            <span className="absolute -top-2.5 -left-2.5 z-10">
+              <Badge n={1} />
+            </span>
+            <span className="absolute top-1/2 -translate-y-1/2 -right-2.5 z-10">
+              <Badge n={2} />
+            </span>
+            <span className="absolute -bottom-2.5 left-8 z-10">
+              <Badge n={3} />
+            </span>
 
-        <motion.div variants={cardVariants}>
-          <Card
-            img="/images/inspiring.png"
-            number="2."
-            heading="Inspiring Content"
-            description="Access tutorials, stories, and insights to keep you inspired and motivated."
-          />
-        </motion.div>
+            <div className="bg-white rounded-xl shadow-lg p-4">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-8 h-8 rounded-full bg-pink-100 shrink-0" />
+                <div>
+                  <p className="font-semibold text-sm text-chblack">Mira K.</p>
+                  <span className="inline-block text-[10px] font-quick font-semibold text-white px-2 py-0.5 rounded-full bg-pink-600">
+                    Dance
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm text-chblack/80 mb-2">Landed the fouetté combo, finally 🎉</p>
+              <div className="flex items-center gap-1.5 text-xs text-chblack/60 bg-beige rounded-full px-3 py-1.5 w-fit mb-3">
+                <Users size={13} /> Dance Room · 214 members
+              </div>
+              <div className="flex gap-4 text-chblack/60">
+                <span className="flex items-center gap-1.5 text-xs">
+                  <Heart size={15} /> 42
+                </span>
+                <span className="flex items-center gap-1.5 text-xs">
+                  <MessageCircle size={15} /> 9
+                </span>
+              </div>
+            </div>
+          </div>
 
-        <motion.div variants={cardVariants}>
-          <Card
-            img="/images/collab.png"
-            number="3."
-            heading="Collaborative Projects"
-            description="Work with others on exciting projects and showcase your creations to the world."
-          />
-        </motion.div>
-      </motion.div>
-    </div>
+          {/* Callouts */}
+          <div className="space-y-6">
+            {REASONS.map((reason, i) => (
+              <div key={reason.heading} className="flex gap-3">
+                <div className="pt-0.5">
+                  <Badge n={i + 1} />
+                </div>
+                <div>
+                  <h3 className="font-quick font-bold text-chblack">{reason.heading}</h3>
+                  <p className="font-pop text-chblack/70 text-sm mt-0.5">{reason.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

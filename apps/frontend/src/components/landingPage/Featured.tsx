@@ -1,111 +1,48 @@
-"use client";
-
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
+
+const HOBBIES = [
+  { slug: "dance", name: "Dance", tagline: "Turns, combos, recital clips.", image: "/images/hobbies/dance-3.png" },
+  { slug: "anime", name: "Anime", tagline: "Season takes, fan art, watch parties.", image: "/images/hobbies/anime-3.png" },
+  { slug: "singing", name: "Singing", tagline: "Covers, open mics, vocal runs.", image: "/images/hobbies/singing-3.png" },
+  { slug: "gaming", name: "Gaming", tagline: "Clips, raids, patch-note arguments.", image: "/images/hobbies/gaming-3.png" },
+  { slug: "art", name: "Art", tagline: "Sketchbooks, WIPs, critique threads.", image: "/images/hobbies/art-3.png" },
+  { slug: "fitness", name: "Fitness", tagline: "PRs, form checks, recovery days.", image: "/images/hobbies/fitness-3.png" },
+];
 
 function Featured() {
-  const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { amount: 0.3 });
-
-  const titleVariants = {
-    hidden: { opacity: 0, y: -50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
-  };
-
-  const descriptionVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, delay: 0.3 } },
-  };
-
-  const imageVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut", staggerChildren: 0.2 } },
-  };
-
-  const linkVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.6 } },
-  };
-
   return (
-    <div ref={sectionRef} className="px-4 md:px-10">
-      <div className="border-b-2 border-chgrey pb-16 md:pb-24">
-        <div className="w-full h-auto flex flex-col items-center justify-center text-center">
-          <motion.div
-            className="font-bnt text-5xl md:text-7xl pt-10 md:pt-20 mb-4"
-            variants={titleVariants}
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-          >
-            FEATURED
-          </motion.div>
-
-          <motion.div
-            className="font-pop text-lg md:text-2xl mb-12 px-0 md:px-2"
-            variants={descriptionVariants}
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-          >
-            Explore hobbies like photography, painting, gaming, fitness, writing, and more. Find your
-            community today!
-          </motion.div>
+    <section className="w-full bg-gradient-to-r from-somig to-beige py-16 sm:py-24 px-6 sm:px-10 md:px-16 lg:px-20">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-10 sm:mb-14 text-center">
+          <h2 className="font-bnt text-chblack text-3xl sm:text-4xl">Find your hobby</h2>
+          <p className="font-pop mt-3 text-chblack/70 max-w-xl mx-auto">
+            Six communities live today. More launching as they grow — request one once you&apos;re in.
+          </p>
         </div>
 
-        {/* Images with Animation */}
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10"
-          variants={imageVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
-          <motion.div className="relative group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/sing.png"
-              className="rounded-3xl group-hover:scale-110 transition-transform duration-300 ease-in-out"
-              alt="Sing"
-            />
-            <motion.div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl scale-110">
-              <span className="font-pop text-xl">Singing Community</span>
-            </motion.div>
-          </motion.div>
-          <motion.div className="relative group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/anime.png"
-              className="rounded-3xl group-hover:scale-110 transition-transform duration-300 ease-in-out"
-              alt="Anime"
-            />
-            <motion.div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl scale-110">
-              <span className="font-pop text-xl">Anime Community </span>
-            </motion.div>
-          </motion.div>
-          <motion.div className="relative group">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/dance.png"
-              className="rounded-3xl group-hover:scale-110 transition-transform duration-300 ease-in-out"
-              alt="Dance"
-            />
-            <motion.div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl scale-110">
-              <span className="font-pop text-xl">Dance Community</span>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="font-pop flex text-lg md:text-xl w-full justify-center md:justify-end pr-0 md:pr-5 pt-6"
-          variants={linkVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-        >
-          <Link className="relative underline" href="/choice">
-            View All Hobbies
-          </Link>
-        </motion.div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {HOBBIES.map((hobby) => (
+            <Link key={hobby.slug} href="/signup" className="group block">
+              <div className="relative rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow aspect-[4/5]">
+                <Image
+                  src={hobby.image}
+                  alt={`${hobby.name} community`}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, 50vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                  <h3 className="font-bnt text-white text-xl sm:text-2xl">{hobby.name}</h3>
+                </div>
+              </div>
+              <p className="font-pop text-sm text-chblack/70 mt-2">{hobby.tagline}</p>
+            </Link>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 

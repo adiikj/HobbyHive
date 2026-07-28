@@ -1,157 +1,72 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Step from "./Step";
+
+function PickVisual() {
+  return (
+    <div className="flex gap-2">
+      <span className="font-quick text-xs px-3 py-1.5 rounded-full bg-pink-600 text-white shadow-sm">Dance</span>
+      <span className="font-quick text-xs px-3 py-1.5 rounded-full bg-white text-chblack/40 border border-chgrey/15">
+        Gaming
+      </span>
+      <span className="font-quick text-xs px-3 py-1.5 rounded-full bg-white text-chblack/40 border border-chgrey/15">
+        Art
+      </span>
+    </div>
+  );
+}
+
+function FeedVisual() {
+  return (
+    <div className="flex items-center gap-2.5 bg-white rounded-lg shadow-md p-2.5 w-44">
+      <div className="w-7 h-7 rounded-full bg-pink-100 shrink-0" />
+      <div className="flex-1 space-y-1.5">
+        <span className="inline-block text-[10px] font-quick font-semibold text-white px-2 py-0.5 rounded-full bg-pink-600">
+          Dance
+        </span>
+        <div className="h-1.5 bg-chblack/10 rounded-full w-4/5" />
+      </div>
+    </div>
+  );
+}
+
+function SwapVisual() {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-quick text-xs px-3 py-1.5 rounded-full bg-white text-chblack/30 border border-chgrey/15 line-through">
+        Dance
+      </span>
+      <span className="text-chblack/30">→</span>
+      <span className="font-quick text-xs px-3 py-1.5 rounded-full bg-pink-600 text-white shadow-sm">Gaming</span>
+    </div>
+  );
+}
 
 function HowItWorks() {
   return (
-    <>
-      <motion.div
-        className=" w-full h-auto lg:[height:1500px] font-bnt py-10 md:p-10 border-b-2 border-chgrey"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
-        <motion.h2
-          className="text-5xl sm:text-5xl lg:text-7xl text-center"
-          initial={{ opacity: 0, y: -100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
-        >
-          HOW IT WORKS?
-        </motion.h2>
+    <section className="w-full bg-beige py-16 sm:py-24 px-6 sm:px-10 md:px-16 lg:px-20">
+      <div className="max-w-5xl mx-auto">
+        <h2 className="font-bnt text-chblack text-3xl sm:text-4xl mb-12 sm:mb-16 text-center">How it works</h2>
 
-        {/* Desktop Layout */}
-        <div className="hidden lg:flex w-full h-auto pt-10 flex-row">
-          <div className="w-1/2 [height:160vh] flex justify-end border-r-4 border-dashed border-gray-600">
-            <motion.div
-              className="w-1/3 h-1 bg-gray-600 mt-36 absolute"
-              initial={{ opacity: 0, x: -200 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1 }}
-            >
-              <div className="[width:480px] h-56 border-4 p-6 bg-beige rounded-3xl relative right-32 bottom-24">
-                <Step
-                  img="/images/one.png"
-                  title="Sign Up or Browse"
-                  description="Create an account or browse our community to discover hobbies that inspire you."
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="w-1/3 h-1 bg-gray-600 [margin-top:750px] absolute"
-              initial={{ opacity: 0, x: -200 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1 }}
-            >
-              <div className="[width:480px] h-56 border-4 p-6 bg-beige rounded-3xl relative right-32 bottom-24">
-                <Step
-                  img="/images/three.png"
-                  title="Engage with the Community"
-                  description="Join groups, chat with members, and participate in hobby-specific events or challenges."
-                />
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="w-1/2 [height:170vh] flex justify-start">
-            <motion.div
-              className="w-1/5 h-1 bg-gray-600 [margin-top:450px] absolute"
-              initial={{ opacity: 0, x: 200 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1 }}
-            >
-              <div className="[width:480px] h-60 border-4 p-6 bg-somig rounded-3xl relative bottom-24 left-40">
-                <Step
-                  img="/images/two.png"
-                  title="Customize Your Interests"
-                  description="Select your hobbies to receive personalized recommendations and updates tailored to your passions."
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="w-1/5 h-1 bg-gray-600 [margin-top:1050px] absolute"
-              initial={{ opacity: 0, x: 200 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1 }}
-            >
-              <div className="[width:480px] h-56 border-4 p-6 bg-somig rounded-3xl relative bottom-24 left-40">
-                <Step
-                  img="/images/four.png"
-                  title="Share Your Journey"
-                  description="Post photos, achievements, or tips to inspire others and showcase your growth."
-                />
-              </div>
-            </motion.div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-6">
+          <Step
+            visual={<PickVisual />}
+            title="Pick a hobby"
+            description="One, or a few. Whatever you actually spend time on."
+            showArrow
+          />
+          <Step
+            visual={<FeedVisual />}
+            title="Get your feed"
+            description="It fills with only that — posts, people, and rooms for it."
+            showArrow
+          />
+          <Step
+            visual={<SwapVisual />}
+            title="Change it anytime"
+            description="Add a hobby, drop one, no penalty. Your feed follows."
+          />
         </div>
-
-        {/* Mobile Layout */}
-        <div className="flex lg:hidden flex-col items-center space-y-10 pt-10">
-          <motion.div
-            className="w-full max-w-[480px]"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <div className="h-auto border-4 p-6 bg-beige rounded-3xl">
-              <Step
-                img="/images/one.png"
-                title="Sign Up or Browse"
-                description="Create an account or browse our community to discover hobbies that inspire you."
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="w-full max-w-[480px]"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <div className="h-auto border-4 p-6 bg-somig rounded-3xl">
-              <Step
-                img="/images/two.png"
-                title="Customize Your Interests"
-                description="Select your hobbies to receive personalized recommendations and updates tailored to your passions."
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="w-full max-w-[480px]"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <div className="h-auto border-4 p-6 bg-beige rounded-3xl">
-              <Step
-                img="/images/three.png"
-                title="Engage with the Community"
-                description="Join groups, chat with members, and participate in hobby-specific events or challenges."
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="w-full max-w-[480px]"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            <div className="h-auto border-4 p-6 bg-somig rounded-3xl">
-              <Step
-                img="/images/four.png"
-                title="Share Your Journey"
-                description="Post photos, achievements, or tips to inspire others and showcase your growth."
-              />
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-    </>
+      </div>
+    </section>
   );
 }
 
