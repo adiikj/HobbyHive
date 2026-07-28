@@ -8,109 +8,69 @@ import { FaBars, FaTimes } from "react-icons/fa";
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-
-  const handleMenuClose = () => {
-    setMenuOpen(false);
-  };
+  const toggleMenu = () => setMenuOpen(!menuOpen);
+  const handleMenuClose = () => setMenuOpen(false);
 
   return (
-    <div className="w-full h-16 md:h-20 border-b-2 pb-5 bg-somig border-chgrey flex justify-between items-center px-4 sm:px-8 pt-4 font-bnt relative">
-      {/* Logo Section */}
-      <div className="flex justify-between items-center w-full sm:w-auto mb-4 sm:mb-0 pt-4 md:pt-0">
-        <Link href="/">
-          <span className="text-chblack font-bold text-3xl sm:text-5xl">HOBBYHIVE</span>
+    <div className="sticky top-0 z-40 w-full">
+      <div className="w-full bg-beige/90 backdrop-blur-md shadow-sm flex justify-between items-center px-4 sm:px-8 h-14 sm:h-16">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-pink-600" aria-hidden="true" />
+          <span className="text-pink-600 font-bnt font-bold text-2xl sm:text-3xl">HOBBYHIVE</span>
         </Link>
-      </div>
 
-      {/* Hamburger Icon for Mobile */}
-      <div className="sm:hidden flex justify-end w-full">
-        <button onClick={toggleMenu}>
-          {menuOpen ? (
-            <FaTimes className="text-3xl text-chblack" />
-          ) : (
-            <FaBars className="text-3xl text-chblack" />
-          )}
-        </button>
-      </div>
-
-      {/* Popup Menu */}
-      <motion.div
-        className={`${
-          menuOpen ? "block" : "hidden"
-        } fixed top-0 right-0 w-2/3 sm:w-80 h-full bg-white shadow-lg flex flex-col justify-center items-center z-50`}
-        initial={{ x: "100%" }}
-        animate={{ x: menuOpen ? 0 : "100%" }}
-        transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 30,
-          duration: 0.5,
-        }}
-      >
-        <div className="absolute top-4 right-4">
-          <button onClick={toggleMenu}>
-            <FaTimes className="text-3xl text-chblack" />
+        <div className="sm:hidden flex justify-end">
+          <button onClick={toggleMenu} aria-label="Toggle menu">
+            {menuOpen ? <FaTimes className="text-2xl text-chblack" /> : <FaBars className="text-2xl text-chblack" />}
           </button>
         </div>
 
-        <Link href="/signin">
-          <motion.button
-            className="font-quick font-semibold w-40 h-10 text-md text-white bg-black rounded-3xl mb-4"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={handleMenuClose}
-          >
-            Sign In
-          </motion.button>
-        </Link>
+        <motion.div
+          className={`${
+            menuOpen ? "block" : "hidden"
+          } fixed top-0 right-0 w-2/3 sm:w-80 h-full bg-white shadow-lg flex flex-col justify-center items-center z-50`}
+          initial={{ x: "100%" }}
+          animate={{ x: menuOpen ? 0 : "100%" }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
+          <div className="absolute top-4 right-4">
+            <button onClick={toggleMenu} aria-label="Close menu">
+              <FaTimes className="text-2xl text-chblack" />
+            </button>
+          </div>
 
-        <Link href="/signup">
-          <motion.button
-            className="font-quick font-semibold w-40 h-10 text-md bg-white rounded-3xl"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={handleMenuClose}
-          >
-            Sign Up
-          </motion.button>
-        </Link>
-      </motion.div>
+          <Link href="/signin">
+            <button
+              className="font-quick font-semibold w-40 h-10 text-md text-white bg-black rounded-3xl mb-4 shadow-md"
+              onClick={handleMenuClose}
+            >
+              Sign In
+            </button>
+          </Link>
+          <Link href="/signup">
+            <button
+              className="font-quick font-semibold w-40 h-10 text-md bg-white border-2 border-chblack/15 rounded-3xl"
+              onClick={handleMenuClose}
+            >
+              Sign Up
+            </button>
+          </Link>
+        </motion.div>
 
-      {/* Button Section (Desktop) */}
-      <div className="hidden sm:flex flex-row gap-4 sm:gap-8 w-full sm:w-auto justify-center">
-        <Link href="/signin">
-          <motion.button
-            className="font-quick font-semibold w-28 h-10 text-md text-white bg-black rounded-3xl"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={handleMenuClose}
-          >
-            Sign In
-          </motion.button>
-        </Link>
-
-        <Link href="/signup">
-          <motion.button
-            className="font-quick font-semibold w-28 h-10 text-md bg-white rounded-3xl"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            whileHover={{ scale: 1.1 }}
-            onClick={handleMenuClose}
-          >
-            Sign Up
-          </motion.button>
-        </Link>
+        <div className="hidden sm:flex flex-row gap-4">
+          <Link href="/signin">
+            <button className="font-quick font-semibold w-24 h-9 text-sm text-white bg-black rounded-3xl shadow-md shadow-black/10 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+              Sign In
+            </button>
+          </Link>
+          <Link href="/signup">
+            <button className="font-quick font-semibold w-24 h-9 text-sm bg-white border-2 border-chblack/15 rounded-3xl hover:border-pink-500 hover:text-pink-600 transition-colors">
+              Sign Up
+            </button>
+          </Link>
+        </div>
       </div>
+      <div className="h-[3px] w-full bg-gradient-to-r from-pink-600 to-warber" />
     </div>
   );
 }
