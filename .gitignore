@@ -30,3 +30,7 @@ next-env.d.ts
 
 # Prisma
 apps/backend/prisma/dev.db
+
+# Markdown docs (keep README.md tracked)
+*.md
+!README.md
