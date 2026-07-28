@@ -1,0 +1,24 @@
+{
+  "name": "hobbyhive",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "pnpm --filter @hobbyhive/frontend dev",
+    "dev:api": "pnpm --filter @hobbyhive/backend dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "db:migrate": "pnpm --filter @hobbyhive/backend db:migrate",
+    "db:studio": "pnpm --filter @hobbyhive/backend db:studio"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "bcrypt", "esbuild", "prisma"]
+  }
+}
