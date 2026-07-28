@@ -48,18 +48,21 @@ function HowItWorks() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-6">
           <Step
+            index={0}
             visual={<PickVisual />}
             title="Pick a hobby"
             description="One, or a few. Whatever you actually spend time on."
             showArrow
           />
           <Step
+            index={1}
             visual={<FeedVisual />}
             title="Get your feed"
-            description="It fills with only that — posts, people, and rooms for it."
+            description="It fills with only that: posts, people, and rooms for it."
             showArrow
           />
           <Step
+            index={2}
             visual={<SwapVisual />}
             title="Change it anytime"
             description="Add a hobby, drop one, no penalty. Your feed follows."
