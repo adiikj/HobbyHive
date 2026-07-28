@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import FeedMockup from "./FeedMockup";
 import About from "./About";
@@ -28,7 +29,7 @@ function Hero() {
             </h1>
             <p className="font-pop mt-6 text-base sm:text-lg text-chblack/70 max-w-lg mx-auto lg:mx-0">
               Pick dance, anime, gaming, art, or whatever you&apos;re into. HobbyHive shows you
-              that — and only that. No mixed feed, no algorithm guessing what else you might like.
+              that, and only that. No mixed feed, no algorithm guessing what else you might like.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
               <Link
@@ -44,6 +45,17 @@ function Hero() {
                 See how it works
                 <ChevronDown size={18} className="transition-transform group-hover:translate-y-0.5" />
               </a>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center lg:justify-start gap-3">
+              <div className="flex -space-x-2.5">
+                {["/images/1.png", "/images/2.png", "/images/3.png", "/images/4.png"].map((src) => (
+                  <div key={src} className="relative w-8 h-8 rounded-full border-2 border-beige overflow-hidden">
+                    <Image src={src} alt="" fill sizes="32px" className="object-cover" />
+                  </div>
+                ))}
+              </div>
+              <p className="font-pop text-sm text-chblack/60">Real hobbyists, already posting</p>
             </div>
           </motion.div>
 
