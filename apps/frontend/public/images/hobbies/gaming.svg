@@ -16,5 +16,5 @@
   <circle cx="460" cy="390" r="14" fill="#28477A"/>
   <circle cx="490" cy="430" r="14" fill="#28477A"/>
   <text x="60" y="700" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="#FAF6EC" letter-spacing="2">GAMING</text>
-  <text x="60" y="750" font-family="Arial, sans-serif" font-size="18" fill="#FAF6EC" opacity="0.6">Placeholder — swap this file for a real photo</text>
+  <text x="60" y="750" font-family="Arial, sans-serif" font-size="18" fill="#FAF6EC" opacity="0.6">Placeholder: swap this file for a real photo</text>
 </svg>

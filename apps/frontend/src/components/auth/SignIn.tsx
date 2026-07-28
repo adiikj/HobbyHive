@@ -98,7 +98,7 @@ function SignIn() {
             Welcome <span className="text-pink-600">back.</span>
           </h1>
           <p className="font-pop text-chblack/70 mt-3 text-base sm:text-lg max-w-sm mx-auto lg:mx-0">
-            Your feed is right where you left it — just your hobby, nothing else.
+            Your feed is right where you left it: just your hobby, nothing else.
           </p>
 
           <div className="hidden lg:flex gap-2 mt-8">

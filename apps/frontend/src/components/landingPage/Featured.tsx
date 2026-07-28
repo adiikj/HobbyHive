@@ -17,7 +17,7 @@ function Featured() {
         <div className="mb-10 sm:mb-14 text-center">
           <h2 className="font-bnt text-chblack text-3xl sm:text-4xl">Find your hobby</h2>
           <p className="font-pop mt-3 text-chblack/70 max-w-xl mx-auto">
-            Six communities live today. More launching as they grow — request one once you&apos;re in.
+            Six communities live today. More launching as they grow. Request one once you&apos;re in.
           </p>
         </div>
 

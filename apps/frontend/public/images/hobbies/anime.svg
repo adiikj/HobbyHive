@@ -8,5 +8,5 @@
   <rect width="800" height="800" fill="url(#g)"/>
   <path d="M400 200 L430 340 L570 370 L430 400 L400 540 L370 400 L230 370 L370 340 Z" fill="#FAF6EC" opacity="0.85"/>
   <text x="60" y="700" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="#FAF6EC" letter-spacing="2">ANIME</text>
-  <text x="60" y="750" font-family="Arial, sans-serif" font-size="18" fill="#FAF6EC" opacity="0.6">Placeholder — swap this file for a real photo</text>
+  <text x="60" y="750" font-family="Arial, sans-serif" font-size="18" fill="#FAF6EC" opacity="0.6">Placeholder: swap this file for a real photo</text>
 </svg>
