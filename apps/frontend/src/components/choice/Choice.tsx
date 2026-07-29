@@ -3,6 +3,12 @@
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
+const COMMUNITIES = [
+  { key: "singing", image: "/images/sing.png", label: "Singing Community" },
+  { key: "anime", image: "/images/anime.png", label: "Anime Community" },
+  { key: "dance", image: "/images/dance.png", label: "Dance Community" },
+];
+
 function Choice() {
   const router = useRouter();
 
@@ -16,7 +22,7 @@ function Choice() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige p-10 sm:p-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-8 md:p-10">
       <motion.h1
         className="text-4xl md:text-5xl lg:text-6xl font-bnt font-bold text-black mb-8 md:mb-12 text-center"
         initial={{ opacity: 0, y: -50 }}
@@ -32,53 +38,27 @@ function Choice() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div
-          className="relative group cursor-pointer w-full h-56 sm:h-64 md:h-72"
-          onClick={() => handleChoice("singing")}
-          whileHover={{ scale: 1.05 }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/sing.png"
-            className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300 ease-in-out"
-            alt="Sing"
-          />
-          <motion.div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl">
-            <span className="font-semibold font-pop text-lg md:text-xl lg:text-2xl">Singing Community</span>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="relative group cursor-pointer w-full h-56 sm:h-64 md:h-72"
-          onClick={() => handleChoice("anime")}
-          whileHover={{ scale: 1.05 }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/anime.png"
-            className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300 ease-in-out"
-            alt="Anime"
-          />
-          <motion.div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl">
-            <span className="font-semibold font-pop text-lg md:text-xl lg:text-2xl">Anime Community</span>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="relative group cursor-pointer w-full h-56 sm:h-64 md:h-72"
-          onClick={() => handleChoice("dance")}
-          whileHover={{ scale: 1.05 }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/dance.png"
-            className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300 ease-in-out"
-            alt="Dance"
-          />
-          <motion.div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl">
-            <span className="font-semibold font-pop text-lg md:text-xl lg:text-2xl">Dance Community</span>
-          </motion.div>
-        </motion.div>
+        {COMMUNITIES.map((community) => (
+          <motion.button
+            key={community.key}
+            type="button"
+            className="relative group cursor-pointer w-full h-56 sm:h-64 md:h-72 text-left"
+            onClick={() => handleChoice(community.key)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={community.image}
+              className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-300 ease-in-out"
+              alt={community.label}
+            />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <span className="absolute bottom-4 left-4 right-4 font-semibold font-pop text-lg md:text-xl lg:text-2xl text-white">
+              {community.label}
+            </span>
+          </motion.button>
+        ))}
       </motion.div>
     </div>
   );
