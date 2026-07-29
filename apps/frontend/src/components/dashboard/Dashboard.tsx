@@ -56,9 +56,9 @@ function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-r from-somig to-beige font-pop">
-      {/* Left Sidebar */}
-      <aside className="w-60 p-6 flex flex-col justify-between bg-white rounded-lg shadow-md fixed top-0 left-0 h-full">
+    <div className="min-h-screen lg:flex bg-gradient-to-r from-somig to-beige font-pop">
+      {/* Left Sidebar: desktop only, collapses to a bottom nav bar on mobile */}
+      <aside className="hidden lg:flex w-60 p-6 flex-col justify-between bg-white rounded-lg shadow-md fixed top-0 left-0 h-full">
         <div>
           <h1 className="text-pink-600 font-bnt font-bold text-5xl mb-6">HOBBYHIVE</h1>
           <nav className="space-y-3">
@@ -95,7 +95,7 @@ function Dashboard() {
       </aside>
 
       {/* Center Section */}
-      <div className="flex-1 p-6 ml-64 pt-24 overflow-y-auto mr-80">
+      <div className="relative flex-1 p-4 sm:p-6 pt-6 lg:pt-24 pb-24 lg:pb-6 overflow-y-auto lg:ml-64 xl:mr-80">
         <header className="w-full flex justify-between items-center p-4 bg-white rounded-lg shadow mb-6">
           <h2 className="text-xl font-bold">Welcome!</h2>
           <div className="flex items-center gap-4">
@@ -112,7 +112,7 @@ function Dashboard() {
 
         {showNotifications && (
           <motion.div
-            className="absolute top-16 right-6 bg-white p-4 rounded-2xl shadow-lg w-72 border border-gray-300 z-50"
+            className="absolute top-16 right-4 sm:right-6 bg-white p-4 rounded-2xl shadow-lg w-[calc(100vw-2rem)] max-w-xs border border-gray-300 z-50"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -147,18 +147,18 @@ function Dashboard() {
         </div>
 
         {/* Create Post Section */}
-        <div className="p-5 mt-6 flex gap-4 bg-white rounded-xl shadow-md">
+        <div className="p-4 sm:p-5 mt-6 flex items-center gap-3 sm:gap-4 bg-white rounded-xl shadow-md">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full" />
+          <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full shrink-0" />
           <input
             type="text"
             placeholder="Share something interesting..."
-            className="flex-1 p-3 rounded-full outline-none border border-gray-300"
+            className="flex-1 min-w-0 p-3 rounded-full outline-none border border-gray-300"
           />
-          <button className="text-gray-600 hover:text-black">
+          <button className="text-gray-600 hover:text-black shrink-0">
             <ImageIcon size={24} />
           </button>
-          <button className="bg-pink-500 px-12 py-2 rounded-full text-white">Post</button>
+          <button className="bg-pink-500 px-5 sm:px-12 py-2 rounded-full text-white shrink-0">Post</button>
         </div>
 
         {/* Feed Section */}
@@ -194,10 +194,26 @@ function Dashboard() {
             </div>
           ))}
         </div>
+
+        {/* Trending Topics: inline on mobile/tablet, moves into the fixed right sidebar at xl */}
+        <div className="xl:hidden mt-6 p-5 rounded-xl bg-white shadow-md">
+          <h3 className="text-xl font-semibold mb-4 text-pink-600">Trending Topics</h3>
+          <ul className="space-y-3">
+            {trendingTopics.map((topic, index) => (
+              <li
+                key={index}
+                className="flex justify-between items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 ease-in-out border border-transparent hover:border-gray-300"
+              >
+                <span className="text-sm font-medium text-gray-700">{topic}</span>
+                <button className="text-xs text-pink-500 hover:text-pink-700">Explore</button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
-      {/* Right Sidebar (Trending) */}
-      <div className="w-80 p-6 ml-6 rounded-xl bg-white shadow-xl pt-20 fixed top-0 right-0 h-full overflow-y-auto">
+      {/* Right Sidebar (Trending): xl and up only */}
+      <div className="hidden xl:block w-80 p-6 ml-6 rounded-xl bg-white shadow-xl pt-20 fixed top-0 right-0 h-full overflow-y-auto">
         <h3 className="text-2xl font-semibold mb-6 text-pink-600 text-center border-b-2 pb-4">Trending Topics</h3>
         <ul className="space-y-6">
           {trendingTopics.map((topic, index) => (
@@ -211,6 +227,28 @@ function Dashboard() {
           ))}
         </ul>
       </div>
+
+      {/* Mobile bottom nav: replaces the left sidebar below lg */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around bg-white border-t border-gray-200 px-2 py-3">
+        <button aria-label="Home" className="text-pink-600">
+          <Home size={22} />
+        </button>
+        <button aria-label="Friends" className="text-gray-500 hover:text-black">
+          <Users size={22} />
+        </button>
+        <button aria-label="Notifications" className="text-gray-500 hover:text-black" onClick={() => setShowNotifications(!showNotifications)}>
+          <Bell size={22} />
+        </button>
+        <button aria-label="Messages" className="text-gray-500 hover:text-black">
+          <MessageCircle size={22} />
+        </button>
+        <button aria-label="Profile" className="text-gray-500 hover:text-black">
+          <User size={22} />
+        </button>
+        <button aria-label="Logout" className="text-red-600" onClick={handleLogout}>
+          <LogOut size={22} />
+        </button>
+      </nav>
     </div>
   );
 }
