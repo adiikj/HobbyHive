@@ -4,12 +4,12 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        bnt: ["BNT", "big-noodle-titling"],
-        mon: ["Monigue", "monigue"],
-        awe: ["Awesome", "awesome"],
-        mons: ["Montserrat", "montserrat"],
-        pop: ["Poppins", "poppins"],
-        quick: ["Quicksand", "quicksand"],
+        bnt: ["var(--font-bnt)"],
+        mon: ["var(--font-monigue)"],
+        awe: ["var(--font-awesome)"],
+        mons: ["var(--font-montserrat)"],
+        pop: ["var(--font-poppins)"],
+        quick: ["var(--font-quicksand)"],
       },
       colors: {
         somig: "#ADE8E6",
