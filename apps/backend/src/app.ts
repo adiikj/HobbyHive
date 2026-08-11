@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import userRouter from "./routes/user.routes.js";
 import hobbyRouter from "./routes/hobby.routes.js";
+import postRouter from "./routes/post.routes.js";
+import feedRouter from "./routes/feed.routes.js";
 
 const app = express();
 
@@ -21,6 +23,8 @@ app.options("*", cors(corsOptions));
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/hobbies", hobbyRouter);
+app.use("/api/v1/posts", postRouter);
+app.use("/api/v1/feed", feedRouter);
 
 app.use(errorHandler);
 
