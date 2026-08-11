@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { motion } from "framer-motion";
 import { Bell, MessageCircle, Heart, Plus, Users, Send, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
 import { logout } from "@/redux/authSlice";
-import { getFeed, getHobbies, getMyHobbies, createPost, type Post, type Hobby } from "@/api/api";
+import { getFeed, getHobbies, getMyHobbies, createPost, getUserProfile, type Post, type Hobby, type Profile } from "@/api/api";
 
 function formatPostDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -17,6 +17,7 @@ function Dashboard() {
   const dispatch = useDispatch();
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [me, setMe] = useState<Profile | null>(null);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -42,7 +43,12 @@ function Dashboard() {
 
     getHobbies().then(setHobbies).catch(() => undefined);
     getMyHobbies().then(setMyHobbies).catch(() => undefined);
+    getUserProfile().then(setMe).catch(() => undefined);
   }, []);
+
+  const goToMyProfile = () => {
+    if (me) router.push(`/profile/${me.username}`);
+  };
 
   const handleLogout = () => {
     Cookies.remove("accessToken");
@@ -122,7 +128,7 @@ function Dashboard() {
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
               <MessageCircle size={22} /> Messages
             </button>
-            <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
+            <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full" onClick={goToMyProfile}>
               <User size={22} /> Profile
             </button>
             <button
@@ -148,13 +154,18 @@ function Dashboard() {
       {/* Center Section */}
       <div className="relative flex-1 p-4 sm:p-6 pt-6 lg:pt-24 pb-24 lg:pb-6 overflow-y-auto lg:ml-64 xl:mr-80">
         <header className="w-full flex justify-between items-center p-4 bg-white rounded-lg shadow mb-6">
-          <h2 className="text-xl font-bold">Welcome!</h2>
+          <h2 className="text-xl font-bold">{me ? `Welcome, ${me.name}!` : "Welcome!"}</h2>
           <div className="flex items-center gap-4">
             <button className="relative" onClick={() => setShowNotifications(!showNotifications)}>
               <Bell size={28} className="text-black hover:text-gray-600 transition" />
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full border border-gray-400" />
+            <img
+              src={me?.avatarUrl || "/images/5.png"}
+              alt="User"
+              onClick={goToMyProfile}
+              className="w-10 h-10 rounded-full border border-gray-400 cursor-pointer object-cover"
+            />
           </div>
         </header>
 
@@ -194,7 +205,7 @@ function Dashboard() {
         <div className="p-4 sm:p-5 mt-6 bg-white rounded-xl shadow-md">
           <div className="flex items-center gap-3 sm:gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full shrink-0" />
+            <img src={me?.avatarUrl || "/images/5.png"} alt="User" className="w-10 h-10 rounded-full shrink-0 object-cover" />
             <input
               type="text"
               value={newPostContent}
@@ -245,16 +256,23 @@ function Dashboard() {
               {posts.map((post) => (
                 <div key={post.id} className="p-5 bg-white rounded-xl shadow-md mb-6">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                    <button
+                      className="flex items-center gap-3 text-left"
+                      onClick={() => router.push(`/profile/${post.author.username}`)}
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/5.png" alt={post.author.name} className="w-10 h-10 rounded-full" />
+                      <img
+                        src={post.author.avatarUrl || "/images/5.png"}
+                        alt={post.author.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
                       <div>
-                        <p className="font-semibold">{post.author.name}</p>
+                        <p className="font-semibold hover:underline">{post.author.name}</p>
                         <p className="text-gray-600 text-sm">
                           {post.hobby.icon} {post.hobby.name} · {formatPostDate(post.createdAt)}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   </div>
 
                   <p>{post.content}</p>
@@ -339,7 +357,7 @@ function Dashboard() {
         <button aria-label="Messages" className="text-gray-500 hover:text-black">
           <MessageCircle size={22} />
         </button>
-        <button aria-label="Profile" className="text-gray-500 hover:text-black">
+        <button aria-label="Profile" className="text-gray-500 hover:text-black" onClick={goToMyProfile}>
           <User size={22} />
         </button>
         <button aria-label="Logout" className="text-red-600" onClick={handleLogout}>
