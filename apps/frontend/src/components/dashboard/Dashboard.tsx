@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { motion } from "framer-motion";
 import { Bell, MessageCircle, Heart, Plus, Users, Image as ImageIcon, Send, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
@@ -9,6 +10,7 @@ import { logout } from "@/redux/authSlice";
 
 function Dashboard() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = () => {
@@ -77,7 +79,10 @@ function Dashboard() {
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
               <User size={22} /> Profile
             </button>
-            <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
+            <button
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full"
+              onClick={() => router.push("/settings/hobbies")}
+            >
               <Settings size={22} /> Settings
             </button>
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
