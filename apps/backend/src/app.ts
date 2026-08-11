@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import userRouter from "./routes/user.routes.js";
+import hobbyRouter from "./routes/hobby.routes.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(cookieParser());
 app.options("*", cors(corsOptions));
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/hobbies", hobbyRouter);
 
 app.use(errorHandler);
 
