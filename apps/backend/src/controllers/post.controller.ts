@@ -10,7 +10,7 @@ const postSelect = {
   imageUrl: true,
   createdAt: true,
   hobby: { select: { id: true, name: true, slug: true, icon: true } },
-  author: { select: { id: true, name: true, username: true } },
+  author: { select: { id: true, name: true, username: true, avatarUrl: true } },
 };
 
 // Create a post tagged to exactly one hobby

@@ -244,15 +244,95 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
     });
 });
 
+const publicProfileSelect = {
+  id: true,
+  name: true,
+  username: true,
+  bio: true,
+  avatarUrl: true,
+  createdAt: true,
+  hobbies: { select: { hobby: { select: { id: true, name: true, slug: true, icon: true } } } },
+};
+
+const toProfileResponse = (user: {
+  id: string;
+  name: string;
+  username: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  createdAt: Date;
+  hobbies: { hobby: { id: string; name: string; slug: string; icon: string | null } }[];
+}) => ({
+  id: user.id,
+  name: user.name,
+  username: user.username,
+  bio: user.bio,
+  avatarUrl: user.avatarUrl,
+  createdAt: user.createdAt,
+  hobbies: user.hobbies.map((h) => h.hobby),
+});
+
+// The logged-in user's own profile
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.id },
-    select: { name: true },
+    select: publicProfileSelect,
   });
 
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    throw new ApiError(404, "User not found");
   }
 
-  res.status(200).json({ status: 200, data: { name: user.name } });
+  res.status(200).json(new ApiResponse(200, toProfileResponse(user)));
+});
+
+// Any user's public profile, by username
+export const getPublicProfile = asyncHandler(async (req: Request, res: Response) => {
+  const username = String(req.params.username);
+
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: publicProfileSelect,
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  res.status(200).json(new ApiResponse(200, toProfileResponse(user)));
+});
+
+// Edit your own profile (name, bio, avatarUrl)
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  const username = String(req.params.username);
+
+  if (req.user!.username !== username) {
+    throw new ApiError(403, "You can only edit your own profile");
+  }
+
+  const { name, bio, avatarUrl } = req.body;
+
+  if (name !== undefined && (typeof name !== "string" || !name.trim())) {
+    throw new ApiError(400, "Name cannot be empty");
+  }
+
+  if (bio !== undefined && typeof bio !== "string") {
+    throw new ApiError(400, "Bio must be a string");
+  }
+
+  if (avatarUrl !== undefined && typeof avatarUrl !== "string") {
+    throw new ApiError(400, "Avatar URL must be a string");
+  }
+
+  const user = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: {
+      ...(name !== undefined ? { name: name.trim() } : {}),
+      ...(bio !== undefined ? { bio: bio.trim() || null } : {}),
+      ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl.trim() || null } : {}),
+    },
+    select: publicProfileSelect,
+  });
+
+  res.status(200).json(new ApiResponse(200, toProfileResponse(user), "Profile updated successfully"));
 });
