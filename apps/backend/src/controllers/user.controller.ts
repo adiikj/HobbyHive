@@ -211,7 +211,7 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(400, "OTP has expired.");
   }
 
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       name: pendingUser.name,
       username: pendingUser.username,
@@ -224,7 +224,24 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
 
   await prisma.pendingUser.delete({ where: { id: pendingUser.id } });
 
-  res.status(200).json({ message: "User verified and confirmed successfully. You can now log in." });
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
+
+  const options = {
+    httpOnly: true,
+    secure: false,
+    sameSite: "none" as const,
+    path: "/",
+    expires: new Date(Date.now() + 3600000),
+  };
+
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json({
+      message: "User verified and confirmed successfully. You can now log in.",
+      data: { accessToken, refreshToken },
+    });
 });
 
 export const getProfile = asyncHandler(async (req: Request, res: Response) => {
