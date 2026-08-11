@@ -1,22 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { motion } from "framer-motion";
-import { Bell, MessageCircle, Heart, Plus, Users, Image as ImageIcon, Send, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
+import { Bell, MessageCircle, Heart, Plus, Users, Send, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
 import { logout } from "@/redux/authSlice";
+import { getFeed, getHobbies, getMyHobbies, createPost, type Post, type Hobby } from "@/api/api";
+
+function formatPostDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 function Dashboard() {
   const dispatch = useDispatch();
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
 
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoadingFeed, setIsLoadingFeed] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [feedError, setFeedError] = useState("");
+
+  const [hobbies, setHobbies] = useState<Hobby[]>([]);
+  const [myHobbies, setMyHobbies] = useState<Hobby[]>([]);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [newPostHobbyId, setNewPostHobbyId] = useState("");
+  const [isPosting, setIsPosting] = useState(false);
+  const [postError, setPostError] = useState("");
+
+  useEffect(() => {
+    getFeed()
+      .then((page) => {
+        setPosts(page.posts);
+        setNextCursor(page.nextCursor);
+      })
+      .catch((err) => setFeedError(err instanceof Error ? err.message : "Failed to load your feed"))
+      .finally(() => setIsLoadingFeed(false));
+
+    getHobbies().then(setHobbies).catch(() => undefined);
+    getMyHobbies().then(setMyHobbies).catch(() => undefined);
+  }, []);
+
   const handleLogout = () => {
     Cookies.remove("accessToken");
     dispatch(logout());
     window.location.href = "/";
+  };
+
+  const handleLoadMore = async () => {
+    if (!nextCursor) return;
+    setIsLoadingMore(true);
+    try {
+      const page = await getFeed(nextCursor);
+      setPosts((prev) => [...prev, ...page.posts]);
+      setNextCursor(page.nextCursor);
+    } catch (err) {
+      setFeedError(err instanceof Error ? err.message : "Failed to load more posts");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim() || !newPostHobbyId) return;
+
+    setPostError("");
+    setIsPosting(true);
+    try {
+      const post = await createPost(newPostContent, newPostHobbyId);
+      setPosts((prev) => [post, ...prev]);
+      setNewPostContent("");
+      setNewPostHobbyId("");
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : "Failed to create post");
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   const stories = [
@@ -26,29 +88,6 @@ function Dashboard() {
     { id: 4, img: "/images/4.png", name: "Emily Johnson" },
   ];
 
-  const posts = [
-    {
-      id: 1,
-      user: "John Doe",
-      avatar: "/images/1.png",
-      hobby: "Photography",
-      content: "Captured this amazing sunset today! 🌅",
-      image: "/images/sunset.jpg",
-      likes: 120,
-      comments: 34,
-    },
-    {
-      id: 2,
-      user: "Emma Brown",
-      avatar: "/images/2.png",
-      hobby: "Gaming",
-      content: "Finally hit Diamond rank! Who else plays Valorant?",
-      image: "/images/game.png",
-      likes: 200,
-      comments: 45,
-    },
-  ];
-
   const trendingTopics = [
     "Photography Tips ",
     "Top Gaming Strategies ",
@@ -56,6 +95,13 @@ function Dashboard() {
     "Coding Challenges ",
     "Best Travel Destinations ",
   ];
+
+  const emptyStateMessage =
+    myHobbies.length === 1
+      ? `Be the first to post about ${myHobbies[0].name}.`
+      : myHobbies.length > 1
+      ? `Be the first to post in ${myHobbies.map((h) => h.name).join(", ")}.`
+      : "Pick a hobby to start seeing posts here.";
 
   return (
     <div className="min-h-screen lg:flex bg-gradient-to-r from-somig to-beige font-pop">
@@ -106,9 +152,6 @@ function Dashboard() {
           <div className="flex items-center gap-4">
             <button className="relative" onClick={() => setShowNotifications(!showNotifications)}>
               <Bell size={28} className="text-black hover:text-gray-600 transition" />
-              <span className="absolute -top-2 -right-2 bg-red-500 text-xs px-2 py-0.5 rounded-full text-white">
-                3
-              </span>
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full border border-gray-400" />
@@ -122,11 +165,7 @@ function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
           >
             <p className="text-sm font-semibold">🔔 Notifications</p>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li className="bg-gray-100 p-3 rounded-lg">📷 Alex liked your post</li>
-              <li className="bg-gray-100 p-3 rounded-lg">🎮 Sarah commented: &quot;Awesome!&quot;</li>
-              <li className="bg-gray-100 p-3 rounded-lg">🎨 Chris followed you</li>
-            </ul>
+            <p className="mt-3 text-sm text-gray-500">Nothing yet.</p>
           </motion.div>
         )}
 
@@ -152,52 +191,105 @@ function Dashboard() {
         </div>
 
         {/* Create Post Section */}
-        <div className="p-4 sm:p-5 mt-6 flex items-center gap-3 sm:gap-4 bg-white rounded-xl shadow-md">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full shrink-0" />
-          <input
-            type="text"
-            placeholder="Share something interesting..."
-            className="flex-1 min-w-0 p-3 rounded-full outline-none border border-gray-300"
-          />
-          <button className="text-gray-600 hover:text-black shrink-0">
-            <ImageIcon size={24} />
-          </button>
-          <button className="bg-pink-500 px-5 sm:px-12 py-2 rounded-full text-white shrink-0">Post</button>
+        <div className="p-4 sm:p-5 mt-6 bg-white rounded-xl shadow-md">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/5.png" alt="User" className="w-10 h-10 rounded-full shrink-0" />
+            <input
+              type="text"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              placeholder="Share something interesting..."
+              className="flex-1 min-w-0 p-3 rounded-full outline-none border border-gray-300"
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+            <select
+              value={newPostHobbyId}
+              onChange={(e) => setNewPostHobbyId(e.target.value)}
+              className="p-2 rounded-lg border border-gray-300 text-sm bg-white"
+            >
+              <option value="">Choose a hobby</option>
+              {hobbies.map((hobby) => (
+                <option key={hobby.id} value={hobby.id}>
+                  {hobby.icon ?? ""} {hobby.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleCreatePost}
+              disabled={isPosting || !newPostContent.trim() || !newPostHobbyId}
+              className="bg-pink-500 px-5 sm:px-12 py-2 rounded-full text-white shrink-0 disabled:opacity-50"
+            >
+              {isPosting ? "Posting..." : "Post"}
+            </button>
+          </div>
+          {postError && <p className="text-red-600 text-sm mt-2">{postError}</p>}
         </div>
 
         {/* Feed Section */}
         <div className="space-y-6 mt-6">
-          {posts.map((post) => (
-            <div key={post.id} className="p-5 bg-white rounded-xl shadow-md mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={post.avatar} alt={post.user} className="w-10 h-10 rounded-full" />
-                <div>
-                  <p className="font-semibold">{post.user}</p>
-                  <p className="text-gray-600 text-sm">{post.hobby}</p>
-                </div>
-              </div>
-
-              <p>{post.content}</p>
-              {post.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={post.image} alt="Post" className="mt-3 rounded-lg w-full h-full" />
-              )}
-
-              <div className="flex gap-6 mt-4 text-gray-600">
-                <button className="flex items-center gap-2 hover:text-red-500">
-                  <Heart size={20} /> {post.likes}
-                </button>
-                <button className="flex items-center gap-2 hover:text-blue-500">
-                  <MessageCircle size={20} /> {post.comments}
-                </button>
-                <button className="flex items-center gap-2 hover:text-green-500">
-                  <Send size={20} />
-                </button>
-              </div>
+          {isLoadingFeed ? (
+            <div className="flex justify-center py-10">
+              <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
             </div>
-          ))}
+          ) : feedError ? (
+            <p className="text-center text-red-600 bg-white rounded-xl shadow-md p-5">{feedError}</p>
+          ) : posts.length === 0 ? (
+            <div className="text-center bg-white rounded-xl shadow-md p-8">
+              <p className="font-semibold text-lg">Your feed is quiet right now.</p>
+              <p className="text-gray-600 mt-1">{emptyStateMessage}</p>
+            </div>
+          ) : (
+            <>
+              {posts.map((post) => (
+                <div key={post.id} className="p-5 bg-white rounded-xl shadow-md mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/images/5.png" alt={post.author.name} className="w-10 h-10 rounded-full" />
+                      <div>
+                        <p className="font-semibold">{post.author.name}</p>
+                        <p className="text-gray-600 text-sm">
+                          {post.hobby.icon} {post.hobby.name} · {formatPostDate(post.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p>{post.content}</p>
+                  {post.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={post.imageUrl} alt="Post" className="mt-3 rounded-lg w-full h-full" />
+                  )}
+
+                  <div className="flex gap-6 mt-4 text-gray-600">
+                    <button className="flex items-center gap-2 hover:text-red-500">
+                      <Heart size={20} />
+                    </button>
+                    <button className="flex items-center gap-2 hover:text-blue-500">
+                      <MessageCircle size={20} />
+                    </button>
+                    <button className="flex items-center gap-2 hover:text-green-500">
+                      <Send size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {nextCursor && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="px-6 py-2 rounded-full bg-white shadow-md text-pink-600 font-semibold disabled:opacity-50"
+                  >
+                    {isLoadingMore ? "Loading..." : "Load more"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Trending Topics: inline on mobile/tablet, moves into the fixed right sidebar at xl */}
