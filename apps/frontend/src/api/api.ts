@@ -25,12 +25,28 @@ export interface Post {
   imageUrl: string | null;
   createdAt: string;
   hobby: Hobby;
-  author: { id: string; name: string; username: string };
+  author: { id: string; name: string; username: string; avatarUrl: string | null };
 }
 
 export interface FeedPage {
   posts: Post[];
   nextCursor: string | null;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  username: string;
+  bio: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  hobbies: Hobby[];
+}
+
+export interface UpdateProfilePayload {
+  name?: string;
+  bio?: string;
+  avatarUrl?: string;
 }
 
 export const loginUser = async (emailOrUsername: string, password: string) => {
@@ -91,7 +107,7 @@ export const logoutUser = async (token: string) => {
   }
 };
 
-export const getUserProfile = async () => {
+export const getUserProfile = async (): Promise<Profile> => {
   try {
     const token = localStorage.getItem("authToken");
 
@@ -104,9 +120,33 @@ export const getUserProfile = async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    return response.data;
+    return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to fetch user profile");
+    throw new Error(message);
+  }
+};
+
+export const getPublicProfile = async (username: string): Promise<Profile> => {
+  try {
+    const response = await axios.get(`${BASE_URL}/${username}`);
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to fetch profile");
+    throw new Error(message);
+  }
+};
+
+export const updateProfile = async (username: string, payload: UpdateProfilePayload): Promise<Profile> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.patch(`${BASE_URL}/${username}`, payload, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to update profile");
     throw new Error(message);
   }
 };
