@@ -6,7 +6,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch } from "react-redux";
+import Cookies from "js-cookie";
 import { registerUser, verifyOTP } from "@/api/api";
+import { login } from "@/redux/authSlice";
 
 interface FormData {
   name: string;
@@ -35,6 +38,7 @@ function SignUp() {
   });
   const [error, setError] = useState("");
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -90,8 +94,12 @@ function SignUp() {
     try {
       setIsLoading(true);
       const response = await verifyOTP(formData.email, otp);
+      const accessToken = response?.data?.accessToken;
 
-      if (response?.message === "User verified and confirmed successfully. You can now log in.") {
+      if (response?.message === "User verified and confirmed successfully. You can now log in." && accessToken) {
+        Cookies.set("accessToken", accessToken, { secure: true, sameSite: "lax" });
+        dispatch(login(accessToken));
+        localStorage.setItem("authToken", accessToken);
         router.push("/choice");
       } else {
         setError("Invalid OTP. Please try again.");
