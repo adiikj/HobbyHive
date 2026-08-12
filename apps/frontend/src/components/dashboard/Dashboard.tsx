@@ -152,7 +152,10 @@ function Dashboard() {
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
               <Bell size={22} /> Notifications
             </button>
-            <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
+            <button
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full"
+              onClick={() => router.push("/messages")}
+            >
               <MessageCircle size={22} /> Messages
             </button>
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full" onClick={goToMyProfile}>

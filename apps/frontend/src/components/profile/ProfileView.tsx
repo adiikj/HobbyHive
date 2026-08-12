@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Settings } from "lucide-react";
+import { Settings, MessageCircle } from "lucide-react";
 import {
   getPublicProfile,
   getUserProfile,
@@ -15,6 +15,7 @@ import {
   getMyFollowRequests,
   getFollowers,
   getFollowingUsers,
+  getOrCreateConversation,
   type Profile,
   type FollowRelationship,
   type FollowRequest,
@@ -75,6 +76,15 @@ function ProfileView({ username }: ProfileViewProps) {
       cancelled = true;
     };
   }, [username]);
+
+  const handleMessage = async () => {
+    try {
+      const { id } = await getOrCreateConversation(username);
+      router.push(`/messages/${id}`);
+    } catch {
+      // leave the button clickable so the user can retry
+    }
+  };
 
   const handleFollow = async () => {
     setIsFollowActionLoading(true);
@@ -219,7 +229,13 @@ function ProfileView({ username }: ProfileViewProps) {
               <Settings size={16} /> Edit Profile
             </button>
           ) : (
-            <div className="shrink-0 text-right">
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <button
+                onClick={handleMessage}
+                className="flex items-center gap-2 text-sm font-quick font-semibold text-chblack bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2"
+              >
+                <MessageCircle size={16} /> Message
+              </button>
               {followStatus === "NONE" && (
                 <button
                   onClick={handleFollow}
