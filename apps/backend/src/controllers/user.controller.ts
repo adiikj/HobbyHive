@@ -7,7 +7,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
-import type { User } from "@prisma/client";
+import type { User, Prisma } from "@prisma/client";
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -252,17 +252,17 @@ const publicProfileSelect = {
   avatarUrl: true,
   createdAt: true,
   hobbies: { select: { hobby: { select: { id: true, name: true, slug: true, icon: true } } } },
-};
+  _count: {
+    select: {
+      followers: { where: { status: "ACCEPTED" } },
+      following: { where: { status: "ACCEPTED" } },
+    },
+  },
+} satisfies Prisma.UserSelect;
 
-const toProfileResponse = (user: {
-  id: string;
-  name: string;
-  username: string;
-  bio: string | null;
-  avatarUrl: string | null;
-  createdAt: Date;
-  hobbies: { hobby: { id: string; name: string; slug: string; icon: string | null } }[];
-}) => ({
+type RawProfile = Prisma.UserGetPayload<{ select: typeof publicProfileSelect }>;
+
+const toProfileResponse = (user: RawProfile) => ({
   id: user.id,
   name: user.name,
   username: user.username,
@@ -270,6 +270,8 @@ const toProfileResponse = (user: {
   avatarUrl: user.avatarUrl,
   createdAt: user.createdAt,
   hobbies: user.hobbies.map((h) => h.hobby),
+  followersCount: user._count.followers,
+  followingCount: user._count.following,
 });
 
 // The logged-in user's own profile
