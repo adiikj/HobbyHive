@@ -1,17 +1,22 @@
+import http from "http";
 import dotenv from "dotenv";
 import { app } from "./app.js";
 import { prisma } from "./db/prisma.js";
+import { initSocket } from "./socket.js";
 
 if (process.env.NODE_ENV !== "production") {
   dotenv.config({ path: "./.env" });
 }
+
+const httpServer = http.createServer(app);
+initSocket(httpServer);
 
 prisma
   .$connect()
   .then(() => {
     console.log("Connected to Postgres");
 
-    app.listen(process.env.PORT || 8000, () => {
+    httpServer.listen(process.env.PORT || 8000, () => {
       console.log(`Server is running on port ${process.env.PORT || 8000}`);
     });
   })
