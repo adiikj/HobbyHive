@@ -5,18 +5,20 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { motion } from "framer-motion";
-import { Bell, MessageCircle, Plus, Users, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
+import { Bell, MessageCircle, Plus, Users, LogOut, Home, User, Settings, HelpCircle, Compass } from "lucide-react";
 import { logout } from "@/redux/authSlice";
 import {
   getFeed,
   getFollowingFeed,
   getHobbies,
   getMyHobbies,
+  getTrendingHobbies,
   createPost,
   getUserProfile,
   type Post,
   type Hobby,
   type Profile,
+  type TrendingHobby,
 } from "@/api/api";
 import PostCard from "./PostCard";
 import NotificationBell from "./NotificationBell";
@@ -37,6 +39,7 @@ function Dashboard() {
 
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [myHobbies, setMyHobbies] = useState<Hobby[]>([]);
+  const [trendingHobbies, setTrendingHobbies] = useState<TrendingHobby[]>([]);
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostHobbyId, setNewPostHobbyId] = useState("");
   const [isPosting, setIsPosting] = useState(false);
@@ -61,6 +64,7 @@ function Dashboard() {
     getHobbies().then(setHobbies).catch(() => undefined);
     getMyHobbies().then(setMyHobbies).catch(() => undefined);
     getUserProfile().then(setMe).catch(() => undefined);
+    getTrendingHobbies().then(setTrendingHobbies).catch(() => undefined);
   }, []);
 
   const goToMyProfile = () => {
@@ -113,14 +117,6 @@ function Dashboard() {
     { id: 4, img: "/images/4.png", name: "Emily Johnson" },
   ];
 
-  const trendingTopics = [
-    "Photography Tips ",
-    "Top Gaming Strategies ",
-    "Healthy Recipes ",
-    "Coding Challenges ",
-    "Best Travel Destinations ",
-  ];
-
   const hobbiesEmptyMessage =
     myHobbies.length === 1
       ? `Be the first to post about ${myHobbies[0].name}.`
@@ -140,6 +136,12 @@ function Dashboard() {
           <nav className="space-y-3">
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
               <Home size={22} /> Home
+            </button>
+            <button
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full"
+              onClick={() => router.push("/explore")}
+            >
+              <Compass size={22} /> Explore
             </button>
             <button
               className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full"
@@ -304,37 +306,56 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Trending Topics: inline on mobile/tablet, moves into the fixed right sidebar at xl */}
+        {/* Trending Hobbies: inline on mobile/tablet, moves into the fixed right sidebar at xl */}
         <div className="xl:hidden mt-6 p-5 rounded-xl bg-white shadow-md">
-          <h3 className="text-xl font-semibold mb-4 text-pink-600">Trending Topics</h3>
-          <ul className="space-y-3">
-            {trendingTopics.map((topic, index) => (
-              <li
-                key={index}
-                className="flex justify-between items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 ease-in-out border border-transparent hover:border-gray-300"
-              >
-                <span className="text-sm font-medium text-gray-700">{topic}</span>
-                <button className="text-xs text-pink-500 hover:text-pink-700">Explore</button>
-              </li>
-            ))}
-          </ul>
+          <h3 className="text-xl font-semibold mb-4 text-pink-600">Trending This Week</h3>
+          {trendingHobbies.length === 0 ? (
+            <p className="text-sm text-gray-500">No trending hobbies yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {trendingHobbies.map((hobby) => (
+                <li
+                  key={hobby.id}
+                  className="flex justify-between items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 ease-in-out border border-transparent hover:border-gray-300"
+                >
+                  <span className="text-sm font-medium text-gray-700">
+                    {hobby.icon} {hobby.name} · {hobby.postCount} {hobby.postCount === 1 ? "post" : "posts"}
+                  </span>
+                  <button
+                    onClick={() => router.push("/explore")}
+                    className="text-xs text-pink-500 hover:text-pink-700"
+                  >
+                    Explore
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
       {/* Right Sidebar (Trending): xl and up only */}
       <div className="hidden xl:block w-80 p-6 ml-6 rounded-xl bg-white shadow-xl pt-20 fixed top-0 right-0 h-full overflow-y-auto">
-        <h3 className="text-2xl font-semibold mb-6 text-pink-600 text-center border-b-2 pb-4">Trending Topics</h3>
-        <ul className="space-y-6">
-          {trendingTopics.map((topic, index) => (
-            <li
-              key={index}
-              className="flex justify-between items-center p-4 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 ease-in-out border border-transparent hover:border-gray-300"
-            >
-              <span className="text-sm font-medium text-gray-700">{topic}</span>
-              <button className="text-xs text-pink-500 hover:text-pink-700">Explore</button>
-            </li>
-          ))}
-        </ul>
+        <h3 className="text-2xl font-semibold mb-6 text-pink-600 text-center border-b-2 pb-4">Trending This Week</h3>
+        {trendingHobbies.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center">No trending hobbies yet.</p>
+        ) : (
+          <ul className="space-y-6">
+            {trendingHobbies.map((hobby) => (
+              <li
+                key={hobby.id}
+                className="flex justify-between items-center p-4 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all duration-200 ease-in-out border border-transparent hover:border-gray-300"
+              >
+                <span className="text-sm font-medium text-gray-700">
+                  {hobby.icon} {hobby.name} · {hobby.postCount} {hobby.postCount === 1 ? "post" : "posts"}
+                </span>
+                <button onClick={() => router.push("/explore")} className="text-xs text-pink-500 hover:text-pink-700">
+                  Explore
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Mobile bottom nav: replaces the left sidebar below lg */}
@@ -346,8 +367,8 @@ function Dashboard() {
           <Users size={22} />
         </button>
         <NotificationBell size={22} iconClassName="text-gray-500 hover:text-black" />
-        <button aria-label="Messages" className="text-gray-500 hover:text-black">
-          <MessageCircle size={22} />
+        <button aria-label="Explore" className="text-gray-500 hover:text-black" onClick={() => router.push("/explore")}>
+          <Compass size={22} />
         </button>
         <button aria-label="Profile" className="text-gray-500 hover:text-black" onClick={goToMyProfile}>
           <User size={22} />
