@@ -5,6 +5,7 @@ const HOBBIES_URL = BASE_URL.replace(/\/users$/, "/hobbies");
 const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
 const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
 const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
+const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
 
 interface RegisterPayload {
   name: string;
@@ -18,6 +19,16 @@ export interface Hobby {
   name: string;
   slug: string;
   icon: string | null;
+  membersCount?: number;
+  postsCount?: number;
+}
+
+export interface TrendingHobby {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  postCount: number;
 }
 
 export interface Post {
@@ -96,6 +107,12 @@ export interface Notification {
 export interface NotificationPage {
   notifications: Notification[];
   nextCursor: string | null;
+}
+
+export interface SearchResults {
+  users: FollowUser[];
+  hobbies: Hobby[];
+  posts: Post[];
 }
 
 export const loginUser = async (emailOrUsername: string, password: string) => {
@@ -238,6 +255,49 @@ export const setMyHobbies = async (hobbyIds: string[]): Promise<Hobby[]> => {
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to save your hobbies");
+    throw new Error(message);
+  }
+};
+
+export const addMyHobby = async (hobbyId: string): Promise<Hobby> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `${BASE_URL}/me/hobbies/${hobbyId}`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to join hobby");
+    throw new Error(message);
+  }
+};
+
+export const getTrendingHobbies = async (): Promise<TrendingHobby[]> => {
+  try {
+    const response = await axios.get(`${HOBBIES_URL}/trending`);
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load trending hobbies");
+    throw new Error(message);
+  }
+};
+
+export const search = async (q: string): Promise<SearchResults> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(SEARCH_URL, {
+      params: { q },
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Search failed");
     throw new Error(message);
   }
 };
