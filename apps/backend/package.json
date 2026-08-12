@@ -10,10 +10,12 @@
     "start": "node dist/index.js",
     "postinstall": "prisma generate",
     "lint": "tsc --noEmit",
+    "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:seed:e2e": "tsx prisma/seedE2E.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -38,9 +40,13 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^6.4.17",
+    "@types/supertest": "^7.2.1",
     "prisma": "^6.0.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10",
+    "vitest-mock-extended": "^5.1.1"
   },
   "engines": {
     "node": ">=20"
