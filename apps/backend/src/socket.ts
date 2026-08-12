@@ -6,6 +6,14 @@ import { prisma } from "./db/prisma.js";
 let io: Server | null = null;
 
 export const userRoom = (userId: string) => `user:${userId}`;
+export const hobbyRoom = (hobbyId: string) => `hobby:${hobbyId}`;
+
+const roomMessageSelect = {
+  id: true,
+  content: true,
+  createdAt: true,
+  author: { select: { id: true, name: true, username: true, avatarUrl: true } },
+};
 
 export const initSocket = (httpServer: HttpServer) => {
   io = new Server(httpServer, {
@@ -40,6 +48,44 @@ export const initSocket = (httpServer: HttpServer) => {
 
   io.on("connection", (socket: Socket) => {
     socket.join(userRoom(socket.data.userId));
+
+    // Hobby-specific live rooms: real-time group chat scoped to a hobby community
+    socket.on("hobby:join", (hobbyId: unknown) => {
+      if (typeof hobbyId === "string") socket.join(hobbyRoom(hobbyId));
+    });
+
+    socket.on("hobby:leave", (hobbyId: unknown) => {
+      if (typeof hobbyId === "string") socket.leave(hobbyRoom(hobbyId));
+    });
+
+    socket.on(
+      "hobby:message",
+      async (payload: { hobbyId?: unknown; content?: unknown }, ack?: (res: { error?: string }) => void) => {
+        try {
+          const hobbyId = payload?.hobbyId;
+          const content = payload?.content;
+
+          if (typeof hobbyId !== "string" || typeof content !== "string" || !content.trim()) {
+            return ack?.({ error: "Invalid message" });
+          }
+
+          const hobby = await prisma.hobby.findUnique({ where: { id: hobbyId }, select: { id: true } });
+          if (!hobby) {
+            return ack?.({ error: "Hobby not found" });
+          }
+
+          const message = await prisma.hobbyRoomMessage.create({
+            data: { hobbyId, authorId: socket.data.userId, content: content.trim() },
+            select: roomMessageSelect,
+          });
+
+          io?.to(hobbyRoom(hobbyId)).emit("hobby:message", { hobbyId, message });
+          ack?.({});
+        } catch {
+          ack?.({ error: "Failed to send message" });
+        }
+      }
+    );
   });
 
   return io;

@@ -105,6 +105,39 @@ export const getHobbyPosts = asyncHandler(async (req: Request, res: Response) =>
   res.status(200).json(new ApiResponse(200, result));
 });
 
+const roomMessageSelect = {
+  id: true,
+  content: true,
+  createdAt: true,
+  author: { select: { id: true, name: true, username: true, avatarUrl: true } },
+};
+
+// History for a hobby's real-time live room (new messages arrive over the socket, see socket.ts)
+export const getHobbyRoomMessages = asyncHandler(async (req: Request, res: Response) => {
+  const slug = String(req.params.slug);
+
+  const hobby = await prisma.hobby.findUnique({ where: { slug }, select: { id: true } });
+  if (!hobby) {
+    throw new ApiError(404, "Hobby not found");
+  }
+
+  const { cursor, limit } = parsePagination(req);
+
+  const messages = await prisma.hobbyRoomMessage.findMany({
+    where: { hobbyId: hobby.id },
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    select: roomMessageSelect,
+  });
+
+  const hasMore = messages.length > limit;
+  const page = hasMore ? messages.slice(0, limit) : messages;
+  const nextCursor = hasMore ? page[page.length - 1].id : null;
+
+  res.status(200).json(new ApiResponse(200, { messages: page.reverse(), nextCursor }));
+});
+
 // Join a single hobby without disturbing the rest of the caller's selection
 export const addMyHobby = asyncHandler(async (req: Request, res: Response) => {
   const hobbyId = String(req.params.hobbyId);
