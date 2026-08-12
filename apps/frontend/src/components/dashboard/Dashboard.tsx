@@ -7,8 +7,20 @@ import Cookies from "js-cookie";
 import { motion } from "framer-motion";
 import { Bell, MessageCircle, Plus, Users, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
 import { logout } from "@/redux/authSlice";
-import { getFeed, getHobbies, getMyHobbies, createPost, getUserProfile, type Post, type Hobby, type Profile } from "@/api/api";
+import {
+  getFeed,
+  getFollowingFeed,
+  getHobbies,
+  getMyHobbies,
+  createPost,
+  getUserProfile,
+  type Post,
+  type Hobby,
+  type Profile,
+} from "@/api/api";
 import PostCard from "./PostCard";
+
+type FeedTab = "hobbies" | "following";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -16,6 +28,7 @@ function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [me, setMe] = useState<Profile | null>(null);
 
+  const [feedTab, setFeedTab] = useState<FeedTab>("hobbies");
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingFeed, setIsLoadingFeed] = useState(true);
@@ -30,14 +43,21 @@ function Dashboard() {
   const [postError, setPostError] = useState("");
 
   useEffect(() => {
-    getFeed()
+    setIsLoadingFeed(true);
+    setFeedError("");
+
+    const fetchPage = feedTab === "hobbies" ? getFeed() : getFollowingFeed();
+
+    fetchPage
       .then((page) => {
         setPosts(page.posts);
         setNextCursor(page.nextCursor);
       })
       .catch((err) => setFeedError(err instanceof Error ? err.message : "Failed to load your feed"))
       .finally(() => setIsLoadingFeed(false));
+  }, [feedTab]);
 
+  useEffect(() => {
     getHobbies().then(setHobbies).catch(() => undefined);
     getMyHobbies().then(setMyHobbies).catch(() => undefined);
     getUserProfile().then(setMe).catch(() => undefined);
@@ -57,7 +77,7 @@ function Dashboard() {
     if (!nextCursor) return;
     setIsLoadingMore(true);
     try {
-      const page = await getFeed(nextCursor);
+      const page = feedTab === "hobbies" ? await getFeed(nextCursor) : await getFollowingFeed(nextCursor);
       setPosts((prev) => [...prev, ...page.posts]);
       setNextCursor(page.nextCursor);
     } catch (err) {
@@ -74,7 +94,9 @@ function Dashboard() {
     setIsPosting(true);
     try {
       const post = await createPost(newPostContent, newPostHobbyId);
-      setPosts((prev) => [post, ...prev]);
+      if (feedTab === "hobbies") {
+        setPosts((prev) => [post, ...prev]);
+      }
       setNewPostContent("");
       setNewPostHobbyId("");
     } catch (err) {
@@ -99,12 +121,15 @@ function Dashboard() {
     "Best Travel Destinations ",
   ];
 
-  const emptyStateMessage =
+  const hobbiesEmptyMessage =
     myHobbies.length === 1
       ? `Be the first to post about ${myHobbies[0].name}.`
       : myHobbies.length > 1
       ? `Be the first to post in ${myHobbies.map((h) => h.name).join(", ")}.`
       : "Pick a hobby to start seeing posts here.";
+
+  const emptyStateMessage =
+    feedTab === "hobbies" ? hobbiesEmptyMessage : "Follow people to see their posts here.";
 
   return (
     <div className="min-h-screen lg:flex bg-gradient-to-r from-somig to-beige font-pop">
@@ -116,7 +141,10 @@ function Dashboard() {
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
               <Home size={22} /> Home
             </button>
-            <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
+            <button
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full"
+              onClick={() => setFeedTab("following")}
+            >
               <Users size={22} /> Friends
             </button>
             <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 w-full">
@@ -235,6 +263,26 @@ function Dashboard() {
           {postError && <p className="text-red-600 text-sm mt-2">{postError}</p>}
         </div>
 
+        {/* Feed Tabs: hobby-scoped feed stays separate from the following feed, never merged */}
+        <div className="flex gap-2 mt-6">
+          <button
+            onClick={() => setFeedTab("hobbies")}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+              feedTab === "hobbies" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            My Hobbies
+          </button>
+          <button
+            onClick={() => setFeedTab("following")}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+              feedTab === "following" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Following
+          </button>
+        </div>
+
         {/* Feed Section */}
         <div className="space-y-6 mt-6">
           {isLoadingFeed ? (
@@ -307,7 +355,7 @@ function Dashboard() {
         <button aria-label="Home" className="text-pink-600">
           <Home size={22} />
         </button>
-        <button aria-label="Friends" className="text-gray-500 hover:text-black">
+        <button aria-label="Friends" className="text-gray-500 hover:text-black" onClick={() => setFeedTab("following")}>
           <Users size={22} />
         </button>
         <button aria-label="Notifications" className="text-gray-500 hover:text-black" onClick={() => setShowNotifications(!showNotifications)}>
