@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { Prisma } from "@prisma/client";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -11,7 +12,22 @@ const postSelect = {
   createdAt: true,
   hobby: { select: { id: true, name: true, slug: true, icon: true } },
   author: { select: { id: true, name: true, username: true, avatarUrl: true } },
-};
+  _count: { select: { likes: true, comments: true } },
+} satisfies Prisma.PostSelect;
+
+type RawPost = Prisma.PostGetPayload<{ select: typeof postSelect }>;
+
+const toPostResponse = (post: RawPost, isLiked: boolean) => ({
+  id: post.id,
+  content: post.content,
+  imageUrl: post.imageUrl,
+  createdAt: post.createdAt,
+  hobby: post.hobby,
+  author: post.author,
+  likesCount: post._count.likes,
+  commentsCount: post._count.comments,
+  isLiked,
+});
 
 // Create a post tagged to exactly one hobby
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
@@ -40,7 +56,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
     select: postSelect,
   });
 
-  res.status(201).json(new ApiResponse(201, post, "Post created successfully"));
+  res.status(201).json(new ApiResponse(201, toPostResponse(post, false), "Post created successfully"));
 });
 
 // Hobby-scoped feed: only posts tagged with hobbies the caller has selected
@@ -71,5 +87,49 @@ export const getFeed = asyncHandler(async (req: Request, res: Response) => {
   const page = hasMore ? posts.slice(0, limit) : posts;
   const nextCursor = hasMore ? page[page.length - 1].id : null;
 
-  res.status(200).json(new ApiResponse(200, { posts: page, nextCursor }));
+  const userLikes = page.length
+    ? await prisma.like.findMany({
+        where: { userId: req.user!.id, postId: { in: page.map((p) => p.id) } },
+        select: { postId: true },
+      })
+    : [];
+  const likedPostIds = new Set(userLikes.map((l) => l.postId));
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      posts: page.map((post) => toPostResponse(post, likedPostIds.has(post.id))),
+      nextCursor,
+    })
+  );
+});
+
+// Like a post (idempotent)
+export const likePost = asyncHandler(async (req: Request, res: Response) => {
+  const postId = String(req.params.postId);
+
+  const post = await prisma.post.findUnique({ where: { id: postId } });
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+
+  await prisma.like.upsert({
+    where: { userId_postId: { userId: req.user!.id, postId } },
+    create: { userId: req.user!.id, postId },
+    update: {},
+  });
+
+  const likesCount = await prisma.like.count({ where: { postId } });
+
+  res.status(200).json(new ApiResponse(200, { isLiked: true, likesCount }));
+});
+
+// Unlike a post (idempotent)
+export const unlikePost = asyncHandler(async (req: Request, res: Response) => {
+  const postId = String(req.params.postId);
+
+  await prisma.like.deleteMany({ where: { userId: req.user!.id, postId } });
+
+  const likesCount = await prisma.like.count({ where: { postId } });
+
+  res.status(200).json(new ApiResponse(200, { isLiked: false, likesCount }));
 });
