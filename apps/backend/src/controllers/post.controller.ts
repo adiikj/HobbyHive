@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
 import { notifyLike, notifyNewPost } from "../services/notification.service.js";
 
-const postSelect = {
+export const postSelect = {
   id: true,
   content: true,
   imageUrl: true,
@@ -16,9 +16,9 @@ const postSelect = {
   _count: { select: { likes: true, comments: true } },
 } satisfies Prisma.PostSelect;
 
-type RawPost = Prisma.PostGetPayload<{ select: typeof postSelect }>;
+export type RawPost = Prisma.PostGetPayload<{ select: typeof postSelect }>;
 
-const toPostResponse = (post: RawPost, isLiked: boolean) => ({
+export const toPostResponse = (post: RawPost, isLiked: boolean) => ({
   id: post.id,
   content: post.content,
   imageUrl: post.imageUrl,
