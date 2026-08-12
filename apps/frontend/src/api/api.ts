@@ -56,12 +56,29 @@ export interface Profile {
   avatarUrl: string | null;
   createdAt: string;
   hobbies: Hobby[];
+  followersCount: number;
+  followingCount: number;
 }
 
 export interface UpdateProfilePayload {
   name?: string;
   bio?: string;
   avatarUrl?: string;
+}
+
+export type FollowRelationship = "NONE" | "REQUESTED" | "FOLLOWING" | "INCOMING_REQUEST" | "SELF";
+
+export interface FollowUser {
+  id: string;
+  name: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+export interface FollowRequest {
+  id: string;
+  createdAt: string;
+  follower: FollowUser;
 }
 
 export const loginUser = async (emailOrUsername: string, password: string) => {
@@ -223,6 +240,21 @@ export const getFeed = async (cursor?: string | null): Promise<FeedPage> => {
   }
 };
 
+export const getFollowingFeed = async (cursor?: string | null): Promise<FeedPage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${FEED_URL}/following`, {
+      params: cursor ? { cursor } : undefined,
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load your following feed");
+    throw new Error(message);
+  }
+};
+
 export const createPost = async (content: string, hobbyId: string): Promise<Post> => {
   try {
     const token = localStorage.getItem("authToken");
@@ -297,6 +329,119 @@ export const addComment = async (postId: string, content: string): Promise<Comme
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to add comment");
+    throw new Error(message);
+  }
+};
+
+export const getFollowStatus = async (username: string): Promise<FollowRelationship> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${BASE_URL}/${username}/follow-status`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data.status;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to fetch follow status");
+    throw new Error(message);
+  }
+};
+
+export const followUser = async (username: string): Promise<FollowRelationship> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `${BASE_URL}/${username}/follow`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data.status === "ACCEPTED" ? "FOLLOWING" : "REQUESTED";
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to follow user");
+    throw new Error(message);
+  }
+};
+
+export const unfollowUser = async (username: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.delete(`${BASE_URL}/${username}/follow`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to unfollow user");
+    throw new Error(message);
+  }
+};
+
+export const acceptFollowRequest = async (username: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.post(
+      `${BASE_URL}/${username}/follow/accept`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to accept follow request");
+    throw new Error(message);
+  }
+};
+
+export const rejectFollowRequest = async (username: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.post(
+      `${BASE_URL}/${username}/follow/reject`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to reject follow request");
+    throw new Error(message);
+  }
+};
+
+export const getMyFollowRequests = async (): Promise<FollowRequest[]> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${BASE_URL}/me/follow-requests`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load follow requests");
+    throw new Error(message);
+  }
+};
+
+export const getFollowers = async (username: string): Promise<FollowUser[]> => {
+  try {
+    const response = await axios.get(`${BASE_URL}/${username}/followers`);
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load followers");
+    throw new Error(message);
+  }
+};
+
+export const getFollowingUsers = async (username: string): Promise<FollowUser[]> => {
+  try {
+    const response = await axios.get(`${BASE_URL}/${username}/following`);
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load following");
     throw new Error(message);
   }
 };
