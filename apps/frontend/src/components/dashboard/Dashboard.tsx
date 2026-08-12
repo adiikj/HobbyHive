@@ -5,13 +5,10 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { motion } from "framer-motion";
-import { Bell, MessageCircle, Heart, Plus, Users, Send, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
+import { Bell, MessageCircle, Plus, Users, LogOut, Home, User, Settings, HelpCircle } from "lucide-react";
 import { logout } from "@/redux/authSlice";
 import { getFeed, getHobbies, getMyHobbies, createPost, getUserProfile, type Post, type Hobby, type Profile } from "@/api/api";
-
-function formatPostDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+import PostCard from "./PostCard";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -254,45 +251,7 @@ function Dashboard() {
           ) : (
             <>
               {posts.map((post) => (
-                <div key={post.id} className="p-5 bg-white rounded-xl shadow-md mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <button
-                      className="flex items-center gap-3 text-left"
-                      onClick={() => router.push(`/profile/${post.author.username}`)}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={post.author.avatarUrl || "/images/5.png"}
-                        alt={post.author.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="font-semibold hover:underline">{post.author.name}</p>
-                        <p className="text-gray-600 text-sm">
-                          {post.hobby.icon} {post.hobby.name} · {formatPostDate(post.createdAt)}
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-
-                  <p>{post.content}</p>
-                  {post.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={post.imageUrl} alt="Post" className="mt-3 rounded-lg w-full h-full" />
-                  )}
-
-                  <div className="flex gap-6 mt-4 text-gray-600">
-                    <button className="flex items-center gap-2 hover:text-red-500">
-                      <Heart size={20} />
-                    </button>
-                    <button className="flex items-center gap-2 hover:text-blue-500">
-                      <MessageCircle size={20} />
-                    </button>
-                    <button className="flex items-center gap-2 hover:text-green-500">
-                      <Send size={20} />
-                    </button>
-                  </div>
-                </div>
+                <PostCard key={post.id} post={post} />
               ))}
 
               {nextCursor && (
