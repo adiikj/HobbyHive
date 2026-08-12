@@ -4,6 +4,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 const HOBBIES_URL = BASE_URL.replace(/\/users$/, "/hobbies");
 const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
 const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
+const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
 
 interface RegisterPayload {
   name: string;
@@ -79,6 +80,22 @@ export interface FollowRequest {
   id: string;
   createdAt: string;
   follower: FollowUser;
+}
+
+export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW" | "NEW_POST";
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  isRead: boolean;
+  createdAt: string;
+  actor: FollowUser | null;
+  post: { id: string; content: string; hobby: Hobby } | null;
+}
+
+export interface NotificationPage {
+  notifications: Notification[];
+  nextCursor: string | null;
 }
 
 export const loginUser = async (emailOrUsername: string, password: string) => {
@@ -442,6 +459,52 @@ export const getFollowingUsers = async (username: string): Promise<FollowUser[]>
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to load following");
+    throw new Error(message);
+  }
+};
+
+export const getNotifications = async (cursor?: string | null): Promise<NotificationPage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(NOTIFICATIONS_URL, {
+      params: cursor ? { cursor } : undefined,
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load notifications");
+    throw new Error(message);
+  }
+};
+
+export const getUnreadNotificationCount = async (): Promise<number> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${NOTIFICATIONS_URL}/unread-count`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data.count;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load unread notification count");
+    throw new Error(message);
+  }
+};
+
+export const markAllNotificationsRead = async (): Promise<void> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.post(
+      `${NOTIFICATIONS_URL}/read-all`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to mark notifications as read");
     throw new Error(message);
   }
 };
