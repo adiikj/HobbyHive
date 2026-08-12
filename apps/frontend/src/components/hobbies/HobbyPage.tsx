@@ -14,8 +14,9 @@ import {
 } from "@/api/api";
 import PostCard from "@/components/dashboard/PostCard";
 import HobbyLiveRoom from "./HobbyLiveRoom";
+import HobbyEvents from "./HobbyEvents";
 
-type HobbyTab = "posts" | "room";
+type HobbyTab = "posts" | "room" | "events";
 
 interface HobbyPageProps {
   slug: string;
@@ -160,10 +161,20 @@ function HobbyPage({ slug }: HobbyPageProps) {
           >
             Live Room
           </button>
+          <button
+            onClick={() => setTab("events")}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+              tab === "events" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Events
+          </button>
         </div>
 
         {tab === "room" ? (
           <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} />
+        ) : tab === "events" ? (
+          <HobbyEvents slug={hobby.slug} />
         ) : (
           <div className="space-y-6">
             {isLoadingPosts ? (
