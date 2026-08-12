@@ -136,12 +136,13 @@ function Explore() {
                     </h2>
                     <div className="flex flex-wrap gap-2">
                       {results.hobbies.map((h) => (
-                        <span
+                        <button
                           key={h.id}
-                          className="font-quick text-sm px-3 py-1.5 rounded-full bg-pink-50 text-pink-700 border border-pink-100"
+                          onClick={() => router.push(`/hobbies/${h.slug}`)}
+                          className="font-quick text-sm px-3 py-1.5 rounded-full bg-pink-50 text-pink-700 border border-pink-100 hover:bg-pink-100"
                         >
                           {h.icon} {h.name}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   </section>
@@ -161,9 +162,12 @@ function Explore() {
                           >
                             {p.author.name}
                           </button>
-                          <span className="font-pop text-xs text-chblack/40 ml-2">
+                          <button
+                            onClick={() => router.push(`/hobbies/${p.hobby.slug}`)}
+                            className="font-pop text-xs text-chblack/40 ml-2 hover:underline"
+                          >
                             {p.hobby.icon} {p.hobby.name}
-                          </span>
+                          </button>
                           <p className="font-pop text-sm text-chblack/80 mt-1">{p.content}</p>
                         </div>
                       ))}
@@ -188,12 +192,13 @@ function Explore() {
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {trending.map((h) => (
-                    <span
+                    <button
                       key={h.id}
-                      className="font-quick text-sm px-4 py-2 rounded-full bg-white shadow-sm border border-pink-100"
+                      onClick={() => router.push(`/hobbies/${h.slug}`)}
+                      className="font-quick text-sm px-4 py-2 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-300"
                     >
                       {h.icon} {h.name} · {h.postCount} {h.postCount === 1 ? "post" : "posts"}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </section>
@@ -212,14 +217,14 @@ function Explore() {
                       key={h.id}
                       className="flex items-center justify-between bg-white rounded-xl shadow-md p-4"
                     >
-                      <div>
+                      <button onClick={() => router.push(`/hobbies/${h.slug}`)} className="text-left hover:underline">
                         <p className="font-pop font-semibold text-chblack">
                           {h.icon} {h.name}
                         </p>
                         <p className="font-pop text-xs text-chblack/50 mt-0.5">
                           {h.membersCount ?? 0} members · {h.postsCount ?? 0} posts
                         </p>
-                      </div>
+                      </button>
                       <button
                         onClick={() => handleJoin(h.id)}
                         disabled={joiningId === h.id}

@@ -322,10 +322,10 @@ function Dashboard() {
                     {hobby.icon} {hobby.name} · {hobby.postCount} {hobby.postCount === 1 ? "post" : "posts"}
                   </span>
                   <button
-                    onClick={() => router.push("/explore")}
+                    onClick={() => router.push(`/hobbies/${hobby.slug}`)}
                     className="text-xs text-pink-500 hover:text-pink-700"
                   >
-                    Explore
+                    View
                   </button>
                 </li>
               ))}
@@ -349,8 +349,11 @@ function Dashboard() {
                 <span className="text-sm font-medium text-gray-700">
                   {hobby.icon} {hobby.name} · {hobby.postCount} {hobby.postCount === 1 ? "post" : "posts"}
                 </span>
-                <button onClick={() => router.push("/explore")} className="text-xs text-pink-500 hover:text-pink-700">
-                  Explore
+                <button
+                  onClick={() => router.push(`/hobbies/${hobby.slug}`)}
+                  className="text-xs text-pink-500 hover:text-pink-700"
+                >
+                  View
                 </button>
               </li>
             ))}

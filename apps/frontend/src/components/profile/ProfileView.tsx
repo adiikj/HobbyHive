@@ -315,12 +315,13 @@ function ProfileView({ username }: ProfileViewProps) {
           ) : (
             <div className="flex flex-wrap gap-2">
               {profile.hobbies.map((hobby) => (
-                <span
+                <button
                   key={hobby.id}
-                  className="font-quick text-sm px-3 py-1.5 rounded-full bg-pink-50 text-pink-700 border border-pink-100"
+                  onClick={() => router.push(`/hobbies/${hobby.slug}`)}
+                  className="font-quick text-sm px-3 py-1.5 rounded-full bg-pink-50 text-pink-700 border border-pink-100 hover:bg-pink-100"
                 >
                   {hobby.icon} {hobby.name}
-                </span>
+                </button>
               ))}
             </div>
           )}

@@ -23,6 +23,7 @@ function PostCard({ post: initialPost }: PostCardProps) {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const goToAuthor = () => router.push(`/profile/${post.author.username}`);
+  const goToHobby = () => router.push(`/hobbies/${post.hobby.slug}`);
 
   const toggleLike = async () => {
     const wasLiked = post.isLiked;
@@ -72,20 +73,27 @@ function PostCard({ post: initialPost }: PostCardProps) {
 
   return (
     <div className="p-5 bg-white rounded-xl shadow-md mb-6">
-      <button className="flex items-center gap-3 text-left" onClick={goToAuthor}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={post.author.avatarUrl || "/images/5.png"}
-          alt={post.author.name}
-          className="w-10 h-10 rounded-full object-cover"
-        />
+      <div className="flex items-center gap-3">
+        <button onClick={goToAuthor}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.author.avatarUrl || "/images/5.png"}
+            alt={post.author.name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        </button>
         <div>
-          <p className="font-semibold hover:underline">{post.author.name}</p>
+          <button onClick={goToAuthor} className="font-semibold hover:underline">
+            {post.author.name}
+          </button>
           <p className="text-gray-600 text-sm">
-            {post.hobby.icon} {post.hobby.name} · {formatPostDate(post.createdAt)}
+            <button onClick={goToHobby} className="hover:underline">
+              {post.hobby.icon} {post.hobby.name}
+            </button>{" "}
+            · {formatPostDate(post.createdAt)}
           </p>
         </div>
-      </button>
+      </div>
 
       <p className="mt-3">{post.content}</p>
       {post.imageUrl && (
