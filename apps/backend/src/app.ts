@@ -8,6 +8,7 @@ import postRouter from "./routes/post.routes.js";
 import feedRouter from "./routes/feed.routes.js";
 import notificationRouter from "./routes/notification.routes.js";
 import searchRouter from "./routes/search.routes.js";
+import conversationRouter from "./routes/conversation.routes.js";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/v1/posts", postRouter);
 app.use("/api/v1/feed", feedRouter);
 app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/search", searchRouter);
+app.use("/api/v1/conversations", conversationRouter);
 
 app.use(errorHandler);
 
