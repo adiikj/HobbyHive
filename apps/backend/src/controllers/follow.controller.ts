@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
+import { notifyFollowRequest } from "../services/notification.service.js";
 
 const followUserSelect = { id: true, name: true, username: true, avatarUrl: true };
 
@@ -37,6 +38,8 @@ export const followUser = asyncHandler(async (req: Request, res: Response) => {
   const follow = await prisma.follow.create({
     data: { followerId: req.user!.id, followingId: target.id, status: "PENDING" },
   });
+
+  await notifyFollowRequest(target.id, req.user!.id);
 
   res.status(201).json(new ApiResponse(201, { status: follow.status }, "Follow request sent"));
 });

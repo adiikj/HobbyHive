@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
+import { notifyComment } from "../services/notification.service.js";
 
 const commentSelect = {
   id: true,
@@ -42,6 +43,8 @@ export const addComment = asyncHandler(async (req: Request, res: Response) => {
     data: { postId, userId: req.user!.id, content: content.trim() },
     select: commentSelect,
   });
+
+  await notifyComment(post.authorId, req.user!.id, postId);
 
   res.status(201).json(new ApiResponse(201, comment, "Comment added successfully"));
 });

@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
+import { notifyLike, notifyNewPost } from "../services/notification.service.js";
 
 const postSelect = {
   id: true,
@@ -95,6 +96,8 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
     select: postSelect,
   });
 
+  await notifyNewPost(hobbyId, req.user!.id, post.id);
+
   res.status(201).json(new ApiResponse(201, toPostResponse(post, false), "Post created successfully"));
 });
 
@@ -143,11 +146,14 @@ export const likePost = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(404, "Post not found");
   }
 
-  await prisma.like.upsert({
+  const existingLike = await prisma.like.findUnique({
     where: { userId_postId: { userId: req.user!.id, postId } },
-    create: { userId: req.user!.id, postId },
-    update: {},
   });
+
+  if (!existingLike) {
+    await prisma.like.create({ data: { userId: req.user!.id, postId } });
+    await notifyLike(post.authorId, req.user!.id, postId);
+  }
 
   const likesCount = await prisma.like.count({ where: { postId } });
 
