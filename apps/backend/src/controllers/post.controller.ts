@@ -29,6 +29,45 @@ const toPostResponse = (post: RawPost, isLiked: boolean) => ({
   isLiked,
 });
 
+const parsePagination = (req: Request) => {
+  const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
+  const limitParam = Number(req.query.limit);
+  const limit = Number.isInteger(limitParam) && limitParam > 0 && limitParam <= 50 ? limitParam : 10;
+  return { cursor, limit };
+};
+
+const buildFeedPage = async (
+  where: Prisma.PostWhereInput,
+  cursor: string | undefined,
+  limit: number,
+  userId: string
+) => {
+  const posts = await prisma.post.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    select: postSelect,
+  });
+
+  const hasMore = posts.length > limit;
+  const page = hasMore ? posts.slice(0, limit) : posts;
+  const nextCursor = hasMore ? page[page.length - 1].id : null;
+
+  const userLikes = page.length
+    ? await prisma.like.findMany({
+        where: { userId, postId: { in: page.map((p) => p.id) } },
+        select: { postId: true },
+      })
+    : [];
+  const likedPostIds = new Set(userLikes.map((l) => l.postId));
+
+  return {
+    posts: page.map((post) => toPostResponse(post, likedPostIds.has(post.id))),
+    nextCursor,
+  };
+};
+
 // Create a post tagged to exactly one hobby
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
   const { content, hobbyId, imageUrl } = req.body;
@@ -61,9 +100,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
 
 // Hobby-scoped feed: only posts tagged with hobbies the caller has selected
 export const getFeed = asyncHandler(async (req: Request, res: Response) => {
-  const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
-  const limitParam = Number(req.query.limit);
-  const limit = Number.isInteger(limitParam) && limitParam > 0 && limitParam <= 50 ? limitParam : 10;
+  const { cursor, limit } = parsePagination(req);
 
   const userHobbies = await prisma.userHobby.findMany({
     where: { userId: req.user!.id },
@@ -75,32 +112,26 @@ export const getFeed = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json(new ApiResponse(200, { posts: [], nextCursor: null }));
   }
 
-  const posts = await prisma.post.findMany({
-    where: { hobbyId: { in: hobbyIds } },
-    orderBy: { createdAt: "desc" },
-    take: limit + 1,
-    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    select: postSelect,
+  const result = await buildFeedPage({ hobbyId: { in: hobbyIds } }, cursor, limit, req.user!.id);
+  res.status(200).json(new ApiResponse(200, result));
+});
+
+// Following feed: posts by users the caller follows, any hobby — kept separate from the hobby feed
+export const getFollowingFeed = asyncHandler(async (req: Request, res: Response) => {
+  const { cursor, limit } = parsePagination(req);
+
+  const follows = await prisma.follow.findMany({
+    where: { followerId: req.user!.id, status: "ACCEPTED" },
+    select: { followingId: true },
   });
+  const followingIds = follows.map((f) => f.followingId);
 
-  const hasMore = posts.length > limit;
-  const page = hasMore ? posts.slice(0, limit) : posts;
-  const nextCursor = hasMore ? page[page.length - 1].id : null;
+  if (followingIds.length === 0) {
+    return res.status(200).json(new ApiResponse(200, { posts: [], nextCursor: null }));
+  }
 
-  const userLikes = page.length
-    ? await prisma.like.findMany({
-        where: { userId: req.user!.id, postId: { in: page.map((p) => p.id) } },
-        select: { postId: true },
-      })
-    : [];
-  const likedPostIds = new Set(userLikes.map((l) => l.postId));
-
-  res.status(200).json(
-    new ApiResponse(200, {
-      posts: page.map((post) => toPostResponse(post, likedPostIds.has(post.id))),
-      nextCursor,
-    })
-  );
+  const result = await buildFeedPage({ authorId: { in: followingIds } }, cursor, limit, req.user!.id);
+  res.status(200).json(new ApiResponse(200, result));
 });
 
 // Like a post (idempotent)
