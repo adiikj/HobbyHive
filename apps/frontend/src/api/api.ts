@@ -146,6 +146,18 @@ export interface ConversationSummary {
   updatedAt: string;
 }
 
+export interface HobbyRoomMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: FollowUser;
+}
+
+export interface HobbyRoomMessagePage {
+  messages: HobbyRoomMessage[];
+  nextCursor: string | null;
+}
+
 export const loginUser = async (emailOrUsername: string, password: string) => {
   try {
     const response = await axios.post(
@@ -346,6 +358,24 @@ export const getHobbyPosts = async (slug: string, cursor?: string | null): Promi
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to load hobby posts");
+    throw new Error(message);
+  }
+};
+
+export const getHobbyRoomMessages = async (
+  slug: string,
+  cursor?: string | null
+): Promise<HobbyRoomMessagePage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${HOBBIES_URL}/${slug}/room/messages`, {
+      params: cursor ? { cursor } : undefined,
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load room messages");
     throw new Error(message);
   }
 };
