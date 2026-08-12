@@ -30,14 +30,14 @@ export const toPostResponse = (post: RawPost, isLiked: boolean) => ({
   isLiked,
 });
 
-const parsePagination = (req: Request) => {
+export const parsePagination = (req: Request) => {
   const cursor = typeof req.query.cursor === "string" ? req.query.cursor : undefined;
   const limitParam = Number(req.query.limit);
   const limit = Number.isInteger(limitParam) && limitParam > 0 && limitParam <= 50 ? limitParam : 10;
   return { cursor, limit };
 };
 
-const buildFeedPage = async (
+export const buildFeedPage = async (
   where: Prisma.PostWhereInput,
   cursor: string | undefined,
   limit: number,

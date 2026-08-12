@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
+import { buildFeedPage, parsePagination } from "./post.controller.js";
 
 // List the full hobby taxonomy, with real member/post counts
 export const listHobbies = asyncHandler(async (_req: Request, res: Response) => {
@@ -53,6 +54,57 @@ export const getTrendingHobbies = asyncHandler(async (_req: Request, res: Respon
   );
 });
 
+// A hobby's public community page: counts + whether the caller has joined
+export const getHobbyBySlug = asyncHandler(async (req: Request, res: Response) => {
+  const slug = String(req.params.slug);
+
+  const hobby = await prisma.hobby.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      icon: true,
+      _count: { select: { users: true, posts: true } },
+    },
+  });
+
+  if (!hobby) {
+    throw new ApiError(404, "Hobby not found");
+  }
+
+  const membership = await prisma.userHobby.findUnique({
+    where: { userId_hobbyId: { userId: req.user!.id, hobbyId: hobby.id } },
+  });
+
+  res.status(200).json(
+    new ApiResponse(200, {
+      id: hobby.id,
+      name: hobby.name,
+      slug: hobby.slug,
+      icon: hobby.icon,
+      membersCount: hobby._count.users,
+      postsCount: hobby._count.posts,
+      isMember: Boolean(membership),
+    })
+  );
+});
+
+// Posts belonging to a hobby's community page — same shape as the personal feed
+export const getHobbyPosts = asyncHandler(async (req: Request, res: Response) => {
+  const slug = String(req.params.slug);
+
+  const hobby = await prisma.hobby.findUnique({ where: { slug }, select: { id: true } });
+  if (!hobby) {
+    throw new ApiError(404, "Hobby not found");
+  }
+
+  const { cursor, limit } = parsePagination(req);
+  const result = await buildFeedPage({ hobbyId: hobby.id }, cursor, limit, req.user!.id);
+
+  res.status(200).json(new ApiResponse(200, result));
+});
+
 // Join a single hobby without disturbing the rest of the caller's selection
 export const addMyHobby = asyncHandler(async (req: Request, res: Response) => {
   const hobbyId = String(req.params.hobbyId);
@@ -69,6 +121,29 @@ export const addMyHobby = asyncHandler(async (req: Request, res: Response) => {
   });
 
   res.status(200).json(new ApiResponse(200, hobby, "Hobby added"));
+});
+
+// Leave a single hobby — blocked if it would leave the caller with zero hobbies
+export const removeMyHobby = asyncHandler(async (req: Request, res: Response) => {
+  const hobbyId = String(req.params.hobbyId);
+  const userId = req.user!.id;
+
+  const membership = await prisma.userHobby.findUnique({
+    where: { userId_hobbyId: { userId, hobbyId } },
+  });
+
+  if (!membership) {
+    return res.status(200).json(new ApiResponse(200, { removed: false }, "Not a member of this hobby"));
+  }
+
+  const memberCount = await prisma.userHobby.count({ where: { userId } });
+  if (memberCount <= 1) {
+    throw new ApiError(400, "You must have at least one hobby selected");
+  }
+
+  await prisma.userHobby.delete({ where: { userId_hobbyId: { userId, hobbyId } } });
+
+  res.status(200).json(new ApiResponse(200, { removed: true }, "Hobby removed"));
 });
 
 // Get the current user's selected hobbies

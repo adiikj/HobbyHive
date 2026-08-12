@@ -8,7 +8,7 @@ import {
   getPublicProfile,
   updateProfile,
 } from "../controllers/user.controller.js";
-import { getMyHobbies, setMyHobbies, addMyHobby } from "../controllers/hobby.controller.js";
+import { getMyHobbies, setMyHobbies, addMyHobby, removeMyHobby } from "../controllers/hobby.controller.js";
 import {
   followUser,
   unfollowUser,
@@ -34,6 +34,7 @@ router.get("/profile", verifyJWT, getProfile);
 router.get("/me/hobbies", verifyJWT, getMyHobbies);
 router.post("/me/hobbies", verifyJWT, setMyHobbies);
 router.post("/me/hobbies/:hobbyId", verifyJWT, addMyHobby);
+router.delete("/me/hobbies/:hobbyId", verifyJWT, removeMyHobby);
 router.get("/me/follow-requests", verifyJWT, getMyFollowRequests);
 
 // Keep dynamic routes last so they never shadow the static ones above
