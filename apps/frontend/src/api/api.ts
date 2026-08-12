@@ -6,6 +6,7 @@ const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
 const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
 const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
 const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
+const CONVERSATIONS_URL = BASE_URL.replace(/\/users$/, "/conversations");
 
 interface RegisterPayload {
   name: string;
@@ -123,6 +124,26 @@ export interface SearchResults {
   users: FollowUser[];
   hobbies: Hobby[];
   posts: Post[];
+}
+
+export interface DirectMessage {
+  id: string;
+  content: string;
+  createdAt: string;
+  sender: FollowUser;
+}
+
+export interface MessagePage {
+  messages: DirectMessage[];
+  nextCursor: string | null;
+}
+
+export interface ConversationSummary {
+  id: string;
+  otherUser: FollowUser | null;
+  lastMessage: DirectMessage | null;
+  unreadCount: number;
+  updatedAt: string;
 }
 
 export const loginUser = async (emailOrUsername: string, password: string) => {
@@ -617,6 +638,88 @@ export const markAllNotificationsRead = async (): Promise<void> => {
     );
   } catch (error) {
     const message = getErrorMessage(error, "Failed to mark notifications as read");
+    throw new Error(message);
+  }
+};
+
+export const getOrCreateConversation = async (username: string): Promise<{ id: string }> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      CONVERSATIONS_URL,
+      { username },
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to start conversation");
+    throw new Error(message);
+  }
+};
+
+export const listConversations = async (): Promise<ConversationSummary[]> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(CONVERSATIONS_URL, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load conversations");
+    throw new Error(message);
+  }
+};
+
+export const getMessages = async (conversationId: string, cursor?: string | null): Promise<MessagePage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${CONVERSATIONS_URL}/${conversationId}/messages`, {
+      params: cursor ? { cursor } : undefined,
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load messages");
+    throw new Error(message);
+  }
+};
+
+export const sendMessage = async (conversationId: string, content: string): Promise<DirectMessage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `${CONVERSATIONS_URL}/${conversationId}/messages`,
+      { content },
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to send message");
+    throw new Error(message);
+  }
+};
+
+export const markConversationRead = async (conversationId: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.post(
+      `${CONVERSATIONS_URL}/${conversationId}/read`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to mark conversation as read");
     throw new Error(message);
   }
 };
