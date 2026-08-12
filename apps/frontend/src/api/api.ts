@@ -31,6 +31,16 @@ export interface TrendingHobby {
   postCount: number;
 }
 
+export interface HobbyDetail {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  membersCount: number;
+  postsCount: number;
+  isMember: boolean;
+}
+
 export interface Post {
   id: string;
   content: string;
@@ -273,6 +283,48 @@ export const addMyHobby = async (hobbyId: string): Promise<Hobby> => {
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to join hobby");
+    throw new Error(message);
+  }
+};
+
+export const leaveHobby = async (hobbyId: string): Promise<void> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    await axios.delete(`${BASE_URL}/me/hobbies/${hobbyId}`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to leave hobby");
+    throw new Error(message);
+  }
+};
+
+export const getHobbyBySlug = async (slug: string): Promise<HobbyDetail> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${HOBBIES_URL}/${slug}`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load hobby");
+    throw new Error(message);
+  }
+};
+
+export const getHobbyPosts = async (slug: string, cursor?: string | null): Promise<FeedPage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${HOBBIES_URL}/${slug}/posts`, {
+      params: cursor ? { cursor } : undefined,
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load hobby posts");
     throw new Error(message);
   }
 };
