@@ -13,6 +13,9 @@ import {
   type Post,
 } from "@/api/api";
 import PostCard from "@/components/dashboard/PostCard";
+import HobbyLiveRoom from "./HobbyLiveRoom";
+
+type HobbyTab = "posts" | "room";
 
 interface HobbyPageProps {
   slug: string;
@@ -24,6 +27,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
+  const [tab, setTab] = useState<HobbyTab>("posts");
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -139,36 +143,59 @@ function HobbyPage({ slug }: HobbyPageProps) {
           {error && <p className="font-pop text-red-600 text-sm mt-4">{error}</p>}
         </motion.div>
 
-        <div className="space-y-6">
-          {isLoadingPosts ? (
-            <div className="flex justify-center py-10">
-              <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
-            </div>
-          ) : posts.length === 0 ? (
-            <div className="text-center bg-white rounded-xl shadow-md p-8">
-              <p className="font-semibold text-lg">No posts yet.</p>
-              <p className="text-gray-600 mt-1">Be the first to post about {hobby.name}.</p>
-            </div>
-          ) : (
-            <>
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-
-              {nextCursor && (
-                <div className="flex justify-center">
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore}
-                    className="px-6 py-2 rounded-full bg-white shadow-md text-pink-600 font-semibold disabled:opacity-50"
-                  >
-                    {isLoadingMore ? "Loading..." : "Load more"}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setTab("posts")}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+              tab === "posts" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Posts
+          </button>
+          <button
+            onClick={() => setTab("room")}
+            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+              tab === "room" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Live Room
+          </button>
         </div>
+
+        {tab === "room" ? (
+          <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} />
+        ) : (
+          <div className="space-y-6">
+            {isLoadingPosts ? (
+              <div className="flex justify-center py-10">
+                <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="text-center bg-white rounded-xl shadow-md p-8">
+                <p className="font-semibold text-lg">No posts yet.</p>
+                <p className="text-gray-600 mt-1">Be the first to post about {hobby.name}.</p>
+              </div>
+            ) : (
+              <>
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+
+                {nextCursor && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="px-6 py-2 rounded-full bg-white shadow-md text-pink-600 font-semibold disabled:opacity-50"
+                    >
+                      {isLoadingMore ? "Loading..." : "Load more"}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
