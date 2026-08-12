@@ -26,6 +26,21 @@ export interface Post {
   createdAt: string;
   hobby: Hobby;
   author: { id: string; name: string; username: string; avatarUrl: string | null };
+  likesCount: number;
+  commentsCount: number;
+  isLiked: boolean;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { id: string; name: string; username: string; avatarUrl: string | null };
+}
+
+export interface LikeResult {
+  isLiked: boolean;
+  likesCount: number;
 }
 
 export interface FeedPage {
@@ -222,6 +237,66 @@ export const createPost = async (content: string, hobbyId: string): Promise<Post
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to create post");
+    throw new Error(message);
+  }
+};
+
+export const likePost = async (postId: string): Promise<LikeResult> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `${POSTS_URL}/${postId}/like`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to like post");
+    throw new Error(message);
+  }
+};
+
+export const unlikePost = async (postId: string): Promise<LikeResult> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.delete(`${POSTS_URL}/${postId}/like`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to unlike post");
+    throw new Error(message);
+  }
+};
+
+export const getComments = async (postId: string): Promise<Comment[]> => {
+  try {
+    const response = await axios.get(`${POSTS_URL}/${postId}/comments`);
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load comments");
+    throw new Error(message);
+  }
+};
+
+export const addComment = async (postId: string, content: string): Promise<Comment> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `${POSTS_URL}/${postId}/comments`,
+      { content },
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to add comment");
     throw new Error(message);
   }
 };
