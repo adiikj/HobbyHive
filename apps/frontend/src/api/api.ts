@@ -7,6 +7,7 @@ const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
 const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
 const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
 const CONVERSATIONS_URL = BASE_URL.replace(/\/users$/, "/conversations");
+const EVENTS_URL = BASE_URL.replace(/\/users$/, "/events");
 
 interface RegisterPayload {
   name: string;
@@ -156,6 +157,30 @@ export interface HobbyRoomMessage {
 export interface HobbyRoomMessagePage {
   messages: HobbyRoomMessage[];
   nextCursor: string | null;
+}
+
+export interface HobbyEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: string;
+  createdAt: string;
+  creator: FollowUser;
+  attendeeCount: number;
+  isAttending: boolean;
+}
+
+export interface CreateEventPayload {
+  title: string;
+  description?: string;
+  location?: string;
+  startsAt: string;
+}
+
+export interface RsvpResult {
+  isAttending: boolean;
+  attendeeCount: number;
 }
 
 export const loginUser = async (emailOrUsername: string, password: string) => {
@@ -376,6 +401,80 @@ export const getHobbyRoomMessages = async (
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to load room messages");
+    throw new Error(message);
+  }
+};
+
+export const getHobbyEvents = async (slug: string): Promise<HobbyEvent[]> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${HOBBIES_URL}/${slug}/events`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load events");
+    throw new Error(message);
+  }
+};
+
+export const createEvent = async (slug: string, payload: CreateEventPayload): Promise<HobbyEvent> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(`${HOBBIES_URL}/${slug}/events`, payload, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to create event");
+    throw new Error(message);
+  }
+};
+
+export const rsvpToEvent = async (eventId: string): Promise<RsvpResult> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.post(
+      `${EVENTS_URL}/${eventId}/rsvp`,
+      {},
+      {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to RSVP");
+    throw new Error(message);
+  }
+};
+
+export const cancelRsvp = async (eventId: string): Promise<RsvpResult> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.delete(`${EVENTS_URL}/${eventId}/rsvp`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to cancel RSVP");
+    throw new Error(message);
+  }
+};
+
+export const getEventAttendees = async (eventId: string): Promise<FollowUser[]> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${EVENTS_URL}/${eventId}/attendees`, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load attendees");
     throw new Error(message);
   }
 };
