@@ -32,6 +32,7 @@ model User {
   notificationsSent     Notification[] @relation("NotificationActor")
   conversations         ConversationParticipant[]
   messagesSent          Message[]
+  hobbyRoomMessages     HobbyRoomMessage[]
 }
 
 model Hobby {
@@ -41,8 +42,9 @@ model Hobby {
   icon      String?
   createdAt DateTime @default(now())
 
-  users UserHobby[]
-  posts Post[]
+  users        UserHobby[]
+  posts        Post[]
+  roomMessages HobbyRoomMessage[]
 }
 
 model Post {
@@ -170,6 +172,19 @@ model Message {
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+model HobbyRoomMessage {
+  id        String   @id @default(cuid())
+  hobbyId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  hobby  Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([hobbyId, createdAt])
 }
 
 model UserHobby {
