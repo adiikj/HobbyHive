@@ -19,13 +19,13 @@ import {
   type Profile,
 } from "@/api/api";
 import PostCard from "./PostCard";
+import NotificationBell from "./NotificationBell";
 
 type FeedTab = "hobbies" | "following";
 
 function Dashboard() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [me, setMe] = useState<Profile | null>(null);
 
   const [feedTab, setFeedTab] = useState<FeedTab>("hobbies");
@@ -181,9 +181,7 @@ function Dashboard() {
         <header className="w-full flex justify-between items-center p-4 bg-white rounded-lg shadow mb-6">
           <h2 className="text-xl font-bold">{me ? `Welcome, ${me.name}!` : "Welcome!"}</h2>
           <div className="flex items-center gap-4">
-            <button className="relative" onClick={() => setShowNotifications(!showNotifications)}>
-              <Bell size={28} className="text-black hover:text-gray-600 transition" />
-            </button>
+            <NotificationBell />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={me?.avatarUrl || "/images/5.png"}
@@ -193,17 +191,6 @@ function Dashboard() {
             />
           </div>
         </header>
-
-        {showNotifications && (
-          <motion.div
-            className="absolute top-16 right-4 sm:right-6 bg-white p-4 rounded-2xl shadow-lg w-[calc(100vw-2rem)] max-w-xs border border-gray-300 z-50"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <p className="text-sm font-semibold">🔔 Notifications</p>
-            <p className="mt-3 text-sm text-gray-500">Nothing yet.</p>
-          </motion.div>
-        )}
 
         {/* Stories Section */}
         <div className="mt-6 flex gap-4 overflow-x-auto overflow-y-hidden">
@@ -358,9 +345,7 @@ function Dashboard() {
         <button aria-label="Friends" className="text-gray-500 hover:text-black" onClick={() => setFeedTab("following")}>
           <Users size={22} />
         </button>
-        <button aria-label="Notifications" className="text-gray-500 hover:text-black" onClick={() => setShowNotifications(!showNotifications)}>
-          <Bell size={22} />
-        </button>
+        <NotificationBell size={22} iconClassName="text-gray-500 hover:text-black" />
         <button aria-label="Messages" className="text-gray-500 hover:text-black">
           <MessageCircle size={22} />
         </button>
