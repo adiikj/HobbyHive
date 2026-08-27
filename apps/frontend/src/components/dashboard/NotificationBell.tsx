@@ -10,6 +10,7 @@ import {
   markAllNotificationsRead,
   type Notification,
 } from "@/api/api";
+import { timeAgo } from "@/lib/time";
 
 const POLL_INTERVAL_MS = 30000;
 
@@ -29,21 +30,18 @@ function notificationMessage(n: Notification): string {
   }
 }
 
-function timeAgo(iso: string): string {
-  const minutes = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
-
 interface NotificationBellProps {
   size?: number;
   iconClassName?: string;
+  /** "above" opens the dropdown upward — required when the trigger sits in a bottom nav bar, otherwise the panel renders off-screen. */
+  dropdownAlign?: "below" | "above";
 }
 
-function NotificationBell({ size = 28, iconClassName = "text-black hover:text-gray-600" }: NotificationBellProps) {
+function NotificationBell({
+  size = 22,
+  iconClassName = "text-chblack hover:text-chblack/60",
+  dropdownAlign = "below",
+}: NotificationBellProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -79,10 +77,15 @@ function NotificationBell({ size = 28, iconClassName = "text-black hover:text-gr
 
   return (
     <div className="relative">
-      <button className="relative" onClick={toggleOpen}>
+      <button
+        className="relative rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+        onClick={toggleOpen}
+        aria-label="Notifications"
+        aria-expanded={isOpen}
+      >
         <Bell size={size} className={`transition ${iconClassName}`} />
         {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-xs px-1.5 py-0.5 rounded-full text-white min-w-[18px] text-center leading-tight">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-xs px-1.5 py-0.5 rounded-full text-white min-w-[18px] text-center leading-tight">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -90,27 +93,33 @@ function NotificationBell({ size = 28, iconClassName = "text-black hover:text-gr
 
       {isOpen && (
         <motion.div
-          className="absolute top-10 right-0 bg-white p-4 rounded-2xl shadow-lg w-[calc(100vw-2rem)] max-w-xs border border-gray-300 z-50"
-          initial={{ opacity: 0, y: -10 }}
+          className={`absolute right-0 bg-white p-3.5 rounded-2xl shadow-lg w-[calc(100vw-2rem)] max-w-xs border border-chgrey/10 z-50 ${
+            dropdownAlign === "above" ? "bottom-full mb-2" : "top-full mt-2"
+          }`}
+          initial={{ opacity: 0, y: dropdownAlign === "above" ? 10 : -10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.15 }}
         >
-          <p className="text-sm font-semibold">🔔 Notifications</p>
+          <p className="font-quick text-sm font-semibold text-chblack">Notifications</p>
           {isLoading ? (
-            <div className="flex justify-center py-4">
-              <div className="w-5 h-5 border-t-2 border-pink-600 rounded-full animate-spin" />
+            <div className="flex justify-center py-5">
+              <div className="w-4 h-4 border-t-2 border-pink-600 rounded-full animate-spin" />
             </div>
           ) : !notifications || notifications.length === 0 ? (
-            <p className="mt-3 text-sm text-gray-500">Nothing yet.</p>
+            <p className="mt-2.5 text-xs text-chblack/50">Nothing yet.</p>
           ) : (
-            <ul className="mt-3 space-y-2 text-sm max-h-80 overflow-y-auto">
+            <ul className="mt-2.5 space-y-1 text-xs max-h-80 overflow-y-auto">
               {notifications.map((n) => (
-                <li
-                  key={n.id}
-                  onClick={() => n.actor && router.push(`/profile/${n.actor.username}`)}
-                  className={`p-3 rounded-lg cursor-pointer ${n.isRead ? "bg-gray-50" : "bg-pink-50"}`}
-                >
-                  <p>{notificationMessage(n)}</p>
-                  <p className="text-xs text-gray-400 mt-1">{timeAgo(n.createdAt)}</p>
+                <li key={n.id}>
+                  <button
+                    onClick={() => n.actor && router.push(`/profile/${n.actor.username}`)}
+                    className={`w-full text-left p-2.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${
+                      n.isRead ? "bg-beige hover:bg-beige/70" : "bg-pink-50 hover:bg-pink-100"
+                    }`}
+                  >
+                    <p className="text-chblack">{notificationMessage(n)}</p>
+                    <p className="text-[11px] text-chblack/40 mt-0.5">{timeAgo(n.createdAt)}</p>
+                  </button>
                 </li>
               ))}
             </ul>

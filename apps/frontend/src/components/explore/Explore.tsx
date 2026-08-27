@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Search, ArrowLeft } from "lucide-react";
 import {
   getHobbies,
@@ -16,6 +16,7 @@ import {
 
 function Explore() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [myHobbyIds, setMyHobbyIds] = useState<Set<string>>(new Set());
@@ -23,7 +24,7 @@ function Explore() {
   const [isLoading, setIsLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 

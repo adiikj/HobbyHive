@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, MessageCircle, Send } from "lucide-react";
+import { Heart, MessageCircle, Send, Check } from "lucide-react";
 import { likePost, unlikePost, getComments, addComment, type Post, type Comment } from "@/api/api";
-
-function formatPostDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+import { getHobbyColor } from "@/lib/hobbyTheme";
+import { timeAgo } from "@/lib/time";
 
 interface PostCardProps {
   post: Post;
@@ -21,9 +19,11 @@ function PostCard({ post: initialPost }: PostCardProps) {
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   const goToAuthor = () => router.push(`/profile/${post.author.username}`);
   const goToHobby = () => router.push(`/hobbies/${post.hobby.slug}`);
+  const hobbyColor = getHobbyColor(post.hobby.name);
 
   const toggleLike = async () => {
     const wasLiked = post.isLiked;
@@ -71,89 +71,122 @@ function PostCard({ post: initialPost }: PostCardProps) {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/hobbies/${post.hobby.slug}#${post.id}`);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 1500);
+    } catch {
+      // clipboard access denied — silently no-op, nothing to recover from here
+    }
+  };
+
   return (
-    <div className="p-5 bg-white rounded-xl shadow-md mb-6">
-      <div className="flex items-center gap-3">
-        <button onClick={goToAuthor}>
+    <div className="p-4 bg-white rounded-xl shadow-md">
+      <div className="flex items-center gap-2.5">
+        <button
+          onClick={goToAuthor}
+          className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.author.avatarUrl || "/images/5.png"}
             alt={post.author.name}
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-9 h-9 rounded-full object-cover"
           />
         </button>
-        <div>
-          <button onClick={goToAuthor} className="font-semibold hover:underline">
-            {post.author.name}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={goToAuthor}
+              className="font-semibold text-sm hover:underline focus-visible:outline-none focus-visible:underline"
+            >
+              {post.author.name}
+            </button>
+            <span className="text-chblack/30 text-xs">@{post.author.username}</span>
+            <span className="text-chblack/30 text-xs">· {timeAgo(post.createdAt)}</span>
+          </div>
+          <button
+            onClick={goToHobby}
+            style={{ backgroundColor: `${hobbyColor}1A`, color: hobbyColor }}
+            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-1 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+          >
+            {post.hobby.icon} {post.hobby.name}
           </button>
-          <p className="text-gray-600 text-sm">
-            <button onClick={goToHobby} className="hover:underline">
-              {post.hobby.icon} {post.hobby.name}
-            </button>{" "}
-            · {formatPostDate(post.createdAt)}
-          </p>
         </div>
       </div>
 
-      <p className="mt-3">{post.content}</p>
+      <p className="mt-2.5 text-chblack text-sm">{post.content}</p>
       {post.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.imageUrl} alt="Post" className="mt-3 rounded-lg w-full h-full" />
+        <img src={post.imageUrl} alt="Post attachment" className="mt-2.5 rounded-lg w-full max-h-96 object-cover" />
       )}
 
-      <div className="flex gap-6 mt-4 text-gray-600">
+      <div className="flex gap-1 mt-3 -ml-2 text-chblack/50">
         <button
           onClick={toggleLike}
-          className={`flex items-center gap-2 ${post.isLiked ? "text-red-500" : "hover:text-red-500"}`}
+          className={`flex items-center gap-1 px-2 py-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${
+            post.isLiked ? "text-red-500 hover:bg-red-50" : "hover:bg-beige hover:text-red-500"
+          }`}
         >
-          <Heart size={20} fill={post.isLiked ? "currentColor" : "none"} /> {post.likesCount}
+          <Heart size={16} fill={post.isLiked ? "currentColor" : "none"} />
+          <span className="text-xs">{post.likesCount}</span>
         </button>
-        <button onClick={toggleComments} className="flex items-center gap-2 hover:text-blue-500">
-          <MessageCircle size={20} /> {post.commentsCount}
+        <button
+          onClick={toggleComments}
+          className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-beige hover:text-blue-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+        >
+          <MessageCircle size={16} />
+          <span className="text-xs">{post.commentsCount}</span>
         </button>
-        <button className="flex items-center gap-2 hover:text-green-500">
-          <Send size={20} />
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-beige hover:text-green-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+          aria-label="Copy link to post"
+        >
+          {isCopied ? <Check size={16} className="text-green-600" /> : <Send size={16} />}
         </button>
       </div>
 
       {showComments && (
-        <div className="mt-4 border-t border-gray-100 pt-4">
+        <div className="mt-2.5 border-t border-chgrey/10 pt-3">
           {isLoadingComments ? (
-            <div className="flex justify-center py-4">
-              <div className="w-5 h-5 border-t-2 border-pink-600 rounded-full animate-spin" />
+            <div className="flex justify-center py-3">
+              <div className="w-4 h-4 border-t-2 border-pink-600 rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="space-y-3">
-              {comments?.length === 0 && <p className="text-gray-500 text-sm">No comments yet.</p>}
+            <div className="space-y-2.5">
+              {comments?.length === 0 && <p className="text-chblack/50 text-xs">No comments yet.</p>}
               {comments?.map((comment) => (
-                <div key={comment.id} className="flex gap-2 text-sm">
+                <div key={comment.id} className="flex gap-2 text-xs">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={comment.author.avatarUrl || "/images/5.png"}
                     alt={comment.author.name}
-                    className="w-7 h-7 rounded-full object-cover shrink-0"
+                    className="w-6 h-6 rounded-full object-cover shrink-0"
                   />
                   <p>
                     <span className="font-semibold">{comment.author.name}</span>{" "}
-                    <span className="text-gray-700">{comment.content}</span>
+                    <span className="text-chblack/70">{comment.content}</span>
                   </p>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-2.5">
             <input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
               placeholder="Add a comment..."
-              className="flex-1 min-w-0 p-2 rounded-full outline-none border border-gray-300 text-sm"
+              className="flex-1 min-w-0 p-1.5 px-3.5 rounded-full border border-chgrey/20 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
             />
             <button
               onClick={handleAddComment}
               disabled={isSubmittingComment || !commentText.trim()}
-              className="text-pink-600 font-semibold text-sm px-4 disabled:opacity-50"
+              className="text-white bg-pink-600 hover:bg-pink-700 font-semibold text-xs px-3.5 rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-pink-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-1"
             >
               {isSubmittingComment ? "..." : "Send"}
             </button>
