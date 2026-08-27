@@ -20,9 +20,10 @@ test("login, create a post, and see it in the hobby feed", async ({ page }) => {
 
   await expect(page).toHaveURL(/\/dashboard/);
 
+  // The seeded user has exactly one hobby ("Dance"), so the composer auto-selects it —
+  // there's no hobby chip to click.
   const postContent = `E2E test post ${Date.now()}`;
   await page.getByPlaceholder("Share something interesting...").fill(postContent);
-  await page.getByRole("combobox").selectOption({ label: /Dance/ });
   await page.getByRole("button", { name: "Post" }).click();
 
   await expect(page.getByText(postContent)).toBeVisible();
