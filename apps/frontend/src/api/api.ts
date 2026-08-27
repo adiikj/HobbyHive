@@ -534,12 +534,12 @@ export const getFollowingFeed = async (cursor?: string | null): Promise<FeedPage
   }
 };
 
-export const createPost = async (content: string, hobbyId: string): Promise<Post> => {
+export const createPost = async (content: string, hobbyId: string, imageUrl?: string): Promise<Post> => {
   try {
     const token = localStorage.getItem("authToken");
     const response = await axios.post(
       POSTS_URL,
-      { content, hobbyId },
+      { content, hobbyId, imageUrl },
       {
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -548,6 +548,22 @@ export const createPost = async (content: string, hobbyId: string): Promise<Post
     return response.data.data;
   } catch (error) {
     const message = getErrorMessage(error, "Failed to create post");
+    throw new Error(message);
+  }
+};
+
+export const uploadPostImage = async (file: File): Promise<{ url: string }> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await axios.post(`${POSTS_URL}/upload-image`, formData, {
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to upload image");
     throw new Error(message);
   }
 };

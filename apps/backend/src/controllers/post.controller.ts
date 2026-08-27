@@ -69,6 +69,16 @@ export const buildFeedPage = async (
   };
 };
 
+// Handle a single image upload for a post attachment, returning its public URL
+export const uploadPostImage = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.file) {
+    throw new ApiError(400, "No image file provided");
+  }
+
+  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  res.status(201).json(new ApiResponse(201, { url }, "Image uploaded successfully"));
+});
+
 // Create a post tagged to exactly one hobby
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
   const { content, hobbyId, imageUrl } = req.body;
