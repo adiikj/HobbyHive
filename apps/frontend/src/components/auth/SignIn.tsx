@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { setSessionCookie } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
-import Cookies from "js-cookie";
 import { loginUser } from "@/api/api";
 import { login } from "@/redux/authSlice";
 import type { RootState } from "@/redux/store";
@@ -39,7 +39,7 @@ function SignIn() {
       const accessToken = response?.data?.accessToken;
       if (!accessToken) throw new Error("Access Token not found");
 
-      Cookies.set("accessToken", accessToken, { secure: true, sameSite: "lax" });
+      setSessionCookie(accessToken);
 
       dispatch(login(accessToken));
       localStorage.setItem("authToken", accessToken);

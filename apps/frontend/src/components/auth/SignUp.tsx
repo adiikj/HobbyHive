@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { setSessionCookie } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch } from "react-redux";
-import Cookies from "js-cookie";
 import { registerUser, verifyOTP } from "@/api/api";
 import { login } from "@/redux/authSlice";
 
@@ -97,7 +97,7 @@ function SignUp() {
       const accessToken = response?.data?.accessToken;
 
       if (response?.message === "User verified and confirmed successfully. You can now log in." && accessToken) {
-        Cookies.set("accessToken", accessToken, { secure: true, sameSite: "lax" });
+        setSessionCookie(accessToken);
         dispatch(login(accessToken));
         localStorage.setItem("authToken", accessToken);
         router.push("/choice");
