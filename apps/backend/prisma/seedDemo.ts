@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { E2E_EMAIL } from "./seedE2E.js";
 
 const prisma = new PrismaClient();
 
@@ -10,6 +9,9 @@ const prisma = new PrismaClient();
 // upserts/existence checks so it won't duplicate data.
 
 const DEMO_PASSWORD = "DemoPassword123!";
+
+// The account you log in as to browse the seeded network — it follows, and is followed by, demo users.
+const VIEWER = { name: "Adiikj", username: "adiikj", email: "adiikj@hobbyhive.test" };
 
 const HOBBIES = [
   { name: "Dance", slug: "dance", icon: "💃" },
@@ -88,6 +90,16 @@ const POSTS_BY_HOBBY: Record<string, string[]> = {
   ],
 };
 
+// Photos served by the frontend (apps/frontend/public/images/posts), so the feed and Explore grid have images
+const PHOTOS_BY_HOBBY: Record<string, string[]> = {
+  dance: ["dance", "dance-2", "dance-3"],
+  fitness: ["fitness", "fitness-2", "fitness-3"],
+  art: ["art", "art-2", "art-3"],
+  gaming: ["gaming", "gaming-2", "gaming-3"],
+  anime: ["anime", "anime-2", "anime-3"],
+  singing: ["singing", "singing-2", "singing-3"],
+};
+
 const COMMENTS = [
   "This is awesome!",
   "Love this energy.",
@@ -133,10 +145,21 @@ async function main() {
   const hobbiesBySlug = await ensureHobbies();
   const demoUsers = await ensureDemoUsers();
 
-  const e2eUser = await prisma.user.findUnique({ where: { email: E2E_EMAIL } });
-  if (!e2eUser) {
-    throw new Error(`Run the E2E seed first (creates ${E2E_EMAIL}) — this script links demo users to it.`);
-  }
+  const viewer = await prisma.user.upsert({
+    where: { email: VIEWER.email },
+    update: {},
+    create: {
+      ...VIEWER,
+      password: await bcrypt.hash(DEMO_PASSWORD, 10),
+      otp: "000000",
+      otpVerified: true,
+    },
+  });
+  await prisma.userHobby.upsert({
+    where: { userId_hobbyId: { userId: viewer.id, hobbyId: hobbiesBySlug["dance"].id } },
+    update: {},
+    create: { userId: viewer.id, hobbyId: hobbiesBySlug["dance"].id },
+  });
 
   // Hobby memberships
   for (const demo of demoUsers) {
@@ -177,14 +200,14 @@ async function main() {
     }
   }
 
-  // One post from the E2E tester so their own profile has content too
-  const e2eHasPost = (await prisma.post.count({ where: { authorId: e2eUser.id } })) > 0;
-  if (!e2eHasPost) {
+  // One post from the viewer so their own profile has content too
+  const viewerHasPost = (await prisma.post.count({ where: { authorId: viewer.id } })) > 0;
+  if (!viewerHasPost) {
     const danceHobby = hobbiesBySlug["dance"];
     if (danceHobby) {
       const post = await prisma.post.create({
         data: {
-          authorId: e2eUser.id,
+          authorId: viewer.id,
           hobbyId: danceHobby.id,
           content: "Excited to be part of this community!",
           createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
@@ -194,31 +217,49 @@ async function main() {
     }
   }
 
-  // Follows: e2e_tester follows the first 4 demo users; the first 3 follow back;
-  // the 5th sends e2e_tester a pending follow request to exercise that UI too.
+  // Photos: roughly every other demo post in a hobby with photos gets one (skips posts that already have an image)
+  for (const [slug, photos] of Object.entries(PHOTOS_BY_HOBBY)) {
+    const hobby = hobbiesBySlug[slug];
+    if (!hobby) continue;
+    const posts = await prisma.post.findMany({
+      where: { hobbyId: hobby.id, authorId: { in: demoUsers.map((d) => d.id) } },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, imageUrl: true },
+    });
+    for (let i = 0; i < posts.length; i += 2) {
+      if (posts[i].imageUrl) continue;
+      await prisma.post.update({
+        where: { id: posts[i].id },
+        data: { imageUrl: `/images/posts/${photos[(i / 2) % photos.length]}.webp` },
+      });
+    }
+  }
+
+  // Follows: the viewer follows the first 4 demo users; the first 3 follow back;
+  // the 5th sends the viewer a pending follow request to exercise that UI too.
   const following = demoUsers.slice(0, 4);
   const followBack = demoUsers.slice(0, 3);
   const pendingRequester = demoUsers[4];
 
   for (const demo of following) {
     await prisma.follow.upsert({
-      where: { followerId_followingId: { followerId: e2eUser.id, followingId: demo.id } },
+      where: { followerId_followingId: { followerId: viewer.id, followingId: demo.id } },
       update: { status: "ACCEPTED" },
-      create: { followerId: e2eUser.id, followingId: demo.id, status: "ACCEPTED" },
+      create: { followerId: viewer.id, followingId: demo.id, status: "ACCEPTED" },
     });
   }
   for (const demo of followBack) {
     await prisma.follow.upsert({
-      where: { followerId_followingId: { followerId: demo.id, followingId: e2eUser.id } },
+      where: { followerId_followingId: { followerId: demo.id, followingId: viewer.id } },
       update: { status: "ACCEPTED" },
-      create: { followerId: demo.id, followingId: e2eUser.id, status: "ACCEPTED" },
+      create: { followerId: demo.id, followingId: viewer.id, status: "ACCEPTED" },
     });
   }
   if (pendingRequester) {
     await prisma.follow.upsert({
-      where: { followerId_followingId: { followerId: pendingRequester.id, followingId: e2eUser.id } },
+      where: { followerId_followingId: { followerId: pendingRequester.id, followingId: viewer.id } },
       update: {},
-      create: { followerId: pendingRequester.id, followingId: e2eUser.id, status: "PENDING" },
+      create: { followerId: pendingRequester.id, followingId: viewer.id, status: "PENDING" },
     });
   }
 
@@ -233,8 +274,8 @@ async function main() {
     });
   }
 
-  // Likes: e2e_tester likes a handful of posts, demo users like each other's posts
-  const likers = [e2eUser.id, ...demoUsers.map((d) => d.id)];
+  // Likes: the viewer likes a handful of posts, demo users like each other's posts
+  const likers = [viewer.id, ...demoUsers.map((d) => d.id)];
   for (let i = 0; i < allPostIds.length; i++) {
     const postId = allPostIds[i];
     const likeCount = 1 + (i % 3);
@@ -263,8 +304,143 @@ async function main() {
     }
   }
 
+  await seedHiveFeatures(hobbiesBySlug, demoUsers, viewer.id);
+
   console.log(`Seeded ${demoUsers.length} demo users, ${allPostIds.length} posts, follows, likes, and comments.`);
-  console.log(`Demo account password: ${DEMO_PASSWORD} (e.g. priya@demo.hobbyhive.test)`);
+  console.log(`Log in as ${VIEWER.email} (password: ${DEMO_PASSWORD}); every demo user shares that password.`);
+}
+
+type DemoUser = (typeof DEMO_USERS)[number] & { id: string };
+const DAY = 24 * 60 * 60 * 1000;
+const daysAgo = (n: number) => new Date(Date.now() - n * DAY);
+const photo = (name: string) => `/images/posts/${name}.webp`;
+
+/** Moderators, challenges, pinned posts, a progress log, a multi-photo post, and a reply thread with a mention. */
+async function seedHiveFeatures(hobbiesBySlug: Record<string, { id: string }>, demoUsers: DemoUser[], viewerId: string) {
+  const dance = hobbiesBySlug["dance"];
+  const art = hobbiesBySlug["art"];
+  const byUsername = (u: string) => demoUsers.find((d) => d.username === u)!;
+  const priya = byUsername("priya_dances");
+  const aisha = byUsername("aisha_paints");
+  const diego = byUsername("diego_runs");
+
+  // The demo login moderates Dance (so pinning/challenges/removal can be tried); Priya co-moderates
+  await prisma.userHobby.updateMany({ where: { userId: viewerId, hobbyId: dance.id }, data: { role: "MODERATOR" } });
+  await prisma.userHobby.upsert({
+    where: { userId_hobbyId: { userId: priya.id, hobbyId: dance.id } },
+    update: { role: "MODERATOR" },
+    create: { userId: priya.id, hobbyId: dance.id, role: "MODERATOR" },
+  });
+  await prisma.userHobby.upsert({
+    where: { userId_hobbyId: { userId: aisha.id, hobbyId: art.id } },
+    update: { role: "MODERATOR" },
+    create: { userId: aisha.id, hobbyId: art.id, role: "MODERATOR" },
+  });
+  // Diego joins Dance so the challenge has more than one entrant
+  await prisma.userHobby.upsert({
+    where: { userId_hobbyId: { userId: diego.id, hobbyId: dance.id } },
+    update: {},
+    create: { userId: diego.id, hobbyId: dance.id },
+  });
+
+  const ensurePost = async (data: {
+    authorId: string;
+    hobbyId: string;
+    content: string;
+    images?: string[];
+    challengeId?: string;
+    progressLogId?: string;
+    createdAt: Date;
+    pinnedAt?: Date;
+  }) => {
+    const existing = await prisma.post.findFirst({ where: { authorId: data.authorId, content: data.content }, select: { id: true } });
+    if (existing) return existing.id;
+    const images = data.images ?? [];
+    const post = await prisma.post.create({ data: { ...data, images, imageUrl: images[0] ?? null } });
+    return post.id;
+  };
+
+  // Challenges: one running + one finished in Dance, one running in Art
+  const ensureChallenge = async (hobbyId: string, creatorId: string, title: string, prompt: string, startsAt: Date, endsAt: Date) => {
+    const existing = await prisma.challenge.findFirst({ where: { hobbyId, title }, select: { id: true } });
+    if (existing) return existing.id;
+    return (await prisma.challenge.create({ data: { hobbyId, creatorId, title, prompt, startsAt, endsAt } })).id;
+  };
+
+  const pastDance = await ensureChallenge(
+    dance.id,
+    priya.id,
+    "Mirror Mirror",
+    "Film the same 8 counts facing the mirror and facing away. Which one's cleaner?",
+    daysAgo(16),
+    daysAgo(9)
+  );
+  const danceChallenge = await ensureChallenge(
+    dance.id,
+    viewerId,
+    "Freestyle Friday",
+    "30 seconds of freestyle to any song you love. No choreography allowed!",
+    daysAgo(2),
+    new Date(Date.now() + 5 * DAY)
+  );
+  const artChallenge = await ensureChallenge(
+    art.id,
+    aisha.id,
+    "Draw Your Pet",
+    "Any medium, any pet (real or imaginary). Show us the sketch, then the finish.",
+    daysAgo(1),
+    new Date(Date.now() + 6 * DAY)
+  );
+
+  await ensurePost({ authorId: priya.id, hobbyId: dance.id, content: "Mirror vs no mirror: turns out I rely on it way too much 😅", images: [photo("dance-3")], challengeId: pastDance, createdAt: daysAgo(12) });
+  await ensurePost({ authorId: priya.id, hobbyId: dance.id, content: "Freestyle to Bad Guy. Pure chaos but I had fun!", images: [photo("dance-2")], challengeId: danceChallenge, createdAt: daysAgo(1) });
+  await ensurePost({ authorId: diego.id, hobbyId: dance.id, content: "First time freestyling ever. Be kind 🙏", challengeId: danceChallenge, createdAt: daysAgo(0.5) });
+  await ensurePost({ authorId: aisha.id, hobbyId: art.id, content: "My cat Miso, in gouache. Sketch → finish.", images: [photo("art"), photo("art-2")], challengeId: artChallenge, createdAt: daysAgo(0.7) });
+
+  // A pinned starter post in Dance from the moderator
+  await ensurePost({
+    authorId: viewerId,
+    hobbyId: dance.id,
+    content: "👋 Welcome to the Dance hive! Share practice clips, ask for feedback, and join this week's challenge. Be kind, stay on topic.",
+    createdAt: daysAgo(20),
+    pinnedAt: daysAgo(20),
+  });
+
+  // Priya's progress log: four entries over a month
+  let log = await prisma.progressLog.findFirst({ where: { userId: priya.id, title: "Learning a clean double pirouette" } });
+  if (!log) {
+    log = await prisma.progressLog.create({
+      data: { userId: priya.id, hobbyId: dance.id, title: "Learning a clean double pirouette", description: "From wobbly singles to a controlled double." },
+    });
+  }
+  const entries: [string, string | null, number][] = [
+    ["Week 1: can barely finish a single without hopping.", "dance", 28],
+    ["Week 2: spotting is clicking. Singles are stable now.", null, 21],
+    ["Week 3: first double! Landed 2 out of 10.", "dance-2", 12],
+    ["Week 4: 7 out of 10 clean doubles. Arms finally relaxed.", "dance-3", 3],
+  ];
+  for (const [content, image, ago] of entries) {
+    await ensurePost({ authorId: priya.id, hobbyId: dance.id, content, images: image ? [photo(image)] : [], progressLogId: log.id, createdAt: daysAgo(ago) });
+  }
+
+  // A multi-photo post
+  await ensurePost({
+    authorId: aisha.id,
+    hobbyId: art.id,
+    content: "Sketchbook dump from this week's café sessions ☕",
+    images: [photo("art-3"), photo("art"), photo("art-2")],
+    createdAt: daysAgo(2),
+  });
+
+  // A reply thread with an @mention of the demo login
+  const threadPostId = await ensurePost({ authorId: priya.id, hobbyId: dance.id, content: "Anyone have tips for staying on beat during freestyle?", createdAt: daysAgo(1.5) });
+  const hasThread = (await prisma.comment.count({ where: { postId: threadPostId } })) > 0;
+  if (!hasThread) {
+    const top = await prisma.comment.create({ data: { postId: threadPostId, userId: diego.id, content: "Count the 8s out loud at first. Feels silly, works." } });
+    await prisma.comment.create({ data: { postId: threadPostId, userId: priya.id, parentId: top.id, content: "@diego_runs ha, trying that tonight. @adiikj you should join this week's challenge too!" } });
+    await prisma.notification.create({ data: { userId: viewerId, actorId: priya.id, type: "MENTION", postId: threadPostId } });
+    await prisma.notification.create({ data: { userId: diego.id, actorId: priya.id, type: "REPLY", postId: threadPostId } });
+  }
 }
 
 main()
