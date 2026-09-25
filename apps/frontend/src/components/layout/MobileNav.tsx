@@ -1,57 +1,63 @@
 "use client";
 
-import { useDispatch } from "react-redux";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import { Home, Compass, Users, User, LogOut } from "lucide-react";
-import { logout } from "@/redux/authSlice";
-import { useCurrentUser, clearCurrentUser } from "@/lib/currentUser";
-import NotificationBell from "@/components/dashboard/NotificationBell";
+import { Home, Compass, MessageCircle, User, Plus, type LucideIcon } from "lucide-react";
+import { useCurrentUser } from "@/lib/currentUser";
+import { roundedHexagonPath } from "@/lib/hexagon";
+
+const HEX = roundedHexagonPath(50, 50, 46, 12);
+
+function NavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      className={`flex flex-1 flex-col items-center gap-0.5 py-1 text-[10px] font-quick font-bold transition-colors focus-visible:outline-none focus-visible:text-brand ${
+        active ? "text-chblack" : "text-chblack/45 hover:text-chblack"
+      }`}
+    >
+      <Icon size={22} strokeWidth={active ? 2.4 : 2} className={active ? "text-brand" : undefined} />
+      {label}
+    </Link>
+  );
+}
 
 function MobileNav() {
-  const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
   const { user: me } = useCurrentUser();
 
-  const handleLogout = () => {
-    Cookies.remove("accessToken");
-    clearCurrentUser();
-    dispatch(logout());
-    window.location.href = "/";
-  };
-
-  const iconClass = (active: boolean) =>
-    `rounded-full p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${
-      active ? "text-pink-600" : "text-chblack/50 hover:text-pink-600"
-    }`;
-
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around bg-white border-t border-chgrey/10 px-2 py-2.5">
-      <button aria-label="Home" className={iconClass(pathname === "/dashboard")} onClick={() => router.push("/dashboard")}>
-        <Home size={20} />
-      </button>
-      <button
-        aria-label="Friends"
-        className={iconClass(false)}
-        onClick={() => router.push("/dashboard?feed=following")}
-      >
-        <Users size={20} />
-      </button>
-      <NotificationBell size={20} iconClassName="text-chblack/50 hover:text-pink-600" dropdownAlign="above" />
-      <button aria-label="Explore" className={iconClass(pathname.startsWith("/explore"))} onClick={() => router.push("/explore")}>
-        <Compass size={20} />
-      </button>
-      <button
-        aria-label="Profile"
-        className={iconClass(me ? pathname.startsWith(`/profile/${me.username}`) : false)}
-        onClick={() => me && router.push(`/profile/${me.username}`)}
-      >
-        <User size={20} />
-      </button>
-      <button aria-label="Logout" className="text-red-600 rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400" onClick={handleLogout}>
-        <LogOut size={20} />
-      </button>
+    <nav
+      aria-label="Main"
+      className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex items-end border-t border-line bg-surface/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md"
+    >
+      <NavLink href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
+      <NavLink href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} />
+
+      <div className="flex flex-1 justify-center">
+        <button
+          type="button"
+          onClick={() => router.push(`/dashboard?compose=${Date.now()}`)}
+          aria-label="New post"
+          className="relative -mt-5 flex w-14 h-14 items-center justify-center transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-full"
+        >
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full drop-shadow-md" aria-hidden="true">
+            <path d={HEX} fill="#DB2777" />
+          </svg>
+          <Plus size={26} strokeWidth={2.6} className="relative text-white" />
+        </button>
+      </div>
+
+      <NavLink href="/messages" label="Messages" icon={MessageCircle} active={pathname.startsWith("/messages")} />
+      <NavLink
+        href={me ? `/profile/${me.username}` : "/dashboard"}
+        label="Profile"
+        icon={User}
+        active={me ? pathname.startsWith(`/profile/${me.username}`) : false}
+      />
     </nav>
   );
 }

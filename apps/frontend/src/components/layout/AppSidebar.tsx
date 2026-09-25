@@ -1,93 +1,76 @@
 "use client";
 
-import { useDispatch } from "react-redux";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Cookies from "js-cookie";
-import { Home, Compass, Users, MessageCircle, User, Settings, LogOut } from "lucide-react";
-import { logout } from "@/redux/authSlice";
-import { useCurrentUser, clearCurrentUser } from "@/lib/currentUser";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, Compass, MessageCircle, User, Settings, PenSquare, Bookmark, type LucideIcon } from "lucide-react";
+import { useCurrentUser } from "@/lib/currentUser";
 import Logo from "@/components/brand/Logo";
+import NotificationBell from "@/components/dashboard/NotificationBell";
+import AccountMenu from "./AccountMenu";
+
+const navItemClass = (active: boolean) =>
+  `flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-[15px] font-quick transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+    active
+      ? "bg-surface font-bold text-chblack shadow-sm ring-1 ring-line"
+      : "font-semibold text-chblack/60 hover:bg-surface/70 hover:text-chblack"
+  }`;
+
+function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+  return (
+    <Link href={href} className={navItemClass(active)} aria-current={active ? "page" : undefined}>
+      <Icon size={21} strokeWidth={active ? 2.4 : 2} className={active ? "text-brand" : undefined} />
+      {label}
+    </Link>
+  );
+}
 
 function AppSidebar() {
-  const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { user: me } = useCurrentUser();
 
-  const handleLogout = () => {
-    Cookies.remove("accessToken");
-    clearCurrentUser();
-    dispatch(logout());
-    window.location.href = "/";
-  };
-
-  const isFollowingFeed = pathname === "/dashboard" && searchParams.get("feed") === "following";
-  const isHome = pathname === "/dashboard" && !isFollowingFeed;
-  const isExplore = pathname.startsWith("/explore");
-  const isMessages = pathname.startsWith("/messages");
-  const isProfile = me ? pathname.startsWith(`/profile/${me.username}`) : false;
-  const isSettings = pathname.startsWith("/settings");
-
-  const navLinkClass = (active: boolean) =>
-    `flex items-center gap-2.5 px-2.5 py-2 rounded-lg w-full text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${
-      active ? "bg-pink-600 text-white font-semibold" : "text-chblack/70 hover:text-pink-600"
-    }`;
-
   return (
-    <aside className="hidden lg:flex w-52 p-4 flex-col justify-between bg-white fixed top-0 left-0 h-full z-30">
+    <aside className="hidden lg:flex w-60 fixed inset-y-0 left-0 z-30 flex-col justify-between border-r border-line bg-canvas px-3 py-5">
       <div>
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="flex items-center gap-1.5 mb-7 px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 rounded-lg"
+        <Link
+          href="/dashboard"
+          className="mb-7 flex items-center gap-2 rounded-lg px-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Logo size={22} className="shrink-0" />
-          <span className="text-pink-600 font-bnt font-bold text-xl leading-none">HOBBYHIVE</span>
-        </button>
-        <nav className="space-y-0.5">
-          <button className={navLinkClass(isHome)} onClick={() => router.push("/dashboard")}>
-            <Home size={18} /> Home
-          </button>
-          <button className={navLinkClass(isExplore)} onClick={() => router.push("/explore")}>
-            <Compass size={18} /> Explore
-          </button>
-          <button className={navLinkClass(isFollowingFeed)} onClick={() => router.push("/dashboard?feed=following")}>
-            <Users size={18} /> Friends
-          </button>
-          <button className={navLinkClass(isMessages)} onClick={() => router.push("/messages")}>
-            <MessageCircle size={18} /> Messages
-          </button>
-          <button
-            className={navLinkClass(isProfile)}
-            onClick={() => me && router.push(`/profile/${me.username}`)}
-          >
-            <User size={18} /> Profile
-          </button>
-          <button className={navLinkClass(isSettings)} onClick={() => router.push("/settings/hobbies")}>
-            <Settings size={18} /> Settings
-          </button>
+          <Logo size={28} className="shrink-0" />
+          <span className="font-bnt text-[26px] leading-none tracking-wide text-brand">HOBBYHIVE</span>
+        </Link>
+
+        <nav aria-label="Main" className="space-y-1">
+          <NavItem href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
+          <NavItem href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} />
+          <NavItem href="/messages" label="Messages" icon={MessageCircle} active={pathname.startsWith("/messages")} />
+          <NotificationBell
+            size={21}
+            label="Notifications"
+            iconClassName=""
+            dropdownAlign="side"
+            triggerClassName={navItemClass(false)}
+          />
+          <NavItem href="/saved" label="Saved" icon={Bookmark} active={pathname.startsWith("/saved")} />
+          <NavItem
+            href={me ? `/profile/${me.username}` : "/dashboard"}
+            label="Profile"
+            icon={User}
+            active={me ? pathname.startsWith(`/profile/${me.username}`) : false}
+          />
+          <NavItem href="/settings/hobbies" label="Settings" icon={Settings} active={pathname.startsWith("/settings")} />
         </nav>
+
+        <button
+          type="button"
+          onClick={() => router.push(`/dashboard?compose=${Date.now()}`)}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3 font-quick text-[15px] font-bold text-white shadow-lg shadow-brand/20 transition-all hover:-translate-y-0.5 hover:bg-pink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        >
+          <PenSquare size={18} /> New post
+        </button>
       </div>
 
-      <div className="border-t border-chgrey/10 pt-3">
-        <button
-          onClick={() => me && router.push(`/profile/${me.username}`)}
-          className="flex items-center gap-2.5 px-2.5 py-2 w-full text-left rounded-lg hover:bg-beige transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={me?.avatarUrl || "/images/5.png"} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
-          <span className="min-w-0">
-            <span className="block text-sm font-semibold text-chblack truncate">{me?.name ?? "..."}</span>
-            <span className="block text-xs text-chblack/40 truncate">@{me?.username ?? ""}</span>
-          </span>
-        </button>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2.5 px-2.5 py-2 mt-0.5 text-chblack/50 hover:text-red-600 w-full text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 rounded-lg"
-        >
-          <LogOut size={18} /> Logout
-        </button>
-      </div>
+      <AccountMenu variant="full" />
     </aside>
   );
 }
