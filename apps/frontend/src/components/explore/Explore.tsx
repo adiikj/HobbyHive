@@ -1,29 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Search, ArrowLeft } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search, ArrowRight, Check, Flame, Images, Newspaper, Hexagon } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
+import HobbyGlyph from "@/components/brand/HobbyGlyph";
+import PostCard from "@/components/dashboard/PostCard";
+import { PageContainer, PageHeader, Card, SectionTitle, HexIcon, secondaryButtonClass } from "@/components/ui/Page";
+import { PhotoGridSkeleton, PostListSkeleton } from "@/components/ui/Skeletons";
+import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import {
   getHobbies,
   getMyHobbies,
   getTrendingHobbies,
+  getExploreFeed,
   addMyHobby,
   search,
   type Hobby,
+  type Post,
   type TrendingHobby,
   type SearchResults,
 } from "@/api/api";
+import PhotoGrid from "./PhotoGrid";
+import PostModal from "./PostModal";
+
+type ExploreTab = "photos" | "posts" | "hives";
+
+const TABS: { key: ExploreTab; label: string; icon: typeof Images }[] = [
+  { key: "photos", label: "Photos", icon: Images },
+  { key: "posts", label: "Posts", icon: Newspaper },
+  { key: "hives", label: "Hives", icon: Hexagon },
+];
 
 function Explore() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const requestedTab = searchParams.get("tab");
+  const tab: ExploreTab = requestedTab === "posts" || requestedTab === "hives" ? requestedTab : "photos";
+  const hobbyFilter = searchParams.get("hobby");
 
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [myHobbyIds, setMyHobbyIds] = useState<Set<string>>(new Set());
   const [trending, setTrending] = useState<TrendingHobby[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoadingFeed, setIsLoadingFeed] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [feedError, setFeedError] = useState("");
+  const [openPost, setOpenPost] = useState<Post | null>(null);
+  const closePost = useCallback(() => setOpenPost(null), []);
 
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [results, setResults] = useState<SearchResults | null>(null);
@@ -36,8 +67,33 @@ function Explore() {
         setMyHobbyIds(new Set(mine.map((h) => h.id)));
         setTrending(trendingHobbies);
       })
+      .catch(() => undefined)
       .finally(() => setIsLoading(false));
   }, []);
+
+  const pageSize = tab === "photos" ? 20 : 10;
+
+  useEffect(() => {
+    if (tab === "hives") return;
+    let cancelled = false;
+    setIsLoadingFeed(true);
+    setFeedError("");
+    setPosts([]);
+    setNextCursor(null);
+
+    getExploreFeed({ hobby: hobbyFilter, media: tab === "photos", limit: pageSize })
+      .then((page) => {
+        if (cancelled) return;
+        setPosts(page.posts);
+        setNextCursor(page.nextCursor);
+      })
+      .catch((err) => !cancelled && setFeedError(err instanceof Error ? err.message : "Failed to load posts"))
+      .finally(() => !cancelled && setIsLoadingFeed(false));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, hobbyFilter, pageSize]);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -57,6 +113,31 @@ function Explore() {
     return () => clearTimeout(timeout);
   }, [query]);
 
+  /** Tab and hobby filter live in the URL so they survive refresh and back/forward. */
+  const setParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const handleLoadMore = async () => {
+    if (!nextCursor) return;
+    setIsLoadingMore(true);
+    try {
+      const page = await getExploreFeed({ cursor: nextCursor, hobby: hobbyFilter, media: tab === "photos", limit: pageSize });
+      setPosts((prev) => [...prev, ...page.posts]);
+      setNextCursor(page.nextCursor);
+    } catch (err) {
+      setFeedError(err instanceof Error ? err.message : "Failed to load more posts");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
   const handleJoin = async (hobbyId: string) => {
     setJoiningId(hobbyId);
     try {
@@ -69,206 +150,261 @@ function Explore() {
     }
   };
 
-  const notYetJoined = hobbies.filter((h) => !myHobbyIds.has(h.id));
+  const filterChip = (key: string | null, label: string, icon?: React.ReactNode, color?: string) => {
+    const isActive = hobbyFilter === key;
+    return (
+      <button
+        key={key ?? "all"}
+        type="button"
+        onClick={() => setParams({ hobby: key })}
+        aria-pressed={isActive}
+        className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-quick font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+          isActive ? `border-transparent ${color ? "text-white" : "text-canvas"}` : "border-line bg-surface text-chblack/65 hover:text-chblack"
+        }`}
+        style={isActive ? { backgroundColor: color ?? "rgb(var(--c-ink))" } : undefined}
+      >
+        {icon}
+        {label}
+      </button>
+    );
+  };
+
+  const emptyFeed = (
+    <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
+      <p className="font-bnt text-3xl text-chblack">{tab === "photos" ? "NO PHOTOS YET" : "NOTHING HERE YET"}</p>
+      <p className="mt-1 text-sm text-chblack/55">
+        {hobbyFilter ? "Nobody has shared one in this hive yet. Try another." : "Be the first to share something."}
+      </p>
+    </div>
+  );
+
+  const loadMoreButton = nextCursor && (
+    <div className="flex justify-center pt-2">
+      <button onClick={handleLoadMore} disabled={isLoadingMore} className={secondaryButtonClass}>
+        {isLoadingMore ? "Loading…" : "Show more"}
+      </button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="p-2 rounded-full bg-white shadow hover:bg-gray-50"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className="font-bnt text-3xl text-chblack">Explore</h1>
-        </div>
+    <PageContainer>
+      <PageHeader eyebrow="Discover" title="Explore" subtitle="See what every hive is making, and find your next one." />
 
-        <div className="relative mb-8">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-chblack/40" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search people, hobbies, or posts..."
-            className="w-full font-pop text-chblack bg-white border border-chgrey/20 pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
-        </div>
-
-        {query.trim() ? (
-          <div className="space-y-6">
-            {isSearching ? (
-              <div className="space-y-4">
-                <section className="bg-white rounded-xl shadow-md p-5 space-y-3">
-                  <Skeleton className="h-3 w-20 rounded-full bg-gray-200" />
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <Skeleton className="w-9 h-9 rounded-full bg-gray-200 shrink-0" />
-                      <div className="flex-1 space-y-1.5">
-                        <Skeleton className="h-3 rounded-full bg-gray-200 w-1/3" />
-                        <Skeleton className="h-2.5 rounded-full bg-gray-100 w-1/4" />
-                      </div>
-                    </div>
-                  ))}
-                </section>
-              </div>
-            ) : results && (results.users.length || results.hobbies.length || results.posts.length) ? (
-              <>
-                {results.users.length > 0 && (
-                  <section className="bg-white rounded-xl shadow-md p-5">
-                    <h2 className="font-quick font-semibold text-sm text-chblack/60 uppercase tracking-wide mb-3">
-                      People
-                    </h2>
-                    <div className="space-y-1">
-                      {results.users.map((u) => (
-                        <button
-                          key={u.id}
-                          onClick={() => router.push(`/profile/${u.username}`)}
-                          className="flex items-center gap-3 w-full text-left hover:bg-pink-50 rounded-lg p-2"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={u.avatarUrl || "/images/5.png"}
-                            alt={u.name}
-                            className="w-9 h-9 rounded-full object-cover"
-                          />
-                          <div>
-                            <p className="font-pop text-sm font-semibold">{u.name}</p>
-                            <p className="font-pop text-xs text-chblack/40">@{u.username}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {results.hobbies.length > 0 && (
-                  <section className="bg-white rounded-xl shadow-md p-5">
-                    <h2 className="font-quick font-semibold text-sm text-chblack/60 uppercase tracking-wide mb-3">
-                      Hobbies
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {results.hobbies.map((h) => (
-                        <button
-                          key={h.id}
-                          onClick={() => router.push(`/hobbies/${h.slug}`)}
-                          className="font-quick text-sm px-3 py-1.5 rounded-full bg-pink-50 text-pink-700 border border-pink-100 hover:bg-pink-100"
-                        >
-                          {h.icon} {h.name}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {results.posts.length > 0 && (
-                  <section className="bg-white rounded-xl shadow-md p-5">
-                    <h2 className="font-quick font-semibold text-sm text-chblack/60 uppercase tracking-wide mb-3">
-                      Posts
-                    </h2>
-                    <div className="space-y-4">
-                      {results.posts.map((p) => (
-                        <div key={p.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                          <button
-                            onClick={() => router.push(`/profile/${p.author.username}`)}
-                            className="font-pop text-sm font-semibold hover:underline"
-                          >
-                            {p.author.name}
-                          </button>
-                          <button
-                            onClick={() => router.push(`/hobbies/${p.hobby.slug}`)}
-                            className="font-pop text-xs text-chblack/40 ml-2 hover:underline"
-                          >
-                            {p.hobby.icon} {p.hobby.name}
-                          </button>
-                          <p className="font-pop text-sm text-chblack/80 mt-1">{p.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-              </>
-            ) : (
-              <p className="font-pop text-chblack/50 text-center py-10">No results for &quot;{query}&quot;.</p>
-            )}
-          </div>
-        ) : isLoading ? (
-          <div className="space-y-8">
-            <section>
-              <Skeleton className="h-3 w-40 rounded-full bg-white/50 mb-3" />
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-9 w-32 rounded-full bg-white/50" />
-                ))}
-              </div>
-            </section>
-            <section>
-              <Skeleton className="h-3 w-32 rounded-full bg-white/50 mb-3" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-xl bg-white/50" />
-                ))}
-              </div>
-            </section>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {trending.length > 0 && (
-              <section>
-                <h2 className="font-quick font-semibold text-sm text-chblack/60 uppercase tracking-wide mb-3">
-                  Trending This Week
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {trending.map((h) => (
-                    <button
-                      key={h.id}
-                      onClick={() => router.push(`/hobbies/${h.slug}`)}
-                      className="font-quick text-sm px-4 py-2 rounded-full bg-white shadow-sm border border-pink-100 hover:border-pink-300"
-                    >
-                      {h.icon} {h.name} · {h.postCount} {h.postCount === 1 ? "post" : "posts"}
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <section>
-              <h2 className="font-quick font-semibold text-sm text-chblack/60 uppercase tracking-wide mb-3">
-                Hobbies To Join
-              </h2>
-              {notYetJoined.length === 0 ? (
-                <p className="font-pop text-chblack/50">You&apos;ve already joined every hobby. Nice.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {notYetJoined.map((h) => (
-                    <div
-                      key={h.id}
-                      className="flex items-center justify-between bg-white rounded-xl shadow-md p-4"
-                    >
-                      <button onClick={() => router.push(`/hobbies/${h.slug}`)} className="text-left hover:underline">
-                        <p className="font-pop font-semibold text-chblack">
-                          {h.icon} {h.name}
-                        </p>
-                        <p className="font-pop text-xs text-chblack/50 mt-0.5">
-                          {h.membersCount ?? 0} members · {h.postsCount ?? 0} posts
-                        </p>
-                      </button>
-                      <button
-                        onClick={() => handleJoin(h.id)}
-                        disabled={joiningId === h.id}
-                        className="text-sm font-quick font-semibold text-white bg-pink-600 hover:bg-pink-700 rounded-full px-4 py-1.5 disabled:opacity-60 shrink-0"
-                      >
-                        {joiningId === h.id ? "..." : "Join"}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
-        )}
+      <div className="relative mb-8">
+        <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-chblack/35" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search people, hobbies, or posts"
+          aria-label="Search"
+          className="h-14 w-full rounded-full border border-line bg-surface pl-14 pr-5 text-[15px] text-chblack shadow-sm placeholder:text-chblack/35 focus:outline-none focus:ring-2 focus:ring-brand"
+        />
       </div>
-    </div>
+
+      {query.trim() ? (
+        <div className="space-y-6">
+          {isSearching ? (
+            <PostListSkeleton count={2} withImage={false} />
+          ) : results && (results.users.length || results.hobbies.length || results.posts.length) ? (
+            <>
+              {results.hobbies.length > 0 && (
+                <section>
+                  <SectionTitle>HIVES</SectionTitle>
+                  <div className="flex flex-wrap gap-2">
+                    {results.hobbies.map((h) => (
+                      <Link
+                        key={h.id}
+                        href={`/hobbies/${h.slug}`}
+                        className="flex items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-1.5 pr-4 text-sm font-quick font-bold text-chblack transition-colors hover:bg-canvas"
+                      >
+                        <HexIcon fill={withAlpha(getHobbyColor(h.name), 0.16)} icon={h.icon} size={30} />
+                        {h.name}
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {results.users.length > 0 && (
+                <section>
+                  <SectionTitle>PEOPLE</SectionTitle>
+                  <Card className="divide-y divide-line">
+                    {results.users.map((u) => (
+                      <Link
+                        key={u.id}
+                        href={`/profile/${u.username}`}
+                        className="flex items-center gap-3 px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-canvas"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={u.avatarUrl || "/images/5.png"} alt="" className="h-10 w-10 rounded-full object-cover" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-semibold text-chblack">{u.name}</span>
+                          <span className="block truncate text-xs text-chblack/45">@{u.username}</span>
+                        </span>
+                        <ArrowRight size={16} className="text-chblack/25" />
+                      </Link>
+                    ))}
+                  </Card>
+                </section>
+              )}
+
+              {results.posts.length > 0 && (
+                <section>
+                  <SectionTitle>POSTS</SectionTitle>
+                  <div className="divide-y divide-line rounded-2xl border border-line bg-surface">
+                    {results.posts.map((p) => (
+                      <PostCard key={p.id} post={p} />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
+              <p className="font-bnt text-3xl text-chblack">NO MATCHES</p>
+              <p className="mt-1 text-sm text-chblack/55">Nothing found for &quot;{query}&quot;. Try a hobby name or a username.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <section>
+            <SectionTitle>
+              <span className="flex items-center gap-2">
+                <Flame size={20} className="text-brand" /> TRENDING THIS WEEK
+              </span>
+            </SectionTitle>
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0">
+              {isLoading
+                ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36 w-40 shrink-0 rounded-2xl bg-line" />)
+                : trending.map((h, i) => {
+                    const color = getHobbyColor(h.name);
+                    return (
+                      <Link
+                        key={h.id}
+                        href={`/hobbies/${h.slug}`}
+                        className="group relative flex w-40 shrink-0 flex-col overflow-hidden rounded-2xl border p-4 transition-transform hover:-translate-y-0.5"
+                        style={{
+                          background: `linear-gradient(160deg, ${withAlpha(color, 0.2)}, ${withAlpha(color, 0.04)})`,
+                          borderColor: withAlpha(color, 0.2),
+                        }}
+                      >
+                        <span className="absolute right-3 top-2 font-bnt text-3xl leading-none" style={{ color: withAlpha(color, 0.45) }}>
+                          #{i + 1}
+                        </span>
+                        <HexIcon fill="rgb(var(--c-surface))" icon={h.icon} size={44} />
+                        <span className="mt-4 truncate font-bnt text-2xl leading-none text-chblack">{h.name.toUpperCase()}</span>
+                        <span className="mt-1 text-xs text-chblack/55">
+                          {h.postCount} {h.postCount === 1 ? "post" : "posts"} this week
+                        </span>
+                      </Link>
+                    );
+                  })}
+            </div>
+          </section>
+
+          <section>
+            <div role="tablist" aria-label="Explore" className="mb-4 flex gap-1 rounded-full border border-line bg-surface p-1">
+              {TABS.map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  role="tab"
+                  aria-selected={tab === key}
+                  onClick={() => setParams({ tab: key === "photos" ? null : key })}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm font-quick font-bold transition-colors ${
+                    tab === key ? "bg-chblack text-canvas" : "text-chblack/55 hover:text-chblack"
+                  }`}
+                >
+                  <Icon size={16} /> {label}
+                </button>
+              ))}
+            </div>
+
+            {tab !== "hives" && (
+              <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
+                {filterChip(null, "All")}
+                {isLoading
+                  ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-9 w-24 shrink-0 rounded-full bg-line" />)
+                  : hobbies.map((h) => {
+                      const color = getHobbyColor(h.name);
+                      return filterChip(h.slug, h.name, <HobbyGlyph color={hobbyFilter === h.slug ? "rgb(var(--c-surface))" : color} size={11} />, color);
+                    })}
+              </div>
+            )}
+
+            {tab === "hives" ? (
+              isLoading ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-20 rounded-2xl bg-line" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {hobbies.map((h) => {
+                    const color = getHobbyColor(h.name);
+                    const isJoined = myHobbyIds.has(h.id);
+                    return (
+                      <Card key={h.id} as="div" className="flex items-center gap-3 p-3.5 transition-shadow hover:shadow-sm">
+                        <Link href={`/hobbies/${h.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
+                          <HexIcon fill={withAlpha(color, 0.16)} icon={h.icon} size={48} />
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-chblack">{h.name}</span>
+                            <span className="block truncate text-xs text-chblack/50">
+                              {h.membersCount ?? 0} members · {h.postsCount ?? 0} posts
+                            </span>
+                          </span>
+                        </Link>
+                        {isJoined ? (
+                          <Link
+                            href={`/dashboard?hive=${h.slug}`}
+                            className="flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-quick font-bold"
+                            style={{ backgroundColor: withAlpha(color, 0.12), color }}
+                          >
+                            <Check size={14} /> Joined
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={() => handleJoin(h.id)}
+                            disabled={joiningId === h.id}
+                            className="shrink-0 rounded-full bg-chblack px-4 py-1.5 text-xs font-quick font-bold text-canvas transition-colors hover:bg-chblack/85 disabled:opacity-50"
+                          >
+                            {joiningId === h.id ? "Joining…" : "Join"}
+                          </button>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )
+            ) : isLoadingFeed ? (
+              tab === "photos" ? <PhotoGridSkeleton /> : <PostListSkeleton />
+            ) : feedError ? (
+              <p className="rounded-2xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-4 text-center text-sm text-red-700 dark:text-red-300">{feedError}</p>
+            ) : posts.length === 0 ? (
+              emptyFeed
+            ) : tab === "photos" ? (
+              <div className="space-y-4">
+                <PhotoGrid posts={posts} onOpen={setOpenPost} />
+                {loadMoreButton}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="divide-y divide-line rounded-2xl border border-line bg-surface">
+                  {posts.map((post) => (
+                    <PostCard key={post.id} post={post} showHobby={!hobbyFilter} />
+                  ))}
+                </div>
+                {loadMoreButton}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      <PostModal post={openPost} onClose={closePost} />
+    </PageContainer>
   );
 }
 
