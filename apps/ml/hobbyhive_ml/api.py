@@ -4,6 +4,7 @@ Run: uv run uvicorn hobbyhive_ml.api:app --port 8002
 """
 
 import json
+import threading
 from contextlib import asynccontextmanager
 from functools import lru_cache
 
@@ -12,6 +13,9 @@ from pydantic import BaseModel, Field
 
 from . import classifier
 from .embedder import EMBEDDING_DIM, MODEL_NAME, embed
+from .rag import generate
+from .rag.answer import ask as ask_bea
+from .rag.index import get_index
 
 MAX_BATCH = 64
 MAX_CHARS = 4000  # posts longer than this are truncated; the model's context is ~512 tokens anyway
@@ -22,6 +26,17 @@ async def lifespan(_: FastAPI):
     # Load weights and the ONNX session once, so the first real request isn't slow
     classifier.load()
     embed(["warm up"])
+
+    # Ask Bea: build the knowledge index and load the local LLM in the background, so the service is up at once.
+    # Until the LLM is ready, Bea answers with quotes (the extractive path).
+    def warm_bea() -> None:
+        try:
+            get_index()
+        except Exception as exc:
+            print(f"[bea] knowledge index not built yet: {exc}")
+        generate.ensure_loaded()
+
+    threading.Thread(target=warm_bea, daemon=True).start()
     yield
 
 
@@ -90,6 +105,7 @@ def health() -> dict:
         "trained_at": card["trained_at"],
         "off_topic_rule": {"max_hive_score": rule.max_hive_score, "min_alternative_score": rule.min_alternative_score},
         "test_metrics": card["test_metrics"],
+        "bea_language_model": generate.status(),
     }
 
 
@@ -113,6 +129,17 @@ def query(req: QueryRequest) -> QueryResponse:
         hive_boost=config["hive_boost"],
         min_score=config["min_score"],
     )
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
+    hive: str | None = None
+
+
+@app.post("/ask")
+def ask(req: AskRequest) -> dict:
+    """Ask Bea: local RAG over posts and comments. Returns the answer, its evidence, and a full trace."""
+    return ask_bea(req.question.strip(), req.hive)
 
 
 @app.post("/classify", response_model=ClassifyResponse)

@@ -1,0 +1,8 @@
+{
+  "use_rerank": false,
+  "min_relevance": 0.54,
+  "relative_margin": 0.1,
+  "max_evidence": 3,
+  "candidates": 20,
+  "mmr_lambda": 0.7
+}
