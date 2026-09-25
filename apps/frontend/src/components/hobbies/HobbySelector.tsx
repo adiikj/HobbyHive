@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getHobbies, setMyHobbies, type Hobby } from "@/api/api";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface HobbySelectorProps {
   title: string;
@@ -72,7 +73,11 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
       )}
 
       {isLoading ? (
-        <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-xl bg-white/50" />
+          ))}
+        </div>
       ) : (
         <>
           <motion.div

@@ -3,32 +3,28 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { getUserProfile, updateProfile } from "@/api/api";
+import { updateProfile } from "@/api/api";
+import { useCurrentUser, setCurrentUser } from "@/lib/currentUser";
+import Skeleton from "@/components/ui/Skeleton";
 
 function EditProfile() {
   const router = useRouter();
-  const [username, setUsername] = useState<string | null>(null);
+  const { user: me, isLoading } = useCurrentUser();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    getUserProfile()
-      .then((me) => {
-        setUsername(me.username);
-        setName(me.name);
-        setBio(me.bio || "");
-        setAvatarUrl(me.avatarUrl || "");
-      })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load your profile"))
-      .finally(() => setIsLoading(false));
-  }, []);
+    if (!me) return;
+    setName(me.name);
+    setBio(me.bio || "");
+    setAvatarUrl(me.avatarUrl || "");
+  }, [me]);
 
   const handleSave = async () => {
-    if (!username || !name.trim()) {
+    if (!me || !name.trim()) {
       setError("Name cannot be empty.");
       return;
     }
@@ -36,8 +32,9 @@ function EditProfile() {
     setError("");
     setIsSaving(true);
     try {
-      await updateProfile(username, { name, bio, avatarUrl });
-      router.push(`/profile/${username}`);
+      const updated = await updateProfile(me.username, { name, bio, avatarUrl });
+      setCurrentUser(updated);
+      router.push(`/profile/${me.username}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save your profile");
     } finally {
@@ -47,8 +44,16 @@ function EditProfile() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige">
-        <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+      <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10 flex justify-center">
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-10">
+          <Skeleton className="h-7 w-48 rounded-full bg-gray-200 mb-6" />
+          <div className="space-y-5">
+            <Skeleton className="h-11 w-full rounded-xl bg-gray-100" />
+            <Skeleton className="h-20 w-full rounded-xl bg-gray-100" />
+            <Skeleton className="h-11 w-full rounded-xl bg-gray-100" />
+          </div>
+          <Skeleton className="h-11 w-full rounded-full bg-gray-200 mt-6" />
+        </div>
       </div>
     );
   }

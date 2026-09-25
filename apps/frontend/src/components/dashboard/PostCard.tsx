@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Send, Check } from "lucide-react";
 import { likePost, unlikePost, getComments, addComment, type Post, type Comment } from "@/api/api";
 import { getHobbyColor } from "@/lib/hobbyTheme";
+import Skeleton from "@/components/ui/Skeleton";
 import { timeAgo } from "@/lib/time";
 
 interface PostCardProps {
@@ -151,8 +152,13 @@ function PostCard({ post: initialPost }: PostCardProps) {
       {showComments && (
         <div className="mt-2.5 border-t border-chgrey/10 pt-3">
           {isLoadingComments ? (
-            <div className="flex justify-center py-3">
-              <div className="w-4 h-4 border-t-2 border-pink-600 rounded-full animate-spin" />
+            <div className="space-y-2">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="flex gap-2">
+                  <Skeleton className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
+                  <Skeleton className="h-3 flex-1 rounded-full bg-gray-100 mt-1" />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="space-y-2.5">

@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { Settings, MessageCircle } from "lucide-react";
 import {
   getPublicProfile,
-  getUserProfile,
   getFollowStatus,
   followUser,
   unfollowUser,
@@ -21,6 +20,8 @@ import {
   type FollowRequest,
   type FollowUser,
 } from "@/api/api";
+import { useCurrentUser } from "@/lib/currentUser";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface ProfileViewProps {
   username: string;
@@ -28,6 +29,7 @@ interface ProfileViewProps {
 
 function ProfileView({ username }: ProfileViewProps) {
   const router = useRouter();
+  const { user: me } = useCurrentUser();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +42,9 @@ function ProfileView({ username }: ProfileViewProps) {
   const [listPanel, setListPanel] = useState<"followers" | "following" | null>(null);
   const [listUsers, setListUsers] = useState<FollowUser[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(false);
+
+  const [isMessageLoading, setIsMessageLoading] = useState(false);
+  const [requestActionUsername, setRequestActionUsername] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,35 +59,39 @@ function ProfileView({ username }: ProfileViewProps) {
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : "Failed to load profile"))
       .finally(() => !cancelled && setIsLoading(false));
 
-    getUserProfile()
-      .then((me) => {
-        if (cancelled) return;
-        const own = me.username === username;
-        setIsOwnProfile(own);
-
-        if (own) {
-          getMyFollowRequests()
-            .then((reqs) => !cancelled && setMyFollowRequests(reqs))
-            .catch(() => undefined);
-        } else {
-          getFollowStatus(username)
-            .then((status) => !cancelled && setFollowStatus(status))
-            .catch(() => undefined);
-        }
-      })
-      .catch(() => !cancelled && setIsOwnProfile(false));
-
     return () => {
       cancelled = true;
     };
   }, [username]);
 
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+    const own = me.username === username;
+    setIsOwnProfile(own);
+
+    if (own) {
+      getMyFollowRequests()
+        .then((reqs) => !cancelled && setMyFollowRequests(reqs))
+        .catch(() => undefined);
+    } else {
+      getFollowStatus(username)
+        .then((status) => !cancelled && setFollowStatus(status))
+        .catch(() => undefined);
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [username, me]);
+
   const handleMessage = async () => {
+    setIsMessageLoading(true);
     try {
       const { id } = await getOrCreateConversation(username);
       router.push(`/messages/${id}`);
     } catch {
-      // leave the button clickable so the user can retry
+      setIsMessageLoading(false); // leave the button clickable so the user can retry
     }
   };
 
@@ -134,21 +143,27 @@ function ProfileView({ username }: ProfileViewProps) {
   };
 
   const handleAcceptRequest = async (requesterUsername: string) => {
+    setRequestActionUsername(requesterUsername);
     try {
       await acceptFollowRequest(requesterUsername);
       setMyFollowRequests((prev) => prev.filter((r) => r.follower.username !== requesterUsername));
       setProfile((p) => (p ? { ...p, followersCount: p.followersCount + 1 } : p));
     } catch {
       // leave the request in the list so the user can retry
+    } finally {
+      setRequestActionUsername(null);
     }
   };
 
   const handleRejectRequest = async (requesterUsername: string) => {
+    setRequestActionUsername(requesterUsername);
     try {
       await rejectFollowRequest(requesterUsername);
       setMyFollowRequests((prev) => prev.filter((r) => r.follower.username !== requesterUsername));
     } catch {
       // leave the request in the list so the user can retry
+    } finally {
+      setRequestActionUsername(null);
     }
   };
 
@@ -171,8 +186,26 @@ function ProfileView({ username }: ProfileViewProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige">
-        <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+      <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10 flex justify-center">
+        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 sm:p-10">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-20 h-20 rounded-full bg-gray-200 shrink-0" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32 rounded-full bg-gray-200" />
+                <Skeleton className="h-3 w-20 rounded-full bg-gray-100" />
+                <Skeleton className="h-3 w-28 rounded-full bg-gray-100" />
+              </div>
+            </div>
+            <Skeleton className="h-9 w-28 rounded-full bg-gray-200 shrink-0" />
+          </div>
+          <Skeleton className="h-3 w-3/4 rounded-full bg-gray-100 mt-6" />
+          <div className="mt-6 flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-20 rounded-full bg-gray-100" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -232,9 +265,15 @@ function ProfileView({ username }: ProfileViewProps) {
             <div className="shrink-0 flex flex-col items-end gap-2">
               <button
                 onClick={handleMessage}
-                className="flex items-center gap-2 text-sm font-quick font-semibold text-chblack bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2"
+                disabled={isMessageLoading}
+                className="flex items-center gap-2 text-sm font-quick font-semibold text-chblack bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2 disabled:opacity-60"
               >
-                <MessageCircle size={16} /> Message
+                {isMessageLoading ? (
+                  <span className="w-3.5 h-3.5 border-t-2 border-chblack/50 rounded-full animate-spin" />
+                ) : (
+                  <MessageCircle size={16} />
+                )}
+                Message
               </button>
               {followStatus === "NONE" && (
                 <button
@@ -292,8 +331,13 @@ function ProfileView({ username }: ProfileViewProps) {
           <div className="mt-4 border border-pink-100 rounded-xl p-4">
             <h3 className="font-quick font-semibold text-sm mb-3 capitalize">{listPanel}</h3>
             {isLoadingList ? (
-              <div className="flex justify-center py-4">
-                <div className="w-5 h-5 border-t-2 border-pink-600 rounded-full animate-spin" />
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2">
+                    <Skeleton className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
+                    <Skeleton className="h-3 w-32 rounded-full bg-gray-200" />
+                  </div>
+                ))}
               </div>
             ) : listUsers.length === 0 ? (
               <p className="font-pop text-sm text-chblack/50">Nobody here yet.</p>
@@ -366,15 +410,17 @@ function ProfileView({ username }: ProfileViewProps) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleAcceptRequest(req.follower.username)}
-                      className="text-xs font-quick font-semibold text-white bg-pink-600 hover:bg-pink-700 rounded-full px-4 py-1.5"
+                      disabled={requestActionUsername === req.follower.username}
+                      className="text-xs font-quick font-semibold text-white bg-pink-600 hover:bg-pink-700 rounded-full px-4 py-1.5 disabled:opacity-60"
                     >
-                      Accept
+                      {requestActionUsername === req.follower.username ? "..." : "Accept"}
                     </button>
                     <button
                       onClick={() => handleRejectRequest(req.follower.username)}
-                      className="text-xs font-quick font-semibold text-chblack bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5"
+                      disabled={requestActionUsername === req.follower.username}
+                      className="text-xs font-quick font-semibold text-chblack bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-1.5 disabled:opacity-60"
                     >
-                      Reject
+                      {requestActionUsername === req.follower.username ? "..." : "Reject"}
                     </button>
                   </div>
                 </div>

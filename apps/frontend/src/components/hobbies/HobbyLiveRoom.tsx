@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getHobbyRoomMessages, type HobbyRoomMessage } from "@/api/api";
 import { getSocket } from "@/lib/socket";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface HobbyLiveRoomProps {
   hobbyId: string;
@@ -80,8 +81,16 @@ function HobbyLiveRoom({ hobbyId, slug }: HobbyLiveRoomProps) {
     <div className="bg-white rounded-xl shadow-md flex flex-col h-[28rem]">
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-6 h-6 border-t-2 border-pink-600 rounded-full animate-spin" />
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex gap-2">
+                <Skeleton className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
+                <div className="flex-1 space-y-1.5 max-w-[70%]">
+                  <Skeleton className="h-2.5 w-24 rounded-full bg-gray-200" />
+                  <Skeleton className="h-3 w-4/5 rounded-full bg-gray-100" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : messages.length === 0 ? (
           <p className="text-center text-chblack/50 py-10">No one&apos;s said anything yet. Break the ice.</p>

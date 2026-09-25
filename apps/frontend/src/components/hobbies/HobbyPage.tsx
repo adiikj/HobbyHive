@@ -13,6 +13,7 @@ import {
   type Post,
 } from "@/api/api";
 import PostCard from "@/components/dashboard/PostCard";
+import Skeleton from "@/components/ui/Skeleton";
 import HobbyLiveRoom from "./HobbyLiveRoom";
 import HobbyEvents from "./HobbyEvents";
 
@@ -85,8 +86,19 @@ function HobbyPage({ slug }: HobbyPageProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige">
-        <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+      <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10">
+        <div className="max-w-2xl mx-auto">
+          <Skeleton className="w-9 h-9 rounded-full bg-white/50 mb-6" />
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-10 mb-6 space-y-3">
+            <Skeleton className="h-8 w-1/2 rounded-full bg-gray-200" />
+            <Skeleton className="h-3 w-1/3 rounded-full bg-gray-100" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-20 rounded-full bg-white/50" />
+            <Skeleton className="h-9 w-24 rounded-full bg-white/50" />
+            <Skeleton className="h-9 w-20 rounded-full bg-white/50" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -178,9 +190,21 @@ function HobbyPage({ slug }: HobbyPageProps) {
         ) : (
           <div className="space-y-6">
             {isLoadingPosts ? (
-              <div className="flex justify-center py-10">
-                <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
-              </div>
+              <>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="p-4 bg-white rounded-xl shadow-md space-y-3">
+                    <div className="flex items-center gap-2.5">
+                      <Skeleton className="w-9 h-9 rounded-full bg-gray-200 shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3 w-28 rounded-full bg-gray-200" />
+                        <Skeleton className="h-3 w-16 rounded-full bg-gray-100" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-3 w-full rounded-full bg-gray-100" />
+                    <Skeleton className="h-3 w-4/5 rounded-full bg-gray-100" />
+                  </div>
+                ))}
+              </>
             ) : posts.length === 0 ? (
               <div className="text-center bg-white rounded-xl shadow-md p-8">
                 <p className="font-semibold text-lg">No posts yet.</p>

@@ -11,6 +11,7 @@ import {
   type Notification,
 } from "@/api/api";
 import { timeAgo } from "@/lib/time";
+import Skeleton from "@/components/ui/Skeleton";
 
 const POLL_INTERVAL_MS = 30000;
 
@@ -102,8 +103,13 @@ function NotificationBell({
         >
           <p className="font-quick text-sm font-semibold text-chblack">Notifications</p>
           {isLoading ? (
-            <div className="flex justify-center py-5">
-              <div className="w-4 h-4 border-t-2 border-pink-600 rounded-full animate-spin" />
+            <div className="mt-2.5 space-y-1.5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-2.5 rounded-lg bg-beige space-y-1.5">
+                  <Skeleton className="h-2.5 w-4/5 rounded-full bg-gray-200" />
+                  <Skeleton className="h-2 w-1/4 rounded-full bg-gray-200" />
+                </div>
+              ))}
             </div>
           ) : !notifications || notifications.length === 0 ? (
             <p className="mt-2.5 text-xs text-chblack/50">Nothing yet.</p>

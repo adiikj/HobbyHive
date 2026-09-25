@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 import { logout } from "@/redux/authSlice";
 import { getHobbyColor } from "@/lib/hobbyTheme";
+import { useCurrentUser, clearCurrentUser } from "@/lib/currentUser";
 import {
   getFeed,
   getFollowingFeed,
@@ -14,10 +15,8 @@ import {
   getTrendingHobbies,
   createPost,
   uploadPostImage,
-  getUserProfile,
   type Post,
   type Hobby,
-  type Profile,
   type TrendingHobby,
 } from "@/api/api";
 
@@ -28,7 +27,7 @@ export function useDashboardData() {
   const dispatch = useDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [me, setMe] = useState<Profile | null>(null);
+  const { user: me } = useCurrentUser();
   const feedTopRef = useRef<HTMLDivElement>(null);
 
   const [feedTab, setFeedTab] = useState<FeedTab>(searchParams.get("feed") === "following" ? "following" : "hobbies");
@@ -66,7 +65,6 @@ export function useDashboardData() {
   useEffect(() => {
     getHobbies().then(setHobbies).catch(() => undefined);
     getMyHobbies().then(setMyHobbies).catch(() => undefined);
-    getUserProfile().then(setMe).catch(() => undefined);
     getTrendingHobbies().then(setTrendingHobbies).catch(() => undefined);
   }, []);
 
@@ -86,6 +84,7 @@ export function useDashboardData() {
 
   const handleLogout = () => {
     Cookies.remove("accessToken");
+    clearCurrentUser();
     dispatch(logout());
     window.location.href = "/";
   };

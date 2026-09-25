@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, Image as ImageIcon, X } from "lucide-react";
 import { getHobbyColor } from "@/lib/hobbyTheme";
 import { getFollowStatus, followUser, unfollowUser, type FollowUser as FollowUserType } from "@/api/api";
+import Skeleton from "@/components/ui/Skeleton";
 import PostCard from "./PostCard";
 import NotificationBell from "./NotificationBell";
 import { useDashboardData } from "./useDashboardData";
@@ -327,9 +328,21 @@ function DashboardConsole() {
 
         <div className="space-y-3 mt-4">
           {isLoadingFeed ? (
-            <div className="flex justify-center py-8">
-              <div className="w-7 h-7 border-t-2 border-pink-600 rounded-full animate-spin" />
-            </div>
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 bg-white rounded-xl shadow-md space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <Skeleton className="w-9 h-9 rounded-full bg-gray-200 shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3 w-28 rounded-full bg-gray-200" />
+                      <Skeleton className="h-3 w-16 rounded-full bg-gray-100" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-3 w-full rounded-full bg-gray-100" />
+                  <Skeleton className="h-3 w-4/5 rounded-full bg-gray-100" />
+                </div>
+              ))}
+            </>
           ) : feedError ? (
             <p className="text-center text-red-600 bg-white rounded-2xl border border-chgrey/10 p-4 text-sm">{feedError}</p>
           ) : posts.length === 0 ? (

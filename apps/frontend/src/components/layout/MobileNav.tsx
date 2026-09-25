@@ -1,26 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { usePathname, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { Home, Compass, Users, User, LogOut } from "lucide-react";
 import { logout } from "@/redux/authSlice";
-import { getUserProfile, type Profile } from "@/api/api";
+import { useCurrentUser, clearCurrentUser } from "@/lib/currentUser";
 import NotificationBell from "@/components/dashboard/NotificationBell";
 
 function MobileNav() {
   const dispatch = useDispatch();
   const router = useRouter();
   const pathname = usePathname();
-  const [me, setMe] = useState<Profile | null>(null);
-
-  useEffect(() => {
-    getUserProfile().then(setMe).catch(() => undefined);
-  }, []);
+  const { user: me } = useCurrentUser();
 
   const handleLogout = () => {
     Cookies.remove("accessToken");
+    clearCurrentUser();
     dispatch(logout());
     window.location.href = "/";
   };

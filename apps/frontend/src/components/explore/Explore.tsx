@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, ArrowLeft } from "lucide-react";
+import Skeleton from "@/components/ui/Skeleton";
 import {
   getHobbies,
   getMyHobbies,
@@ -97,8 +98,19 @@ function Explore() {
         {query.trim() ? (
           <div className="space-y-6">
             {isSearching ? (
-              <div className="flex justify-center py-10">
-                <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+              <div className="space-y-4">
+                <section className="bg-white rounded-xl shadow-md p-5 space-y-3">
+                  <Skeleton className="h-3 w-20 rounded-full bg-gray-200" />
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Skeleton className="w-9 h-9 rounded-full bg-gray-200 shrink-0" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3 rounded-full bg-gray-200 w-1/3" />
+                        <Skeleton className="h-2.5 rounded-full bg-gray-100 w-1/4" />
+                      </div>
+                    </div>
+                  ))}
+                </section>
               </div>
             ) : results && (results.users.length || results.hobbies.length || results.posts.length) ? (
               <>
@@ -181,8 +193,23 @@ function Explore() {
             )}
           </div>
         ) : isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+          <div className="space-y-8">
+            <section>
+              <Skeleton className="h-3 w-40 rounded-full bg-white/50 mb-3" />
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-32 rounded-full bg-white/50" />
+                ))}
+              </div>
+            </section>
+            <section>
+              <Skeleton className="h-3 w-32 rounded-full bg-white/50 mb-3" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 rounded-xl bg-white/50" />
+                ))}
+              </div>
+            </section>
           </div>
         ) : (
           <div className="space-y-8">

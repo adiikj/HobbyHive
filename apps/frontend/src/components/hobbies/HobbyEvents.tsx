@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getHobbyEvents, createEvent, rsvpToEvent, cancelRsvp, type HobbyEvent } from "@/api/api";
+import Skeleton from "@/components/ui/Skeleton";
 
 interface HobbyEventsProps {
   slug: string;
@@ -133,8 +134,14 @@ function HobbyEvents({ slug }: HobbyEventsProps) {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center py-10">
-          <div className="w-8 h-8 border-t-2 border-pink-600 rounded-full animate-spin" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-md p-5 space-y-3">
+              <Skeleton className="h-5 w-1/2 rounded-full bg-gray-200" />
+              <Skeleton className="h-3 w-1/3 rounded-full bg-gray-200" />
+              <Skeleton className="h-3 w-2/3 rounded-full bg-gray-100" />
+            </div>
+          ))}
         </div>
       ) : events.length === 0 ? (
         <div className="text-center bg-white rounded-xl shadow-md p-8">
