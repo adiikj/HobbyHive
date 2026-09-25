@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import multer from "multer";
+import { ApiError } from "../utils/ApiError.js";
 
 const uploadsDir = path.join(process.cwd(), "public", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
@@ -20,7 +21,7 @@ export const uploadImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
-      cb(new Error("Only JPEG, PNG, WEBP, or GIF images are allowed"));
+      cb(new ApiError(400, "Only JPEG, PNG, WEBP or GIF images can be uploaded."));
       return;
     }
     cb(null, true);

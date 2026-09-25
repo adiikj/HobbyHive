@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { errorHandler } from "./middlewares/error.middleware.js";
+import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 import userRouter from "./routes/user.routes.js";
 import hobbyRouter from "./routes/hobby.routes.js";
 import postRouter from "./routes/post.routes.js";
@@ -44,6 +44,7 @@ app.use("/api/v1/progress", progressRouter);
 app.use("/api/v1/ml", mlRouter);
 app.use("/api/v1/ask", askRouter);
 
+app.use("/api", notFoundHandler);
 app.use(errorHandler);
 
 export { app };

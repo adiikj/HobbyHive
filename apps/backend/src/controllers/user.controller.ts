@@ -145,7 +145,7 @@ const sendOTP = async (email: string, otp: string) => {
     await transporter.sendMail(mailOptions);
   } catch (error) {
     console.error("Error sending OTP via email:", error);
-    throw new ApiError(500, "Error sending OTP via email");
+    throw new ApiError(503, "We couldn't email your code just now. Please try again in a moment.");
   }
 };
 
