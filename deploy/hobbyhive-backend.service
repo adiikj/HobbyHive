@@ -1,0 +1,20 @@
+# HobbyHive API (Express). Measured peak ~160 MB.
+[Unit]
+Description=HobbyHive API
+After=network-online.target hobbyhive-ml.service
+
+[Service]
+User=hobbyhive
+WorkingDirectory=/opt/hobbyhive/apps/backend
+EnvironmentFile=/opt/hobbyhive/apps/backend/.env
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=192
+Environment=ML_URL=http://127.0.0.1:8002
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=3
+MemoryHigh=260M
+MemoryMax=320M
+
+[Install]
+WantedBy=multi-user.target

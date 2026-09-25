@@ -1,0 +1,21 @@
+# HobbyHive ML service (topic model, search, Ask Bea). Measured peak ~245 MB with the local LLM off.
+[Unit]
+Description=HobbyHive ML
+After=network-online.target
+
+[Service]
+User=hobbyhive
+WorkingDirectory=/opt/hobbyhive/apps/ml
+EnvironmentFile=/opt/hobbyhive/apps/backend/.env
+Environment=BEA_LOCAL_LLM=0
+Environment=ML_THREADS=2
+# Fewer glibc malloc arenas: lower, steadier RSS for a small multi-threaded Python process
+Environment=MALLOC_ARENA_MAX=2
+ExecStart=/opt/hobbyhive/apps/ml/.venv/bin/uvicorn hobbyhive_ml.api:app --host 127.0.0.1 --port 8002 --workers 1 --no-access-log
+Restart=always
+RestartSec=3
+MemoryHigh=320M
+MemoryMax=400M
+
+[Install]
+WantedBy=multi-user.target
