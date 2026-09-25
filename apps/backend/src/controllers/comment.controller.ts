@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { Prisma } from "@prisma/client";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -10,8 +11,13 @@ const commentSelect = {
   content: true,
   parentId: true,
   createdAt: true,
-  author: { select: { id: true, name: true, username: true, avatarUrl: true } },
-};
+  user: { select: { id: true, name: true, username: true, avatarUrl: true } },
+} satisfies Prisma.CommentSelect;
+
+type CommentRow = Prisma.CommentGetPayload<{ select: typeof commentSelect }>;
+
+// The relation is `user` in the schema; clients read it as `author` (same as posts)
+const toCommentResponse = ({ user, ...comment }: CommentRow) => ({ ...comment, author: user });
 
 // List comments on a post, oldest first (flat, with parentId — the client nests replies under their parent)
 export const listComments = asyncHandler(async (req: Request, res: Response) => {
@@ -23,7 +29,7 @@ export const listComments = asyncHandler(async (req: Request, res: Response) => 
     select: commentSelect,
   });
 
-  res.status(200).json(new ApiResponse(200, comments));
+  res.status(200).json(new ApiResponse(200, comments.map(toCommentResponse)));
 });
 
 // Add a comment to a post, or a reply to one of its comments (`parentId`)
@@ -71,5 +77,5 @@ export const addComment = asyncHandler(async (req: Request, res: Response) => {
   }
   await notifyMentions(comment.content, userId, postId, notified);
 
-  res.status(201).json(new ApiResponse(201, comment, "Comment added successfully"));
+  res.status(201).json(new ApiResponse(201, toCommentResponse(comment), "Comment added successfully"));
 });
