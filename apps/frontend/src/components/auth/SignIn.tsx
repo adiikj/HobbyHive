@@ -179,7 +179,7 @@ function SignIn() {
                 {isLoading ? (
                   <span className="border-t-2 border-white w-5 h-5 rounded-full animate-spin" />
                 ) : (
-                  "Sign In"
+                  "Sign in"
                 )}
               </button>
             </div>

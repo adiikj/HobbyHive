@@ -153,7 +153,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const tabs: { key: HobbyTab; label: string; icon: typeof Newspaper }[] = [
     { key: "posts", label: "Posts", icon: Newspaper },
     { key: "ask", label: "Ask Bea", icon: Sparkles },
-    { key: "room", label: "Live Room", icon: Radio },
+    { key: "room", label: "Live room", icon: Radio },
     { key: "events", label: "Events", icon: CalendarDays },
     { key: "challenges", label: "Challenges", icon: Trophy },
     ...(hobby.isModerator ? [{ key: "review" as const, label: "Review", icon: ShieldAlert }] : []),
@@ -258,7 +258,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
               }`}
               style={isActive ? { backgroundColor: color } : undefined}
             >
-              <Icon size={16} className="shrink-0" /> <span className={isActive ? "" : "hidden sm:inline"}>{label}</span>
+              <Icon size={16} className="shrink-0" /> <span className={`whitespace-nowrap ${isActive ? "" : "hidden sm:inline"}`}>{label}</span>
             </button>
           );
         })}

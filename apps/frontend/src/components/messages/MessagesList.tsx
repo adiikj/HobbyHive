@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { listConversations, type ConversationSummary } from "@/api/api";
 import { getSocket } from "@/lib/socket";
 import Skeleton from "@/components/ui/Skeleton";
@@ -44,14 +43,8 @@ function MessagesList({ activeConversationId = null }: MessagesListProps) {
 
   return (
     <div className="flex flex-col h-full bg-canvas font-pop">
+      {/* A top-level page (it's in the main nav), so no back button, same as Explore and Saved */}
       <div className="flex items-center gap-2 px-4 pt-5 pb-4 shrink-0 lg:pt-8">
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="p-1 -ml-1 rounded-full hover:bg-surface lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          aria-label="Back to dashboard"
-        >
-          <ArrowLeft size={20} />
-        </button>
         <h1 className="font-bnt text-5xl leading-[0.9] text-chblack">MESSAGES</h1>
       </div>
 

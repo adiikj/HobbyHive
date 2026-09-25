@@ -138,7 +138,7 @@ function CommentThread({ postId, onCommentAdded }: CommentThreadProps) {
             onKeyDown={mentions.onKeyDown}
             onClick={() => mentions.refresh()}
             onBlur={mentions.close}
-            placeholder={replyTo ? `Reply to ${replyTo.author.name}…` : "Add a comment… (use @ to mention)"}
+            placeholder={replyTo ? `Reply to ${replyTo.author.name}…` : "Add a comment…"}
             aria-label="Add a comment"
             className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
           />
@@ -147,7 +147,7 @@ function CommentThread({ postId, onCommentAdded }: CommentThreadProps) {
         <button
           type="submit"
           disabled={isSubmitting || !text.trim()}
-          className="rounded-full bg-chblack px-4 text-sm font-quick font-bold text-canvas transition-colors hover:bg-chblack/85 disabled:opacity-40"
+          className="rounded-full bg-brand px-4 text-sm font-quick font-bold text-white transition-colors hover:bg-pink-700 disabled:opacity-40"
         >
           {isSubmitting ? "…" : replyTo ? "Reply" : "Send"}
         </button>

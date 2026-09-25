@@ -46,7 +46,7 @@ function EditProfile() {
 
   const header = (
     <>
-      <PageHeader eyebrow="Settings" title="Your account" subtitle="How you show up to other hobbyists." />
+      <PageHeader eyebrow="Settings" title="Your profile" subtitle="How you show up to other hobbyists." />
       <SettingsTabs />
     </>
   );

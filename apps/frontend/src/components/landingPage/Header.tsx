@@ -30,12 +30,12 @@ function Header() {
           <div className="hidden sm:flex flex-row gap-4">
             <Link href="/signin">
               <button className="font-quick font-semibold w-24 h-9 text-sm text-white bg-black rounded-3xl shadow-md shadow-black/10 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                Sign In
+                Sign in
               </button>
             </Link>
             <Link href="/signup">
               <button className="font-quick font-semibold w-24 h-9 text-sm bg-white border-2 border-chblack/15 rounded-3xl hover:border-pink-500 hover:text-pink-600 transition-colors">
-                Sign Up
+                Sign up
               </button>
             </Link>
           </div>
@@ -65,7 +65,7 @@ function Header() {
             className="font-quick font-semibold w-40 h-10 text-md text-white bg-black rounded-3xl mb-4 shadow-md"
             onClick={handleMenuClose}
           >
-            Sign In
+            Sign in
           </button>
         </Link>
         <Link href="/signup">
@@ -73,7 +73,7 @@ function Header() {
             className="font-quick font-semibold w-40 h-10 text-md bg-white border-2 border-chblack/15 rounded-3xl"
             onClick={handleMenuClose}
           >
-            Sign Up
+            Sign up
           </button>
         </Link>
       </motion.div>

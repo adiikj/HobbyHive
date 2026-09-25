@@ -92,11 +92,12 @@ function HobbyEvents({ slug, color }: HobbyEventsProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-chblack/55">
-          {isLoading ? "\u00a0" : upcomingCount === 0 ? "Nothing on the calendar yet." : `${upcomingCount} upcoming`}
+          {/* With no events at all, the empty state below already says so */}
+          {isLoading || events.length === 0 ? "\u00a0" : upcomingCount === 0 ? "No upcoming events" : `${upcomingCount} upcoming`}
         </p>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className={showForm ? secondaryButtonClass : primaryButtonClass}
+          className={`shrink-0 whitespace-nowrap ${showForm ? secondaryButtonClass : primaryButtonClass}`}
         >
           {showForm ? (
             "Cancel"

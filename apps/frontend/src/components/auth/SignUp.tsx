@@ -72,7 +72,7 @@ function SignUp() {
         setIsOtpSent(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error sending OTP. Please try again.");
+      setError(err instanceof Error ? err.message : "We couldn't send your code. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +87,7 @@ function SignUp() {
     setError("");
 
     if (!otp || otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP.");
+      setError("Please enter the 6-digit code from your email.");
       return;
     }
 
@@ -102,10 +102,10 @@ function SignUp() {
         localStorage.setItem("authToken", accessToken);
         router.push("/choice");
       } else {
-        setError("Invalid OTP. Please try again.");
+        setError("That code didn't match. Please check your email and try again.");
       }
     } catch {
-      setError("Error verifying OTP. Please try again.");
+      setError("We couldn't check that code. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +223,7 @@ function SignUp() {
                   animate={{ opacity: 1 }}
                   className="w-full font-quick font-semibold text-white bg-black py-3 rounded-full shadow-md shadow-black/10 hover:shadow-lg hover:-translate-y-0.5 transition-all mt-6 flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0"
                 >
-                  {isLoading ? <span className="border-t-2 border-white w-5 h-5 rounded-full animate-spin" /> : "Send OTP"}
+                  {isLoading ? <span className="border-t-2 border-white w-5 h-5 rounded-full animate-spin" /> : "Send code"}
                 </motion.button>
               ) : (
                 <motion.div
@@ -233,7 +233,7 @@ function SignUp() {
                   transition={{ duration: 0.3 }}
                   className="mt-6"
                 >
-                  <label className="font-quick text-sm font-medium text-chblack/80 mb-1.5 block">Enter OTP</label>
+                  <label className="font-quick text-sm font-medium text-chblack/80 mb-1.5 block">Enter the 6-digit code we emailed you</label>
                   <input
                     name="otp"
                     type="text"
@@ -251,7 +251,7 @@ function SignUp() {
                     {isLoading ? (
                       <span className="border-t-2 border-white w-5 h-5 rounded-full animate-spin" />
                     ) : (
-                      "Verify OTP"
+                      "Verify code"
                     )}
                   </button>
                 </motion.div>
@@ -262,7 +262,7 @@ function SignUp() {
           <p className="font-pop text-chblack/70 text-sm mt-6 text-center">
             Already have an account?{" "}
             <Link href="/signin" className="text-pink-600 font-semibold hover:underline">
-              Login here
+              Sign in here
             </Link>
           </p>
         </motion.div>

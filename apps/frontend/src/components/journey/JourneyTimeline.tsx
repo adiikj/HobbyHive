@@ -110,7 +110,7 @@ function JourneyTimeline({ username, firstName, isOwnProfile }: { username: stri
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-line bg-surface p-4">
-        <dl className="grid grid-cols-4 gap-2 text-center">
+        <dl className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
           {[
             ["Posts", stats.posts],
             ["Photos", stats.photos],
@@ -119,7 +119,7 @@ function JourneyTimeline({ username, firstName, isOwnProfile }: { username: stri
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl bg-canvas px-2 py-2">
               <dd className="font-bnt text-3xl leading-none text-chblack">{value}</dd>
-              <dt className="mt-0.5 text-[10px] font-quick font-bold uppercase tracking-wider text-chblack/45">{label}</dt>
+              <dt className="mt-0.5 truncate text-[10px] font-quick font-bold uppercase tracking-wider text-chblack/45">{label}</dt>
             </div>
           ))}
         </dl>

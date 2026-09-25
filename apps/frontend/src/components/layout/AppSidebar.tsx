@@ -84,7 +84,7 @@ function AppSidebar() {
             icon={User}
             active={me ? pathname.startsWith(`/profile/${me.username}`) : false}
           />
-          <NavItem href="/settings/hobbies" label="Settings" icon={Settings} active={pathname.startsWith("/settings")} />
+          <NavItem href="/settings/profile" label="Settings" icon={Settings} active={pathname.startsWith("/settings")} />
         </nav>
 
         <button

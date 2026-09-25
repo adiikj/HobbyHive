@@ -90,8 +90,8 @@ function HobbyLiveRoom({ hobbyId, slug, color }: HobbyLiveRoomProps) {
           <span className="absolute inset-0 animate-ping rounded-full opacity-60" style={{ backgroundColor: color }} />
           <span className="relative h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
         </span>
-        <p className="text-sm font-semibold text-chblack">Live room</p>
-        <p className="truncate text-xs text-chblack/45">Messages appear for everyone in the hive instantly</p>
+        <p className="shrink-0 text-sm font-semibold text-chblack">Live room</p>
+        <p className="hidden truncate text-xs text-chblack/45 sm:block">Messages appear for everyone in the hive instantly</p>
       </div>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-canvas/60 p-4">

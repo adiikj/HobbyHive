@@ -114,7 +114,7 @@ function AccountMenu({ variant }: AccountMenuProps) {
             <Link role="menuitem" href="/saved" className={itemClass} onClick={() => setIsOpen(false)}>
               <Bookmark size={17} /> Saved
             </Link>
-            <Link role="menuitem" href="/settings/hobbies" className={itemClass} onClick={() => setIsOpen(false)}>
+            <Link role="menuitem" href="/settings/profile" className={itemClass} onClick={() => setIsOpen(false)}>
               <Settings size={17} /> Settings
             </Link>
             <div className="my-1 h-px bg-line" />

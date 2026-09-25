@@ -150,7 +150,7 @@ function UpcomingEvents({ hobby, color }: { hobby: Hobby; color: string }) {
           className="group flex items-center gap-3 rounded-xl bg-canvas p-3 text-sm text-chblack/60 hover:text-chblack"
         >
           <CalendarDays size={18} className="shrink-0" style={{ color }} />
-          <span className="flex-1">No meetups planned yet. Start one?</span>
+          <span className="flex-1">No events planned yet. Start one?</span>
           <ArrowRight size={16} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
         </Link>
       ) : (

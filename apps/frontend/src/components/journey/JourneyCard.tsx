@@ -54,7 +54,7 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
         </Link>
       </div>
 
-      <div className="mt-3 grid grid-cols-[auto_1fr] items-center gap-4">
+      <div className="mt-3 grid grid-cols-1 items-center gap-3 sm:grid-cols-[auto_1fr] sm:gap-4">
         <div className="flex items-center gap-2.5">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: withAlpha(color, streak.current ? 0.15 : 0.06) }}>
             <Flame size={22} style={{ color: streak.current ? color : undefined }} className={streak.current ? "" : "text-chblack/30"} />
@@ -74,7 +74,7 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl bg-canvas px-2 py-1.5">
               <dd className="font-bnt text-2xl leading-none text-chblack">{value}</dd>
-              <dt className="text-[10px] font-quick font-bold uppercase tracking-wider text-chblack/45">{label}</dt>
+              <dt className="truncate text-[10px] font-quick font-bold uppercase tracking-wider text-chblack/45">{label}</dt>
             </div>
           ))}
         </dl>
