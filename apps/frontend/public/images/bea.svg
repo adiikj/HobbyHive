@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Bea, HobbyHive's assistant: a friendly bee with reading glasses">
+  <!-- honey hexagon -->
+  <path d="M40.5 5.5a19 19 0 0 1 19 0l27 15.6a19 19 0 0 1 9.5 16.4v25a19 19 0 0 1-9.5 16.4l-27 15.6a19 19 0 0 1-19 0l-27-15.6A19 19 0 0 1 4 62.5v-25a19 19 0 0 1 9.5-16.4z" fill="#F59E0B"/>
+  <path d="M40.5 5.5a19 19 0 0 1 19 0l27 15.6a19 19 0 0 1 9.5 16.4v6c-14-10-44-18-92 2v-8a19 19 0 0 1 9.5-16.4z" fill="#FBBF24"/>
+
+  <!-- wings -->
+  <ellipse cx="21" cy="38" rx="17" ry="7.5" transform="rotate(-28 21 38)" fill="#E0F2FE" stroke="#3B2A06" stroke-width="2.5"/>
+  <ellipse cx="79" cy="38" rx="17" ry="7.5" transform="rotate(28 79 38)" fill="#E0F2FE" stroke="#3B2A06" stroke-width="2.5"/>
+  <path d="M12 42 Q20 38 28 38" fill="none" stroke="#7DD3FC" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M88 42 Q80 38 72 38" fill="none" stroke="#7DD3FC" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- antennae -->
+  <path d="M43 32 Q40 20 33 16" fill="none" stroke="#3B2A06" stroke-width="3" stroke-linecap="round"/>
+  <path d="M57 32 Q60 20 67 16" fill="none" stroke="#3B2A06" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="33" cy="16" r="4" fill="#DB2777"/>
+  <circle cx="67" cy="16" r="4" fill="#DB2777"/>
+
+  <!-- head, with a striped collar -->
+  <circle cx="50" cy="56" r="27" fill="#FFE066" stroke="#3B2A06" stroke-width="3"/>
+  <path d="M29 73 L71 73 A27 27 0 0 1 64.1 79 L35.9 79 A27 27 0 0 1 29 73 Z" fill="#3B2A06"/>
+
+  <!-- blush -->
+  <ellipse cx="31" cy="59" rx="4.5" ry="2.8" fill="#F472B6" fill-opacity="0.55"/>
+  <ellipse cx="69" cy="59" rx="4.5" ry="2.8" fill="#F472B6" fill-opacity="0.55"/>
+
+  <!-- reading glasses and eyes -->
+  <circle cx="40" cy="50" r="8.5" fill="#FFFFFF" fill-opacity="0.55" stroke="#3B2A06" stroke-width="2.5"/>
+  <circle cx="60" cy="50" r="8.5" fill="#FFFFFF" fill-opacity="0.55" stroke="#3B2A06" stroke-width="2.5"/>
+  <path d="M48.5 49.5 Q50 47.5 51.5 49.5" fill="none" stroke="#3B2A06" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="40" cy="51" r="3.2" fill="#3B2A06"/>
+  <circle cx="60" cy="51" r="3.2" fill="#3B2A06"/>
+  <circle cx="41.2" cy="49.8" r="1.1" fill="#FFFFFF"/>
+  <circle cx="61.2" cy="49.8" r="1.1" fill="#FFFFFF"/>
+
+  <!-- smile -->
+  <path d="M44 61 Q50 66 56 61" fill="none" stroke="#3B2A06" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
