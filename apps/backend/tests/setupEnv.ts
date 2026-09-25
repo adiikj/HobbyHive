@@ -17,6 +17,16 @@ const prismaMock = mockDeep<PrismaClient>();
 
 vi.mock("../src/db/prisma.js", () => ({ prisma: prismaMock }));
 
+// The topic-model service is an HTTP dependency — never call it from tests; ML tests stub these per case
+vi.mock("../src/services/ml.service.js", () => ({
+  classify: vi.fn().mockResolvedValue(null),
+  searchQuery: vi.fn().mockResolvedValue(null),
+  embed: vi.fn().mockResolvedValue(null),
+  analyzePosts: vi.fn().mockResolvedValue(0),
+  analyzePostInBackground: vi.fn(),
+  toVectorLiteral: (v: number[]) => `[${v.join(",")}]`,
+}));
+
 // user.controller.ts talks to real Google/Gmail APIs to send OTP emails — never let tests hit the network
 vi.mock("googleapis", () => ({
   google: {

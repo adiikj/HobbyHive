@@ -15,7 +15,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "db:seed:demo": "tsx prisma/seedDemo.ts"
+    "db:seed:demo": "tsx prisma/seedDemo.ts",
+    "ml:backfill": "tsx prisma/backfillMl.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

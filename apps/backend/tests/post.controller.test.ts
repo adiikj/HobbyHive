@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import { app } from "../src/app.js";
 import { mockAuthenticatedUser, prismaMock, testUser } from "./testUtils.js";
+import * as ml from "../src/services/ml.service.js";
 
 const fakePost = (overrides: Partial<Record<string, unknown>> = {}) => ({
   id: "post_1",
@@ -71,6 +72,8 @@ describe("POST /api/v1/posts", () => {
     expect(res.status).toBe(201);
     expect(res.body.data.isLiked).toBe(false);
     expect(res.body.data.hobby.slug).toBe("dance");
+    // topic analysis is kicked off in the background, not awaited
+    expect(ml.analyzePostInBackground).toHaveBeenCalledWith({ id: "post_1", content: "Hello hobby world", hobbySlug: "dance" });
   });
 });
 

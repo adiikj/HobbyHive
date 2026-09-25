@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
 import { notifyLike, notifyNewPost, notifyMentions } from "../services/notification.service.js";
+import { analyzePostInBackground } from "../services/ml.service.js";
 
 export const postSelect = {
   id: true,
@@ -185,6 +186,8 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
 
   await notifyNewPost(hobbyId, userId, post.id);
   await notifyMentions(post.content, userId, post.id);
+  // Embeds the post (semantic search) and checks it fits the hive (moderator flag) — after responding
+  analyzePostInBackground({ id: post.id, content: post.content, hobbySlug: post.hobby.slug });
 
   const viewer = await getViewerState(userId, [post]);
   res.status(201).json(new ApiResponse(201, toPostResponse(post, viewer), "Post created successfully"));

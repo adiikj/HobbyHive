@@ -73,6 +73,16 @@ model Post {
   // Set when a hive moderator pins the post to the top of the hive
   pinnedAt      DateTime?
 
+  // Topic model (apps/ml): a 384-d sentence embedding (pgvector) for semantic search / similar posts,
+  // plus how well the post fits its hive. All nullable: the ML service is optional and runs async.
+  embedding       Unsupported("vector(384)")?
+  mlHiveScore     Float?
+  mlSuggestedHive String?
+  mlModelVersion  String?
+  // Flagged as likely off-topic for its hive → shown to the hive's moderators; reviewed = they kept it
+  flaggedAt       DateTime?
+  flagReviewedAt  DateTime?
+
   author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   hobby       Hobby        @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
   challenge   Challenge?   @relation(fields: [challengeId], references: [id], onDelete: SetNull)
@@ -87,6 +97,7 @@ model Post {
   @@index([authorId])
   @@index([challengeId])
   @@index([progressLogId, createdAt])
+  @@index([hobbyId, flaggedAt])
 }
 
 model Like {
