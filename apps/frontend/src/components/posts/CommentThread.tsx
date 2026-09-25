@@ -7,6 +7,7 @@ import { getComments, addComment, type Comment } from "@/api/api";
 import { timeAgo } from "@/lib/time";
 import Skeleton from "@/components/ui/Skeleton";
 import MentionText from "./MentionText";
+import { useMentions } from "./MentionPicker";
 
 interface CommentThreadProps {
   postId: string;
@@ -21,6 +22,7 @@ function CommentThread({ postId, onCommentAdded }: CommentThreadProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const mentions = useMentions(inputRef, text, setText);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,15 +126,24 @@ function CommentThread({ postId, onCommentAdded }: CommentThreadProps) {
         </div>
       )}
       <form onSubmit={submit} className="mt-2 flex gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={replyTo ? `Reply to ${replyTo.author.name}…` : "Add a comment… (use @ to mention)"}
-          aria-label="Add a comment"
-          className="min-w-0 flex-1 rounded-full border border-line bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-        />
+        <div className="relative min-w-0 flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              mentions.refresh(e.target.value);
+            }}
+            onKeyDown={mentions.onKeyDown}
+            onClick={() => mentions.refresh()}
+            onBlur={mentions.close}
+            placeholder={replyTo ? `Reply to ${replyTo.author.name}…` : "Add a comment… (use @ to mention)"}
+            aria-label="Add a comment"
+            className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+          />
+          {mentions.picker}
+        </div>
         <button
           type="submit"
           disabled={isSubmitting || !text.trim()}

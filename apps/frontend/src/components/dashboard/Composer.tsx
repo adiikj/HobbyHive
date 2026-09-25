@@ -14,6 +14,7 @@ import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { MAX_POST_IMAGES, type ComposerImage } from "./useDashboardData";
 import HiveHint from "./HiveHint";
+import { useMentions } from "@/components/posts/MentionPicker";
 
 interface ComposerProps {
   hobby: Hobby;
@@ -72,6 +73,7 @@ function Composer({
   const [logError, setLogError] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentions = useMentions(textareaRef, content, onContentChange);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const logMenuRef = useRef<HTMLDivElement>(null);
   const color = getHobbyColor(hobby.name);
@@ -221,24 +223,33 @@ function Composer({
       <div className="flex gap-3 p-4 pb-2">
         {avatar}
         <div className="flex-1 min-w-0">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => onContentChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
-              if (e.key === "Escape" && !content && images.length === 0)
-                setIsExpanded(false);
-            }}
-            placeholder={
-              enterChallenge && challenge
-                ? challenge.prompt
-                : `What's new in your ${hobby.name.toLowerCase()} world?`
-            }
-            aria-label={`Post to ${hobby.name}`}
-            rows={3}
-            className="w-full resize-none bg-transparent pt-2 text-[15px] leading-relaxed text-chblack placeholder:text-chblack/35 focus:outline-none"
-          />
+          <div className="relative">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => {
+                onContentChange(e.target.value);
+                mentions.refresh(e.target.value);
+              }}
+              onClick={() => mentions.refresh()}
+              onBlur={mentions.close}
+              onKeyDown={(e) => {
+                if (mentions.onKeyDown(e)) return;
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
+                if (e.key === "Escape" && !content && images.length === 0)
+                  setIsExpanded(false);
+              }}
+              placeholder={
+                enterChallenge && challenge
+                  ? challenge.prompt
+                  : `What's new in your ${hobby.name.toLowerCase()} world?`
+              }
+              aria-label={`Post to ${hobby.name}`}
+              rows={3}
+              className="w-full resize-none bg-transparent pt-2 text-[15px] leading-relaxed text-chblack placeholder:text-chblack/35 focus:outline-none"
+            />
+            {mentions.picker}
+          </div>
 
           {images.length > 0 && (
             <div className="mt-1 mb-2 grid grid-cols-4 gap-2">
