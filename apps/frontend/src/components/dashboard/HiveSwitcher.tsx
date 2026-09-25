@@ -61,7 +61,7 @@ function HiveSwitcher({ myHobbies, activeKey, onSelect }: HiveSwitcherProps) {
   const isFollowing = activeKey === FOLLOWING;
 
   return (
-    <nav aria-label="Your hives" className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+    <nav data-tour="hives" aria-label="Your hives" className="flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
       {myHobbies.map((hobby) => {
         const color = getHobbyColor(hobby.name);
         const isActive = activeKey === hobby.slug;

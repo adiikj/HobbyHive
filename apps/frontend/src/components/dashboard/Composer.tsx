@@ -179,6 +179,7 @@ function Composer({
     return (
       <div
         ref={containerRef}
+        data-tour="composer"
         className="flex items-center gap-3 bg-surface rounded-2xl border border-line p-3"
       >
         {avatar}

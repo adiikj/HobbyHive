@@ -16,6 +16,7 @@ function ChallengeBanner({ challenge, onEnter }: ChallengeBannerProps) {
 
   return (
     <section
+      data-tour="challenge"
       className="relative overflow-hidden rounded-2xl border p-4 sm:p-5"
       style={{ borderColor: withAlpha(color, 0.3), background: `linear-gradient(120deg, ${withAlpha(color, 0.14)}, rgb(var(--c-surface)) 70%)` }}
     >

@@ -8,10 +8,11 @@ import { roundedHexagonPath } from "@/lib/hexagon";
 
 const HEX = roundedHexagonPath(50, 50, 46, 12);
 
-function NavLink({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+function NavLink({ href, label, icon: Icon, active, tour }: { href: string; label: string; icon: LucideIcon; active: boolean; tour?: string }) {
   return (
     <Link
       href={href}
+      data-tour={tour}
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={`flex flex-1 flex-col items-center gap-0.5 py-1 text-[10px] font-quick font-bold transition-colors focus-visible:outline-none focus-visible:text-brand ${
@@ -35,7 +36,7 @@ function MobileNav() {
       className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex items-end border-t border-line bg-surface/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md"
     >
       <NavLink href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
-      <NavLink href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} />
+      <NavLink href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} tour="nav-explore" />
 
       <div className="flex flex-1 justify-center">
         <button
@@ -55,6 +56,7 @@ function MobileNav() {
       <NavLink
         href={me ? `/profile/${me.username}` : "/dashboard"}
         label="Profile"
+        tour="nav-profile"
         icon={User}
         active={me ? pathname.startsWith(`/profile/${me.username}`) : false}
       />

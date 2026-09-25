@@ -44,7 +44,7 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
   const log = journey.logs[0];
 
   return (
-    <section className="rounded-2xl border border-line bg-surface p-4">
+    <section data-tour="journey" className="rounded-2xl border border-line bg-surface p-4">
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-xs font-quick font-bold uppercase tracking-[0.14em]" style={{ color }}>
           Your journey{day ? ` · day ${day}` : ""}

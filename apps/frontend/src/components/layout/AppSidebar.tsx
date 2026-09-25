@@ -18,9 +18,9 @@ const navItemClass = (active: boolean) =>
       : "font-semibold text-chblack/60 hover:bg-surface/70 hover:text-chblack"
   }`;
 
-function NavItem({ href, label, icon: Icon, active }: { href: string; label: string; icon: LucideIcon; active: boolean }) {
+function NavItem({ href, label, icon: Icon, active, tour }: { href: string; label: string; icon: LucideIcon; active: boolean; tour?: string }) {
   return (
-    <Link href={href} className={navItemClass(active)} aria-current={active ? "page" : undefined}>
+    <Link href={href} data-tour={tour} className={navItemClass(active)} aria-current={active ? "page" : undefined}>
       <Icon size={21} strokeWidth={active ? 2.4 : 2} className={active ? "text-brand" : undefined} />
       {label}
     </Link>
@@ -42,7 +42,7 @@ function AskBeaNavItem() {
   };
 
   return (
-    <button type="button" onClick={open} className={navItemClass(active)} aria-current={active ? "page" : undefined}>
+    <button type="button" onClick={open} data-tour="nav-ask-bea" className={navItemClass(active)} aria-current={active ? "page" : undefined}>
       <BeaAvatar size={22} />
       Ask Bea
     </button>
@@ -67,7 +67,7 @@ function AppSidebar() {
 
         <nav aria-label="Main" className="space-y-1">
           <NavItem href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
-          <NavItem href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} />
+          <NavItem href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} tour="nav-explore" />
           <AskBeaNavItem />
           <NavItem href="/messages" label="Messages" icon={MessageCircle} active={pathname.startsWith("/messages")} />
           <NotificationBell
@@ -81,6 +81,7 @@ function AppSidebar() {
           <NavItem
             href={me ? `/profile/${me.username}` : "/dashboard"}
             label="Profile"
+            tour="nav-profile"
             icon={User}
             active={me ? pathname.startsWith(`/profile/${me.username}`) : false}
           />
@@ -96,7 +97,9 @@ function AppSidebar() {
         </button>
       </div>
 
-      <AccountMenu variant="full" />
+      <div data-tour="account">
+        <AccountMenu variant="full" />
+      </div>
     </aside>
   );
 }

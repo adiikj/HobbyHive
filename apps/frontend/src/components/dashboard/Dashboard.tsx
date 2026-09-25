@@ -8,6 +8,7 @@ import Logo from "@/components/brand/Logo";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { ComposerSkeleton, HiveHeaderSkeleton, PostListSkeleton, CardRowsSkeleton } from "@/components/ui/Skeletons";
 import AccountMenu from "@/components/layout/AccountMenu";
+import WelcomeTour from "@/components/tour/WelcomeTour";
 import PostCard from "./PostCard";
 import NotificationBell from "./NotificationBell";
 import HiveSwitcher from "./HiveSwitcher";
@@ -38,7 +39,9 @@ function MobileTopBar() {
         </Link>
         <NotificationBell size={22} iconClassName="text-chblack/70" triggerClassName="rounded-full p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" />
         <span className="ml-1">
-          <AccountMenu variant="avatar" />
+          <div data-tour="account">
+            <AccountMenu variant="avatar" />
+          </div>
         </span>
       </div>
     </header>
@@ -169,6 +172,8 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-canvas font-pop">
       <MobileTopBar />
+      {/* Starts once the hives (and the feed around them) have loaded, so it can point at them */}
+      <WelcomeTour ready={myHobbies !== null && !isLoadingFeed} />
 
       <div className="mx-auto flex w-full max-w-[1080px] gap-8 lg:px-8">
         <main className="mx-auto w-full min-w-0 max-w-[640px] xl:mx-0 xl:flex-1">
