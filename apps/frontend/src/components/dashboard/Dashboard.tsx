@@ -240,6 +240,8 @@ function Dashboard() {
                 error={postError}
                 onSubmit={handleCreatePost}
                 openSignal={composeSignal}
+                joinedSlugs={myHobbies?.map((h) => h.slug) ?? []}
+                onSwitchHive={selectHive}
               />
             )}
 

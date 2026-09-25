@@ -1090,3 +1090,38 @@ export const updateProgressLog = (logId: string, payload: { title?: string; desc
 
 export const deleteProgressLog = (logId: string) =>
   request<Record<string, never>>(() => axios.delete(`${PROGRESS_URL}/${logId}`, authConfig()), "Failed to delete progress log");
+
+// --- Topic model (apps/ml via the backend). Every call degrades to "unavailable" if the ML service is down.
+
+export interface HiveSuggestion {
+  available: boolean;
+  verdict: "too_short" | "unavailable" | "fits" | "other_hive" | "no_hive";
+  suggestion: { id: string; name: string; slug: string; icon: string | null; confidence: number } | null;
+}
+
+export interface FlaggedPost {
+  post: Post;
+  flaggedAt: string;
+  hiveScore: number | null;
+  looksLike: string | null;
+}
+
+const ML_URL = BASE_URL.replace(/\/users$/, "/ml");
+
+/** Does this draft look like it belongs in a different hive (or none)? */
+export const suggestHive = (text: string, hobbyId: string) =>
+  request<HiveSuggestion>(() => axios.post(`${ML_URL}/suggest-hive`, { text, hobbyId }, authConfig()), "Failed to check the draft");
+
+/** Search by meaning (hybrid: embedding similarity + topic model). */
+export const semanticSearch = (q: string) =>
+  request<{ available: boolean; posts: Post[] }>(() => axios.get(`${SEARCH_URL}/semantic`, authConfig({ q })), "Failed to search");
+
+export const getSimilarPosts = (postId: string) =>
+  request<Post[]>(() => axios.get(`${POSTS_URL}/${postId}/similar`, authConfig()), "Failed to load similar posts");
+
+/** Moderators: posts the model flagged as off-topic for this hive. */
+export const getFlaggedPosts = (slug: string) =>
+  request<FlaggedPost[]>(() => axios.get(`${HOBBIES_URL}/${slug}/flagged`, authConfig()), "Failed to load flagged posts");
+
+export const dismissFlag = (postId: string) =>
+  request<Record<string, never>>(() => axios.post(`${POSTS_URL}/${postId}/flag/dismiss`, {}, authConfig()), "Failed to dismiss flag");

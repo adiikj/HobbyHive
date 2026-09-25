@@ -13,6 +13,7 @@ import type { Challenge, Hobby, ProgressLogSummary } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { MAX_POST_IMAGES, type ComposerImage } from "./useDashboardData";
+import HiveHint from "./HiveHint";
 
 interface ComposerProps {
   hobby: Hobby;
@@ -36,6 +37,9 @@ interface ComposerProps {
   onSubmit: () => Promise<boolean>;
   /** Changes whenever something outside (e.g. the sidebar's "New post") asks the composer to open. */
   openSignal: string | null;
+  /** Hives the user has joined, and a way to move the draft to one (for the topic-model hint). */
+  joinedSlugs: string[];
+  onSwitchHive: (slug: string) => void;
 }
 
 /** Collapsed to a one-line prompt until used; always posts to the hive that's open. */
@@ -59,6 +63,8 @@ function Composer({
   error,
   onSubmit,
   openSignal,
+  joinedSlugs,
+  onSwitchHive,
 }: ComposerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLogMenuOpen, setIsLogMenuOpen] = useState(false);
@@ -370,6 +376,8 @@ function Composer({
           </div>
         </div>
       </div>
+
+      <HiveHint text={content} hobbyId={hobby.id} joinedSlugs={joinedSlugs} onSwitchHive={onSwitchHive} />
 
       <div className="flex items-center justify-between gap-3 border-t border-line px-3 py-2.5">
         <div className="flex items-center gap-1 min-w-0">

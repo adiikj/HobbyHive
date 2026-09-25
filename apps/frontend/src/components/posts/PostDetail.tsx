@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { getPost, type Post } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import PostCard from "@/components/dashboard/PostCard";
+import SimilarPosts from "./SimilarPosts";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { PageContainer, secondaryButtonClass } from "@/components/ui/Page";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
@@ -62,9 +63,12 @@ function PostDetail({ postId }: { postId: string }) {
       ) : !post ? (
         <PostListSkeleton count={1} />
       ) : (
-        <div className="rounded-2xl border border-line bg-surface">
-          <PostCard post={post} autoOpenComments />
-        </div>
+        <>
+          <div className="rounded-2xl border border-line bg-surface">
+            <PostCard post={post} autoOpenComments />
+          </div>
+          <SimilarPosts postId={post.id} />
+        </>
       )}
     </PageContainer>
   );

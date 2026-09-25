@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Search, ArrowRight, Check, Flame, Images, Newspaper, Hexagon } from "lucide-react";
+import { Search, ArrowRight, Check, Flame, Images, Newspaper, Hexagon, Sparkles } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import PostCard from "@/components/dashboard/PostCard";
@@ -17,6 +17,7 @@ import {
   getExploreFeed,
   addMyHobby,
   search,
+  semanticSearch,
   type Hobby,
   type Post,
   type TrendingHobby,
@@ -59,6 +60,8 @@ function Explore() {
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  // Search by meaning (topic model); empty when the ML service is unavailable
+  const [related, setRelated] = useState<Post[]>([]);
 
   useEffect(() => {
     Promise.all([getHobbies(), getMyHobbies(), getTrendingHobbies()])
@@ -99,14 +102,23 @@ function Explore() {
     const trimmed = query.trim();
     if (!trimmed) {
       setResults(null);
+      setRelated([]);
       return;
     }
 
     setIsSearching(true);
     const timeout = setTimeout(() => {
-      search(trimmed)
-        .then(setResults)
-        .catch(() => setResults({ users: [], hobbies: [], posts: [] }))
+      Promise.all([
+        search(trimmed).catch(() => ({ users: [], hobbies: [], posts: [] })),
+        semanticSearch(trimmed)
+          .then((r) => r.posts)
+          .catch(() => [] as Post[]),
+      ])
+        .then(([keyword, meaning]) => {
+          setResults(keyword);
+          const shown = new Set(keyword.posts.map((p) => p.id));
+          setRelated(meaning.filter((p) => !shown.has(p.id)));
+        })
         .finally(() => setIsSearching(false));
     }, 300);
 
@@ -206,7 +218,7 @@ function Explore() {
         <div className="space-y-6">
           {isSearching ? (
             <PostListSkeleton count={2} withImage={false} />
-          ) : results && (results.users.length || results.hobbies.length || results.posts.length) ? (
+          ) : results && (results.users.length || results.hobbies.length || results.posts.length || related.length) ? (
             <>
               {results.hobbies.length > 0 && (
                 <section>
@@ -254,6 +266,24 @@ function Explore() {
                   <SectionTitle>POSTS</SectionTitle>
                   <div className="divide-y divide-line rounded-2xl border border-line bg-surface">
                     {results.posts.map((p) => (
+                      <PostCard key={p.id} post={p} />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {related.length > 0 && (
+                <section>
+                  <SectionTitle>
+                    <span className="flex items-center gap-2">
+                      <Sparkles size={18} className="text-brand" /> RELATED BY MEANING
+                    </span>
+                  </SectionTitle>
+                  <p className="-mt-1 mb-3 text-xs text-chblack/50">
+                    Posts about the same thing, even without your exact words, found by HobbyHive&apos;s topic model.
+                  </p>
+                  <div className="divide-y divide-line rounded-2xl border border-line bg-surface">
+                    {related.map((p) => (
                       <PostCard key={p.id} post={p} />
                     ))}
                   </div>

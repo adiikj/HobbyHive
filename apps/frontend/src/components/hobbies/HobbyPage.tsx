@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldCheck, Trophy } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Trophy } from "lucide-react";
 import {
   getHobbyBySlug,
   getHobbyPosts,
@@ -23,8 +23,9 @@ import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import HobbyLiveRoom from "./HobbyLiveRoom";
 import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
+import FlaggedQueue from "./FlaggedQueue";
 
-type HobbyTab = "posts" | "room" | "events" | "challenges";
+type HobbyTab = "posts" | "room" | "events" | "challenges" | "review";
 
 interface HobbyPageProps {
   slug: string;
@@ -39,7 +40,9 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const [tab, setTab] = useState<HobbyTab>(
-    requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" ? requestedTab : "posts"
+    requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
+      ? requestedTab
+      : "posts"
   );
 
   const [posts, setPosts] = useState<Post[]>([]);
@@ -143,6 +146,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
     { key: "room", label: "Live Room", icon: Radio },
     { key: "events", label: "Events", icon: CalendarDays },
     { key: "challenges", label: "Challenges", icon: Trophy },
+    ...(hobby.isModerator ? [{ key: "review" as const, label: "Review", icon: ShieldAlert }] : []),
   ];
 
   return (
@@ -254,6 +258,8 @@ function HobbyPage({ slug }: HobbyPageProps) {
         <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} color={color} />
       ) : tab === "events" ? (
         <HobbyEvents slug={hobby.slug} color={color} />
+      ) : tab === "review" && hobby.isModerator ? (
+        <FlaggedQueue slug={hobby.slug} />
       ) : tab === "challenges" ? (
         <HobbyChallenges slug={hobby.slug} color={color} isModerator={Boolean(hobby.isModerator)} />
       ) : (
