@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bookmark, LogOut, Monitor, Moon, MoreHorizontal, Settings, Sun, User } from "lucide-react";
+import { Bookmark, LogOut, Map as MapIcon, Monitor, Moon, MoreHorizontal, Settings, Sun, User } from "lucide-react";
 import { logout } from "@/redux/authSlice";
 import { useCurrentUser } from "@/lib/currentUser";
 import { signOut } from "@/lib/auth";
 import { useThemePreference, type ThemePreference } from "@/lib/theme";
+import { TOUR_URL } from "@/lib/tour";
 import Skeleton from "@/components/ui/Skeleton";
 
 interface AccountMenuProps {
@@ -116,6 +117,9 @@ function AccountMenu({ variant }: AccountMenuProps) {
             </Link>
             <Link role="menuitem" href="/settings/profile" className={itemClass} onClick={() => setIsOpen(false)}>
               <Settings size={17} /> Settings
+            </Link>
+            <Link role="menuitem" href={TOUR_URL} className={itemClass} onClick={() => setIsOpen(false)}>
+              <MapIcon size={17} /> Take the tour
             </Link>
             <div className="my-1 h-px bg-line" />
             <div className="px-3 pb-1 pt-1.5">
