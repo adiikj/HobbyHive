@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
-import { postSelect, toPostResponse } from "./post.controller.js";
+import { postSelect, toPostResponse, getViewerState } from "./post.controller.js";
 
 interface UserMatch {
   id: string;
@@ -57,19 +57,13 @@ export const search = asyncHandler(async (req: Request, res: Response) => {
     ? await prisma.post.findMany({ where: { id: { in: postIds } }, select: postSelect })
     : [];
 
-  const userLikes = postIds.length
-    ? await prisma.like.findMany({
-        where: { userId: req.user!.id, postId: { in: postIds } },
-        select: { postId: true },
-      })
-    : [];
-  const likedPostIds = new Set(userLikes.map((l) => l.postId));
+  const viewer = await getViewerState(req.user!.id, posts);
 
   const postById = new Map(posts.map((p) => [p.id, p]));
   const orderedPosts = postIds
     .map((id) => postById.get(id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p))
-    .map((p) => toPostResponse(p, likedPostIds.has(p.id)));
+    .map((p) => toPostResponse(p, viewer));
 
   res.status(200).json(new ApiResponse(200, { users, hobbies, posts: orderedPosts }));
 });

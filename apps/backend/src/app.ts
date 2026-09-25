@@ -10,6 +10,9 @@ import notificationRouter from "./routes/notification.routes.js";
 import searchRouter from "./routes/search.routes.js";
 import conversationRouter from "./routes/conversation.routes.js";
 import eventRouter from "./routes/event.routes.js";
+import savedRouter from "./routes/saved.routes.js";
+import challengeRouter from "./routes/challenge.routes.js";
+import progressRouter from "./routes/progress.routes.js";
 
 const app = express();
 
@@ -33,6 +36,9 @@ app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/search", searchRouter);
 app.use("/api/v1/conversations", conversationRouter);
 app.use("/api/v1/events", eventRouter);
+app.use("/api/v1/saved", savedRouter);
+app.use("/api/v1/challenges", challengeRouter);
+app.use("/api/v1/progress", progressRouter);
 
 app.use(errorHandler);
 

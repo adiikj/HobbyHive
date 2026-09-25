@@ -19,6 +19,8 @@ import {
   getFollowers,
   getFollowingList,
 } from "../controllers/follow.controller.js";
+import { getUserPosts } from "../controllers/post.controller.js";
+import { listUserProgressLogs } from "../controllers/progress.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -40,6 +42,8 @@ router.get("/me/follow-requests", verifyJWT, getMyFollowRequests);
 // Keep dynamic routes last so they never shadow the static ones above
 router.get("/:username", getPublicProfile);
 router.patch("/:username", verifyJWT, updateProfile);
+router.get("/:username/posts", verifyJWT, getUserPosts);
+router.get("/:username/progress", verifyJWT, listUserProgressLogs);
 router.get("/:username/followers", getFollowers);
 router.get("/:username/following", getFollowingList);
 router.get("/:username/follow-status", verifyJWT, getFollowStatus);

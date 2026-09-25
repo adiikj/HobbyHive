@@ -23,6 +23,8 @@ export interface Hobby {
   icon: string | null;
   membersCount?: number;
   postsCount?: number;
+  /** Your role in this hive (only on your own hobbies). */
+  role?: "MEMBER" | "MODERATOR";
 }
 
 export interface TrendingHobby {
@@ -41,6 +43,8 @@ export interface HobbyDetail {
   membersCount: number;
   postsCount: number;
   isMember: boolean;
+  isModerator?: boolean;
+  moderators?: FollowUser[];
 }
 
 export interface Post {
@@ -53,11 +57,81 @@ export interface Post {
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;
+  isSaved?: boolean;
+  /** All photos (up to 4). `imageUrl` is the first one. */
+  images?: string[];
+  pinnedAt?: string | null;
+  challenge?: { id: string; title: string; endsAt: string } | null;
+  progressLog?: { id: string; title: string } | null;
+  /** The viewer moderates this post's hive (can pin / remove it). */
+  canModerate?: boolean;
+  /** The viewer wrote this post. */
+  isOwn?: boolean;
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  prompt: string;
+  startsAt: string;
+  endsAt: string;
+  createdAt: string;
+  hobby: Hobby;
+  creator: FollowUser;
+  entryCount: number;
+  isActive: boolean;
+}
+
+export interface HobbyChallenges {
+  active: Challenge | null;
+  past: Challenge[];
+}
+
+export interface ProgressLogSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  createdAt: string;
+  hobby: Hobby;
+  user: FollowUser;
+  entryCount: number;
+  lastEntryAt: string | null;
+  coverImageUrl: string | null;
+}
+
+export interface ProgressLogDetail extends ProgressLogSummary {
+  entries: Post[];
+}
+
+export interface CreatePostOptions {
+  images?: string[];
+  challengeId?: string | null;
+  progressLogId?: string | null;
+}
+
+export interface SaveResult {
+  isSaved: boolean;
+  collectionId: string | null;
+}
+
+export interface SavedCollection {
+  id: string;
+  name: string;
+  createdAt: string;
+  count: number;
+  coverImageUrl: string | null;
+}
+
+export interface SavedCollectionsSummary {
+  totalSaved: number;
+  collections: SavedCollection[];
 }
 
 export interface Comment {
   id: string;
   content: string;
+  /** Set on replies — always the id of a top-level comment (threads are one level deep). */
+  parentId?: string | null;
   createdAt: string;
   author: { id: string; name: string; username: string; avatarUrl: string | null };
 }
@@ -105,7 +179,7 @@ export interface FollowRequest {
   follower: FollowUser;
 }
 
-export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW" | "NEW_POST";
+export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW" | "NEW_POST" | "MENTION" | "REPLY";
 
 export interface Notification {
   id: string;
@@ -534,12 +608,42 @@ export const getFollowingFeed = async (cursor?: string | null): Promise<FeedPage
   }
 };
 
-export const createPost = async (content: string, hobbyId: string, imageUrl?: string): Promise<Post> => {
+export interface ExploreFeedOptions {
+  cursor?: string | null;
+  /** Narrow to one hobby by slug. */
+  hobby?: string | null;
+  /** Only posts with an image (the photo grid). */
+  media?: boolean;
+  limit?: number;
+}
+
+/** Posts from every hobby, newest first — discovery beyond the hives you've joined. */
+export const getExploreFeed = async ({ cursor, hobby, media, limit }: ExploreFeedOptions = {}): Promise<FeedPage> => {
+  try {
+    const token = localStorage.getItem("authToken");
+    const response = await axios.get(`${FEED_URL}/explore`, {
+      params: {
+        ...(cursor ? { cursor } : {}),
+        ...(hobby ? { hobby } : {}),
+        ...(media ? { media: 1 } : {}),
+        ...(limit ? { limit } : {}),
+      },
+      withCredentials: true,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    return response.data.data;
+  } catch (error) {
+    const message = getErrorMessage(error, "Failed to load posts");
+    throw new Error(message);
+  }
+};
+
+export const createPost = async (content: string, hobbyId: string, options: CreatePostOptions = {}): Promise<Post> => {
   try {
     const token = localStorage.getItem("authToken");
     const response = await axios.post(
       POSTS_URL,
-      { content, hobbyId, imageUrl },
+      { content, hobbyId, ...options },
       {
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -610,12 +714,12 @@ export const getComments = async (postId: string): Promise<Comment[]> => {
   }
 };
 
-export const addComment = async (postId: string, content: string): Promise<Comment> => {
+export const addComment = async (postId: string, content: string, parentId?: string | null): Promise<Comment> => {
   try {
     const token = localStorage.getItem("authToken");
     const response = await axios.post(
       `${POSTS_URL}/${postId}/comments`,
-      { content },
+      { content, ...(parentId ? { parentId } : {}) },
       {
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -876,3 +980,113 @@ function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
   return fallback;
 }
+
+const SAVED_URL = BASE_URL.replace(/\/users$/, "/saved");
+
+function authConfig(params?: Record<string, unknown>) {
+  const token = localStorage.getItem("authToken");
+  return {
+    params,
+    withCredentials: true,
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  };
+}
+
+async function request<T>(run: () => Promise<{ data: { data: T } }>, fallbackMessage: string): Promise<T> {
+  try {
+    return (await run()).data.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, fallbackMessage));
+  }
+}
+
+/** A single post — used for notification links and shared /posts/:id URLs. */
+export const getPost = (postId: string) =>
+  request<Post>(() => axios.get(`${POSTS_URL}/${postId}`, authConfig()), "Failed to load this post");
+
+/** Everything a user has posted, newest first; `media` for just their photos. */
+export const getUserPosts = (username: string, { cursor, media }: { cursor?: string | null; media?: boolean } = {}) =>
+  request<FeedPage>(
+    () =>
+      axios.get(
+        `${BASE_URL}/${encodeURIComponent(username)}/posts`,
+        authConfig({ ...(cursor ? { cursor } : {}), ...(media ? { media: 1 } : {}), limit: media ? 21 : 10 })
+      ),
+    "Failed to load posts"
+  );
+
+/** Save a post, or move an already-saved post into another collection (null = no collection). */
+export const savePost = (postId: string, collectionId: string | null = null) =>
+  request<SaveResult>(() => axios.put(`${POSTS_URL}/${postId}/save`, { collectionId }, authConfig()), "Failed to save post");
+
+export const unsavePost = (postId: string) =>
+  request<SaveResult>(() => axios.delete(`${POSTS_URL}/${postId}/save`, authConfig()), "Failed to unsave post");
+
+export const getSavedPosts = ({ cursor, collectionId }: { cursor?: string | null; collectionId?: string | null } = {}) =>
+  request<FeedPage>(
+    () => axios.get(SAVED_URL, authConfig({ ...(cursor ? { cursor } : {}), ...(collectionId ? { collection: collectionId } : {}) })),
+    "Failed to load saved posts"
+  );
+
+export const getCollections = () =>
+  request<SavedCollectionsSummary>(() => axios.get(`${SAVED_URL}/collections`, authConfig()), "Failed to load collections");
+
+export const createCollection = (name: string) =>
+  request<SavedCollection>(() => axios.post(`${SAVED_URL}/collections`, { name }, authConfig()), "Failed to create collection");
+
+export const renameCollection = (collectionId: string, name: string) =>
+  request<Pick<SavedCollection, "id" | "name">>(
+    () => axios.patch(`${SAVED_URL}/collections/${collectionId}`, { name }, authConfig()),
+    "Failed to rename collection"
+  );
+
+export const deleteCollection = (collectionId: string) =>
+  request<Record<string, never>>(() => axios.delete(`${SAVED_URL}/collections/${collectionId}`, authConfig()), "Failed to delete collection");
+
+const CHALLENGES_URL = BASE_URL.replace(/\/users$/, "/challenges");
+const PROGRESS_URL = BASE_URL.replace(/\/users$/, "/progress");
+
+export const deletePost = (postId: string) =>
+  request<Record<string, never>>(() => axios.delete(`${POSTS_URL}/${postId}`, authConfig()), "Failed to delete post");
+
+export const pinPost = (postId: string) =>
+  request<{ isPinned: boolean }>(() => axios.post(`${POSTS_URL}/${postId}/pin`, {}, authConfig()), "Failed to pin post");
+
+export const unpinPost = (postId: string) =>
+  request<{ isPinned: boolean }>(() => axios.delete(`${POSTS_URL}/${postId}/pin`, authConfig()), "Failed to unpin post");
+
+export const getHobbyPinnedPosts = (slug: string) =>
+  request<Post[]>(() => axios.get(`${HOBBIES_URL}/${slug}/pinned`, authConfig()), "Failed to load pinned posts");
+
+export const getHobbyChallenges = (slug: string) =>
+  request<HobbyChallenges>(() => axios.get(`${HOBBIES_URL}/${slug}/challenges`, authConfig()), "Failed to load challenges");
+
+export const createChallenge = (slug: string, payload: { title: string; prompt: string; days?: number }) =>
+  request<Challenge>(() => axios.post(`${HOBBIES_URL}/${slug}/challenges`, payload, authConfig()), "Failed to start challenge");
+
+export const getChallenge = (challengeId: string) =>
+  request<Challenge>(() => axios.get(`${CHALLENGES_URL}/${challengeId}`, authConfig()), "Failed to load challenge");
+
+export const getChallengeEntries = (challengeId: string, { sort, cursor }: { sort?: "top" | "new"; cursor?: string | null } = {}) =>
+  request<FeedPage>(
+    () => axios.get(`${CHALLENGES_URL}/${challengeId}/entries`, authConfig({ ...(sort === "top" ? { sort } : {}), ...(cursor ? { cursor } : {}) })),
+    "Failed to load entries"
+  );
+
+export const getUserProgressLogs = (username: string, hobbyId?: string) =>
+  request<ProgressLogSummary[]>(
+    () => axios.get(`${BASE_URL}/${encodeURIComponent(username)}/progress`, authConfig(hobbyId ? { hobby: hobbyId } : undefined)),
+    "Failed to load progress logs"
+  );
+
+export const createProgressLog = (payload: { title: string; hobbyId: string; description?: string }) =>
+  request<ProgressLogSummary>(() => axios.post(PROGRESS_URL, payload, authConfig()), "Failed to create progress log");
+
+export const getProgressLog = (logId: string) =>
+  request<ProgressLogDetail>(() => axios.get(`${PROGRESS_URL}/${logId}`, authConfig()), "Failed to load progress log");
+
+export const updateProgressLog = (logId: string, payload: { title?: string; description?: string | null }) =>
+  request<ProgressLogSummary>(() => axios.patch(`${PROGRESS_URL}/${logId}`, payload, authConfig()), "Failed to update progress log");
+
+export const deleteProgressLog = (logId: string) =>
+  request<Record<string, never>>(() => axios.delete(`${PROGRESS_URL}/${logId}`, authConfig()), "Failed to delete progress log");

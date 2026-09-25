@@ -5,7 +5,9 @@ import {
   getHobbyBySlug,
   getHobbyPosts,
   getHobbyRoomMessages,
+  getHobbyPinnedPosts,
 } from "../controllers/hobby.controller.js";
+import { listHobbyChallenges, createChallenge } from "../controllers/challenge.controller.js";
 import { getHobbyEvents, createEvent } from "../controllers/event.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -20,5 +22,8 @@ router.get("/:slug/posts", verifyJWT, getHobbyPosts);
 router.get("/:slug/room/messages", verifyJWT, getHobbyRoomMessages);
 router.get("/:slug/events", verifyJWT, getHobbyEvents);
 router.post("/:slug/events", verifyJWT, createEvent);
+router.get("/:slug/pinned", verifyJWT, getHobbyPinnedPosts);
+router.get("/:slug/challenges", verifyJWT, listHobbyChallenges);
+router.post("/:slug/challenges", verifyJWT, createChallenge);
 
 export default router;

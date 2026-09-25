@@ -3,7 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
-import { buildFeedPage, parsePagination } from "./post.controller.js";
+import { buildFeedPage, getViewerState, parsePagination, postSelect, toPostResponse } from "./post.controller.js";
 
 // List the full hobby taxonomy, with real member/post counts
 export const listHobbies = asyncHandler(async (_req: Request, res: Response) => {
@@ -73,9 +73,16 @@ export const getHobbyBySlug = asyncHandler(async (req: Request, res: Response) =
     throw new ApiError(404, "Hobby not found");
   }
 
-  const membership = await prisma.userHobby.findUnique({
-    where: { userId_hobbyId: { userId: req.user!.id, hobbyId: hobby.id } },
-  });
+  const [membership, moderators] = await Promise.all([
+    prisma.userHobby.findUnique({
+      where: { userId_hobbyId: { userId: req.user!.id, hobbyId: hobby.id } },
+    }),
+    prisma.userHobby.findMany({
+      where: { hobbyId: hobby.id, role: "MODERATOR" },
+      orderBy: { createdAt: "asc" },
+      select: { user: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+    }),
+  ]);
 
   res.status(200).json(
     new ApiResponse(200, {
@@ -86,8 +93,26 @@ export const getHobbyBySlug = asyncHandler(async (req: Request, res: Response) =
       membersCount: hobby._count.users,
       postsCount: hobby._count.posts,
       isMember: Boolean(membership),
+      isModerator: membership?.role === "MODERATOR",
+      moderators: moderators.map((m) => m.user),
     })
   );
+});
+
+// A hive's pinned posts (at most 3), most recently pinned first
+export const getHobbyPinnedPosts = asyncHandler(async (req: Request, res: Response) => {
+  const hobby = await prisma.hobby.findUnique({ where: { slug: String(req.params.slug) }, select: { id: true } });
+  if (!hobby) {
+    throw new ApiError(404, "Hobby not found");
+  }
+
+  const posts = await prisma.post.findMany({
+    where: { hobbyId: hobby.id, pinnedAt: { not: null } },
+    orderBy: { pinnedAt: "desc" },
+    select: postSelect,
+  });
+  const viewer = await getViewerState(req.user!.id, posts);
+  res.status(200).json(new ApiResponse(200, posts.map((p) => toPostResponse(p, viewer))));
 });
 
 // Posts belonging to a hobby's community page — same shape as the personal feed
@@ -187,7 +212,7 @@ export const getMyHobbies = asyncHandler(async (req: Request, res: Response) => 
     orderBy: { hobby: { name: "asc" } },
   });
 
-  res.status(200).json(new ApiResponse(200, userHobbies.map((uh) => uh.hobby)));
+  res.status(200).json(new ApiResponse(200, userHobbies.map((uh) => ({ ...uh.hobby, role: uh.role }))));
 });
 
 // Replace the current user's selected hobbies
@@ -215,10 +240,12 @@ export const setMyHobbies = asyncHandler(async (req: Request, res: Response) => 
 
   const userId = req.user!.id;
 
+  // Diff rather than delete-and-recreate, so memberships you keep keep their role (e.g. moderator)
   await prisma.$transaction([
-    prisma.userHobby.deleteMany({ where: { userId } }),
+    prisma.userHobby.deleteMany({ where: { userId, hobbyId: { notIn: uniqueHobbyIds } } }),
     prisma.userHobby.createMany({
       data: uniqueHobbyIds.map((hobbyId) => ({ userId, hobbyId })),
+      skipDuplicates: true,
     }),
   ]);
 
@@ -230,5 +257,5 @@ export const setMyHobbies = asyncHandler(async (req: Request, res: Response) => 
 
   res
     .status(200)
-    .json(new ApiResponse(200, userHobbies.map((uh) => uh.hobby), "Hobbies updated successfully"));
+    .json(new ApiResponse(200, userHobbies.map((uh) => ({ ...uh.hobby, role: uh.role })), "Hobbies updated successfully"));
 });

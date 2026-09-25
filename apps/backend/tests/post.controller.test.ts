@@ -11,6 +11,10 @@ const fakePost = (overrides: Partial<Record<string, unknown>> = {}) => ({
   hobby: { id: "hobby_dance", name: "Dance", slug: "dance", icon: "💃" },
   author: { id: testUser.id, name: testUser.name, username: testUser.username, avatarUrl: null },
   _count: { likes: 0, comments: 0 },
+  images: [] as string[],
+  pinnedAt: null,
+  challenge: null,
+  progressLog: null,
   authorId: testUser.id,
   ...overrides,
 });
@@ -55,6 +59,9 @@ describe("POST /api/v1/posts", () => {
     prismaMock.hobby.findUnique.mockResolvedValueOnce({ id: "hobby_dance" } as never);
     prismaMock.post.create.mockResolvedValueOnce(fakePost() as never);
     prismaMock.userHobby.findMany.mockResolvedValueOnce([]); // notifyNewPost: nobody else to notify
+    prismaMock.like.findMany.mockResolvedValueOnce([]);
+    prismaMock.savedPost.findMany.mockResolvedValueOnce([]);
+    prismaMock.userHobby.findMany.mockResolvedValueOnce([]); // viewer state: moderates nothing
 
     const res = await request(app)
       .post("/api/v1/posts")
@@ -88,6 +95,8 @@ describe("GET /api/v1/feed — the core curation guarantee", () => {
     ] as never);
     prismaMock.post.findMany.mockResolvedValueOnce([fakePost()] as never);
     prismaMock.like.findMany.mockResolvedValueOnce([]);
+    prismaMock.savedPost.findMany.mockResolvedValueOnce([]);
+    prismaMock.userHobby.findMany.mockResolvedValueOnce([]); // viewer moderates none of these hobbies
 
     const res = await request(app).get("/api/v1/feed").set("Authorization", `Bearer ${token}`);
 
@@ -96,6 +105,36 @@ describe("GET /api/v1/feed — the core curation guarantee", () => {
       expect.objectContaining({
         where: { hobbyId: { in: ["hobby_dance", "hobby_anime"] } },
       })
+    );
+  });
+});
+
+describe("GET /api/v1/feed/explore", () => {
+  it("spans every hobby when unfiltered", async () => {
+    const token = mockAuthenticatedUser();
+    prismaMock.post.findMany.mockResolvedValueOnce([fakePost()] as never);
+    prismaMock.like.findMany.mockResolvedValueOnce([]);
+    prismaMock.savedPost.findMany.mockResolvedValueOnce([]);
+    prismaMock.userHobby.findMany.mockResolvedValueOnce([]); // viewer moderates none of these hobbies
+
+    const res = await request(app).get("/api/v1/feed/explore").set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.posts).toHaveLength(1);
+    expect(prismaMock.post.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+  });
+
+  it("narrows to one hobby and to posts with images when asked", async () => {
+    const token = mockAuthenticatedUser();
+    prismaMock.post.findMany.mockResolvedValueOnce([]);
+
+    const res = await request(app)
+      .get("/api/v1/feed/explore?hobby=dance&media=1")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.post.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { hobby: { slug: "dance" }, imageUrl: { not: null } } })
     );
   });
 });
