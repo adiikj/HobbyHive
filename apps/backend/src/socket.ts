@@ -17,6 +17,8 @@ const roomMessageSelect = {
 
 export const initSocket = (httpServer: HttpServer) => {
   io = new Server(httpServer, {
+    // Serve "/socket.io?..." (no trailing slash) so it survives the frontend's /socket.io rewrite proxy
+    addTrailingSlash: false,
     cors: {
       origin: process.env.CORS_ORIGIN,
       credentials: true,
