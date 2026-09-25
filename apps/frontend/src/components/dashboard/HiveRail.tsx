@@ -18,6 +18,7 @@ import { timeAgo } from "@/lib/time";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import Skeleton from "@/components/ui/Skeleton";
 import SuggestedUserRow from "./SuggestedUserRow";
+import BeaAvatar from "@/components/bea/BeaAvatar";
 
 const ROOM_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
 
@@ -65,6 +66,42 @@ function RailSearch() {
         className="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-sm text-chblack placeholder:text-chblack/35 focus:outline-none focus:ring-2 focus:ring-brand"
       />
     </form>
+  );
+}
+
+function AskBeaCard({ hobby }: { hobby: Hobby }) {
+  const router = useRouter();
+  const [question, setQuestion] = useState("");
+
+  return (
+    <section className="rounded-2xl border border-amber-400/40 bg-gradient-to-br from-amber-500/10 to-transparent p-4">
+      <div className="flex items-center gap-2.5">
+        <BeaAvatar size={34} />
+        <div className="min-w-0">
+          <p className="font-bnt text-xl leading-none tracking-wide text-chblack">ASK BEA</p>
+          <p className="truncate text-xs text-chblack/55">She&apos;s read everything in {hobby.name}</p>
+        </div>
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const q = question.trim();
+          if (q) router.push(`/hobbies/${hobby.slug}?tab=ask&q=${encodeURIComponent(q)}`);
+        }}
+        className="mt-3 flex gap-1.5"
+      >
+        <input
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="e.g. how do I stop getting dizzy?"
+          aria-label={`Ask Bea about ${hobby.name}`}
+          className="min-w-0 flex-1 rounded-full border border-line bg-surface px-3.5 py-2 text-sm placeholder:text-chblack/35 focus:outline-none focus:ring-2 focus:ring-amber-400"
+        />
+        <button type="submit" disabled={!question.trim()} className="shrink-0 rounded-full bg-amber-500 px-3.5 text-xs font-quick font-bold text-[#3b2a06] hover:bg-amber-400 disabled:opacity-40">
+          Ask
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -229,6 +266,7 @@ function HiveRail({ hobby, people, discover, showSearch = true }: HiveRailProps)
     <div className="space-y-4">
       {showSearch && <RailSearch />}
 
+      {hobby && <AskBeaCard hobby={hobby} />}
       {hobby && <UpcomingEvents hobby={hobby} color={color} />}
       {hobby && <LiveRoomCard hobby={hobby} color={color} />}
 

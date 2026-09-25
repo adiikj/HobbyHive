@@ -1125,3 +1125,67 @@ export const getFlaggedPosts = (slug: string) =>
 
 export const dismissFlag = (postId: string) =>
   request<Record<string, never>>(() => axios.post(`${POSTS_URL}/${postId}/flag/dismiss`, {}, authConfig()), "Failed to dismiss flag");
+
+// --- Ask Bea (local RAG over the hive's posts and comments; every answer carries its evidence and a trace)
+
+export interface BeaEvidence {
+  chunk_id: string;
+  kind: "post" | "comment";
+  post_id: string;
+  comment_id: string | null;
+  author_name: string;
+  author_username: string;
+  text: string;
+  created_at: string;
+  post: Post | null;
+}
+
+export interface BeaCandidate {
+  text: string;
+  author: string;
+  kind: "post" | "comment";
+  keyword_score: number;
+  matched_terms: Record<string, number>;
+  meaning_score: number;
+  fused_score: number;
+  rerank_score: number | null;
+  passed_threshold: boolean;
+  close_to_best: boolean;
+  is_question: boolean;
+  replying_to: string | null;
+  selected: boolean;
+}
+
+export interface BeaRewrite {
+  evidence: number;
+  source: string;
+  draft: string | null;
+  accepted: boolean;
+  reason: string | null;
+  unsupported_words: string[];
+  dropped_words: string[];
+}
+
+export interface BeaTrace {
+  index: { posts: number; comments: number; chunks: number; skipped_low_information: number; skipped_duplicates: number };
+  config: { use_rerank: boolean; min_relevance: number; max_evidence: number };
+  candidates: BeaCandidate[];
+  generator: string;
+  rewrites: BeaRewrite[];
+  timings_ms: Record<string, number>;
+}
+
+export interface BeaReply {
+  available: boolean;
+  assistant: string;
+  mode?: "none" | "extractive" | "generated" | "mixed";
+  /** Answer text in segments; `evidence` holds indexes into `evidence` below. */
+  answer?: { text: string; evidence: number[] }[];
+  evidence?: BeaEvidence[];
+  trace?: BeaTrace;
+}
+
+const ASK_URL = BASE_URL.replace(/\/users$/, "/ask");
+
+export const askBea = (question: string, hobbySlug?: string | null) =>
+  request<BeaReply>(() => axios.post(ASK_URL, { question, hobbySlug: hobbySlug ?? undefined }, authConfig()), "Bea couldn't answer that");

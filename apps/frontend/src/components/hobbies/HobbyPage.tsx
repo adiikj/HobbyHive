@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Trophy } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import {
   getHobbyBySlug,
   getHobbyPosts,
@@ -24,8 +24,9 @@ import HobbyLiveRoom from "./HobbyLiveRoom";
 import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
 import FlaggedQueue from "./FlaggedQueue";
+import AskBea from "@/components/bea/AskBea";
 
-type HobbyTab = "posts" | "room" | "events" | "challenges" | "review";
+type HobbyTab = "posts" | "ask" | "room" | "events" | "challenges" | "review";
 
 interface HobbyPageProps {
   slug: string;
@@ -40,7 +41,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const [tab, setTab] = useState<HobbyTab>(
-    requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
+    requestedTab === "ask" || requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
       ? requestedTab
       : "posts"
   );
@@ -143,6 +144,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const color = getHobbyColor(hobby.name);
   const tabs: { key: HobbyTab; label: string; icon: typeof Newspaper }[] = [
     { key: "posts", label: "Posts", icon: Newspaper },
+    { key: "ask", label: "Ask Bea", icon: Sparkles },
     { key: "room", label: "Live Room", icon: Radio },
     { key: "events", label: "Events", icon: CalendarDays },
     { key: "challenges", label: "Challenges", icon: Trophy },
@@ -258,6 +260,8 @@ function HobbyPage({ slug }: HobbyPageProps) {
         <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} color={color} />
       ) : tab === "events" ? (
         <HobbyEvents slug={hobby.slug} color={color} />
+      ) : tab === "ask" ? (
+        <AskBea hive={{ name: hobby.name, slug: hobby.slug }} initialQuestion={searchParams.get("q")} />
       ) : tab === "review" && hobby.isModerator ? (
         <FlaggedQueue slug={hobby.slug} />
       ) : tab === "challenges" ? (
