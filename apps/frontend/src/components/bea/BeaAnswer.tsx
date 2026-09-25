@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, Quote, Search, Sparkles, X } from "lucide-react";
-import type { BeaEvidence, BeaReply, BeaTrace } from "@/api/api";
+import { Check, ChevronDown, Quote, Search, Sparkles, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { rateBeaAnswer, type BeaEvidence, type BeaReply, type BeaTrace } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import { timeAgo } from "@/lib/time";
 
@@ -133,6 +133,51 @@ function WhyPanel({ trace, assistant }: { trace: BeaTrace; assistant: string }) 
   );
 }
 
+/** 👍/👎 on an answer. Ratings are stored per answer and feed Bea's "helpful" rate. */
+function Feedback({ answerId }: { answerId: string }) {
+  const [rating, setRating] = useState<boolean | null>(null);
+  const [error, setError] = useState(false);
+
+  const rate = async (helpful: boolean) => {
+    const previous = rating;
+    setRating(helpful);
+    setError(false);
+    try {
+      await rateBeaAnswer(answerId, helpful);
+    } catch {
+      setRating(previous);
+      setError(true);
+    }
+  };
+
+  const button = (helpful: boolean) => {
+    const Icon = helpful ? ThumbsUp : ThumbsDown;
+    const selected = rating === helpful;
+    return (
+      <button
+        type="button"
+        onClick={() => rate(helpful)}
+        aria-pressed={selected}
+        aria-label={helpful ? "Helpful" : "Not helpful"}
+        className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+          selected ? "bg-amber-500/20 text-amber-700 dark:text-amber-300" : "text-chblack/40 hover:bg-line hover:text-chblack"
+        }`}
+      >
+        <Icon size={14} fill={selected ? "currentColor" : "none"} />
+      </button>
+    );
+  };
+
+  return (
+    <div className="mt-3 flex items-center gap-1 text-xs text-chblack/50">
+      <span className="mr-1">{rating === null ? "Was this helpful?" : "Thanks! This helps Bea improve."}</span>
+      {button(true)}
+      {button(false)}
+      {error && <span className="ml-1 text-red-600">Couldn&apos;t save, try again</span>}
+    </div>
+  );
+}
+
 /** Bea's reply: the answer (with numbered evidence markers), the evidence cards, and the "Why this answer?" trace. */
 function BeaAnswer({ reply }: { reply: BeaReply }) {
   const [highlight, setHighlight] = useState<string | null>(null);
@@ -182,6 +227,7 @@ function BeaAnswer({ reply }: { reply: BeaReply }) {
         </div>
       )}
 
+      {reply.answerId && <Feedback answerId={reply.answerId} />}
       {reply.trace && <WhyPanel trace={reply.trace} assistant={reply.assistant} />}
     </div>
   );

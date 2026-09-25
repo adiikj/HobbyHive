@@ -40,6 +40,7 @@ model User {
   collections           Collection[]
   challengesCreated     Challenge[]
   progressLogs          ProgressLog[]
+  beaAnswers            BeaAnswer[]
 }
 
 model Hobby {
@@ -55,6 +56,7 @@ model Hobby {
   events       Event[]
   challenges   Challenge[]
   progressLogs ProgressLog[]
+  beaAnswers   BeaAnswer[]
 }
 
 model Post {
@@ -351,4 +353,27 @@ model PendingUser {
   otpVerified Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// One Ask Bea answer, kept so users can rate it (👍/👎) and so answer quality can be measured over time
+model BeaAnswer {
+  id            String   @id @default(cuid())
+  userId        String
+  hobbyId       String?
+  question      String
+  // "none" (nothing relevant enough, so Bea said so), "extractive", "generated" or "mixed" (see apps/ml)
+  mode          String
+  evidenceCount Int
+  // Best retrieval match (meaning score), to relate ratings to retrieval quality
+  topScore      Float?
+  // null = not rated yet
+  helpful       Boolean?
+  ratedAt       DateTime?
+  createdAt     DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hobby Hobby? @relation(fields: [hobbyId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }

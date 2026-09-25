@@ -1178,6 +1178,8 @@ export interface BeaTrace {
 export interface BeaReply {
   available: boolean;
   assistant: string;
+  /** Id for rating this answer (👍/👎). */
+  answerId?: string;
   mode?: "none" | "extractive" | "generated" | "mixed";
   /** Answer text in segments; `evidence` holds indexes into `evidence` below. */
   answer?: { text: string; evidence: number[] }[];
@@ -1189,3 +1191,9 @@ const ASK_URL = BASE_URL.replace(/\/users$/, "/ask");
 
 export const askBea = (question: string, hobbySlug?: string | null) =>
   request<BeaReply>(() => axios.post(ASK_URL, { question, hobbySlug: hobbySlug ?? undefined }, authConfig()), "Bea couldn't answer that");
+
+export const rateBeaAnswer = (answerId: string, helpful: boolean) =>
+  request<{ id: string; helpful: boolean }>(
+    () => axios.post(`${ASK_URL}/${answerId}/feedback`, { helpful }, authConfig()),
+    "Couldn't save your feedback"
+  );

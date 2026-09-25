@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import { app } from "../src/app.js";
-import { mockAuthenticatedUser, prismaMock } from "./testUtils.js";
+import { mockAuthenticatedUser, prismaMock, testUser } from "./testUtils.js";
 import * as ml from "../src/services/ml.service.js";
 import { resetAskRateLimit } from "../src/controllers/ask.controller.js";
 
@@ -53,8 +53,9 @@ describe("POST /api/v1/ask", () => {
       evidence: [
         { chunk_id: "c1:0", kind: "comment", post_id: "p1", comment_id: "c1", author_name: "Diego Alvarez", author_username: "diego_runs", text: "Count the 8s out loud at first.", created_at: "" },
       ],
-      trace: { generator: "ready" },
+      trace: { generator: "ready", candidates: [{ meaning_score: 0.71 }] },
     });
+    prismaMock.beaAnswer.create.mockResolvedValueOnce({ id: "ans_1" } as never);
     prismaMock.post.findMany.mockResolvedValueOnce([rawPost("p1", "Anyone have tips for staying on beat?")] as never);
     prismaMock.like.findMany.mockResolvedValueOnce([]);
     prismaMock.savedPost.findMany.mockResolvedValueOnce([]);
@@ -65,7 +66,14 @@ describe("POST /api/v1/ask", () => {
     expect(ml.askBea).toHaveBeenCalledWith("staying on beat?", "dance");
     expect(res.body.data.mode).toBe("extractive");
     expect(res.body.data.evidence[0]).toMatchObject({ kind: "comment", post: { id: "p1" } });
-    expect(res.body.data.trace).toEqual({ generator: "ready" });
+    expect(res.body.data.trace).toEqual({ generator: "ready", candidates: [{ meaning_score: 0.71 }] });
+    // Kept for rating: the id goes back to the client
+    expect(res.body.data.answerId).toBe("ans_1");
+    expect(prismaMock.beaAnswer.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ userId: testUser.id, hobbyId: "hobby_dance", mode: "extractive", evidenceCount: 1, topScore: 0.71 }),
+      })
+    );
   });
 
   it("404s for an unknown hive", async () => {
@@ -82,5 +90,34 @@ describe("POST /api/v1/ask", () => {
     }
     const res = await request(app).post("/api/v1/ask").set(auth(token)).send({ question: "One more?" });
     expect(res.status).toBe(429);
+  });
+});
+
+describe("POST /api/v1/ask/:answerId/feedback", () => {
+  it("needs helpful to be true or false", async () => {
+    const token = mockAuthenticatedUser();
+    const res = await request(app).post("/api/v1/ask/ans_1/feedback").set(auth(token)).send({ helpful: "yes" });
+    expect(res.status).toBe(400);
+  });
+
+  it("only lets you rate your own answers", async () => {
+    const token = mockAuthenticatedUser();
+    prismaMock.beaAnswer.findUnique.mockResolvedValueOnce({ userId: "someone_else" } as never);
+    const res = await request(app).post("/api/v1/ask/ans_1/feedback").set(auth(token)).send({ helpful: true });
+    expect(res.status).toBe(404);
+    expect(prismaMock.beaAnswer.update).not.toHaveBeenCalled();
+  });
+
+  it("records the rating", async () => {
+    const token = mockAuthenticatedUser();
+    prismaMock.beaAnswer.findUnique.mockResolvedValueOnce({ userId: testUser.id } as never);
+    prismaMock.beaAnswer.update.mockResolvedValueOnce({ id: "ans_1", helpful: false } as never);
+
+    const res = await request(app).post("/api/v1/ask/ans_1/feedback").set(auth(token)).send({ helpful: false });
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.beaAnswer.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "ans_1" }, data: expect.objectContaining({ helpful: false }) })
+    );
   });
 });
