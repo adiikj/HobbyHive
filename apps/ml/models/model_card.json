@@ -1,0 +1,50 @@
+{
+  "trained_at": "2026-09-25T18:51:56+00:00",
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "classifier": "LogisticRegression (multinomial)",
+  "C": 2,
+  "labels": [
+    "anime",
+    "art",
+    "coding",
+    "cooking",
+    "dance",
+    "fitness",
+    "gaming",
+    "music",
+    "off_topic",
+    "photography",
+    "singing",
+    "travel",
+    "writing"
+  ],
+  "off_topic_rule": {
+    "max_hive_score": 0.13,
+    "min_alternative_score": 0.3
+  },
+  "dataset": {
+    "file": "data/hobby_posts.csv",
+    "rows": 520,
+    "sha256_12": "c1ae12cc03ca",
+    "synthetic": true
+  },
+  "test_metrics": {
+    "accuracy": 0.7885,
+    "macro_f1": 0.7847,
+    "off_topic_flagging": {
+      "precision": 0.9444,
+      "recall": 0.6538,
+      "f1": 0.7727,
+      "false_alarm_rate": 0.0331,
+      "vague_false_alarm_rate": 0.04,
+      "flagged": 72
+    },
+    "vague_posts_wrongly_flagged": "1/25"
+  },
+  "real_posts": {
+    "posts": 44,
+    "suggested_hive_accuracy": 0.7727272727272727,
+    "false_alarm_rate": 0.09090909090909091,
+    "flagged_off_topic": 4
+  }
+}

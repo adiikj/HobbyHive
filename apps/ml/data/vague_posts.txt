@@ -1,0 +1,52 @@
+# Hive-agnostic posts that fit in ANY hive. Not used to train the classifier — only to calibrate the
+# off-topic rule so that short or vague on-topic posts ("Small win today!") are not flagged.
+Small win today!
+Excited to be part of this community!
+Any tips for a beginner?
+Week 3 update: slowly getting better
+Progress, not perfection
+Finally did it after weeks of trying
+So happy with how this turned out
+Can't wait for the weekend session
+Feeling rusty after a long break
+Is it normal to feel stuck at this stage?
+Just getting started, be kind
+One month in and loving it
+What helped you improve the fastest?
+Had a rough day but this made it better
+Proud of myself today
+Trying something new this week
+Back at it after the holidays
+Not perfect but I'm improving
+Big milestone for me today
+Anyone want to practice together this weekend?
+First attempt, feedback welcome
+Took a while but it finally clicked
+Did a little every day this week
+This community is so supportive
+Hello everyone, new here!
+Short session today but it still counts
+Almost there, one more push
+I keep making the same mistake, help
+Goal for this month: be consistent
+Looking back at where I started, wow
+Consistency is paying off
+Rough attempt but I learned a lot
+Late night session, couldn't stop
+Who else practices early in the morning?
+Two steps forward, one step back
+Tomorrow I'm trying the harder version
+Finally got some feedback from a pro
+Took the day off to recharge
+Everything is harder than it looks
+Celebrating a small personal record today
+Nervous about the big day next week
+Learning from my mistakes one at a time
+Is there a good resource for going deeper?
+Stuck on the same thing for days now
+My friend got me into this and I'm hooked
+Keeping it fun, not stressing
+Another day, another attempt
+Updated my setup and it helps a lot
+Took a class today and learned so much
+Can't believe how far I've come this year

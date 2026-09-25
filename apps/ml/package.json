@@ -1,0 +1,11 @@
+{
+  "name": "@hobbyhive/ml",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "uv run uvicorn hobbyhive_ml.api:app --host 127.0.0.1 --port 8002",
+    "train": "uv run python train.py",
+    "dataset": "uv run python data/build_dataset.py",
+    "test": "uv run pytest -q"
+  }
+}

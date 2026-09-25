@@ -1,0 +1,10 @@
+{
+  "query_instruction": "Represent this sentence for searching relevant passages: ",
+  "hive_boost": 0.3,
+  "min_score": 0.57,
+  "benchmark": {
+    "queries": 14,
+    "posts": 36,
+    "top3_quality": 0.905
+  }
+}
