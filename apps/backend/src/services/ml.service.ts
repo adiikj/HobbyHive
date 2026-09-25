@@ -21,13 +21,13 @@ export interface Classification {
   top: [string, number][];
 }
 
-async function call<T>(path: string, body: unknown): Promise<T | null> {
+async function call<T>(path: string, body: unknown, timeoutMs = TIMEOUT_MS): Promise<T | null> {
   try {
     const res = await fetch(`${ML_URL}${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     if (!res.ok) return null;
     return (await res.json()) as T;
@@ -45,6 +45,28 @@ export const searchQuery = async (text: string) =>
     "/query",
     { text }
   );
+
+export interface BeaEvidence {
+  chunk_id: string;
+  kind: "post" | "comment";
+  post_id: string;
+  comment_id: string | null;
+  author_name: string;
+  author_username: string;
+  text: string;
+  created_at: string;
+}
+
+export interface BeaResult {
+  mode: "none" | "extractive" | "generated" | "mixed";
+  answer: { text: string; evidence: number[] }[];
+  evidence: BeaEvidence[];
+  trace: Record<string, unknown>;
+}
+
+/** Ask Bea (local RAG in apps/ml). Generous timeout: local rewriting takes a few seconds on CPU. */
+export const askBea = async (question: string, hive: string | null) =>
+  call<BeaResult>("/ask", { question, hive }, 60_000);
 
 export const embed = async (texts: string[]) => {
   const res = await call<{ embeddings: number[][] }>("/embed", { texts });

@@ -21,6 +21,7 @@ vi.mock("../src/db/prisma.js", () => ({ prisma: prismaMock }));
 vi.mock("../src/services/ml.service.js", () => ({
   classify: vi.fn().mockResolvedValue(null),
   searchQuery: vi.fn().mockResolvedValue(null),
+  askBea: vi.fn().mockResolvedValue(null),
   embed: vi.fn().mockResolvedValue(null),
   analyzePosts: vi.fn().mockResolvedValue(0),
   analyzePostInBackground: vi.fn(),
