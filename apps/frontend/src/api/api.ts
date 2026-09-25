@@ -1197,3 +1197,45 @@ export const rateBeaAnswer = (answerId: string, helpful: boolean) =>
     () => axios.post(`${ASK_URL}/${answerId}/feedback`, { helpful }, authConfig()),
     "Couldn't save your feedback"
   );
+
+// ---- Journey (streaks, milestones, then → now) ----
+
+export interface JourneyHobby {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+}
+
+export interface JourneyPostRef {
+  id: string;
+  excerpt: string;
+  image: string | null;
+}
+
+export type JourneyMilestone =
+  | { type: "joined"; date: string; hobby: JourneyHobby }
+  | { type: "first_post" | "first_photo"; date: string; hobby: JourneyHobby; post: JourneyPostRef }
+  | { type: "challenge_entry"; date: string; hobby: JourneyHobby; post: JourneyPostRef; challengeTitle: string }
+  | { type: "log_started"; date: string; hobby: JourneyHobby; logId: string; logTitle: string }
+  | { type: "post_count"; date: string; hobby: JourneyHobby; post: JourneyPostRef; count: number };
+
+export interface Journey {
+  user: { id: string; name: string; username: string; avatarUrl: string | null };
+  hobby: JourneyHobby | null;
+  joinedAt: string | null;
+  stats: { posts: number; photos: number; challengesEntered: number; logs: number };
+  /** Weekly streaks: a week counts when it has at least one post. */
+  streak: { current: number; best: number; activeThisWeek: boolean; weeks: { start: string; posts: number }[] };
+  currentChallenge: { id: string; title: string; prompt: string; endsAt: string; entered: boolean } | null;
+  logs: { id: string; title: string; createdAt: string; hobby: JourneyHobby; entryCount: number; lastEntryAt: string | null }[];
+  thenNow: { first: { postId: string; image: string; date: string }; latest: { postId: string; image: string; date: string } } | null;
+  milestones: JourneyMilestone[];
+}
+
+/** A user's journey in one hive (`hobbySlug`) or across all their hives. */
+export const getJourney = (username: string, hobbySlug?: string | null) =>
+  request<Journey>(
+    () => axios.get(`${BASE_URL}/${username}/journey`, authConfig(hobbySlug ? { hobby: hobbySlug } : undefined)),
+    "Couldn't load this journey"
+  );

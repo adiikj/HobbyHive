@@ -20,6 +20,7 @@ import {
   getFollowingList,
 } from "../controllers/follow.controller.js";
 import { getUserPosts } from "../controllers/post.controller.js";
+import { getJourney } from "../controllers/journey.controller.js";
 import { listUserProgressLogs } from "../controllers/progress.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -43,6 +44,7 @@ router.get("/me/follow-requests", verifyJWT, getMyFollowRequests);
 router.get("/:username", getPublicProfile);
 router.patch("/:username", verifyJWT, updateProfile);
 router.get("/:username/posts", verifyJWT, getUserPosts);
+router.get("/:username/journey", verifyJWT, getJourney);
 router.get("/:username/progress", verifyJWT, listUserProgressLogs);
 router.get("/:username/followers", getFollowers);
 router.get("/:username/following", getFollowingList);
