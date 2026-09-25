@@ -14,6 +14,7 @@ import HiveSwitcher from "./HiveSwitcher";
 import HiveRail from "./HiveRail";
 import Composer from "./Composer";
 import ChallengeBanner from "@/components/challenges/ChallengeBanner";
+import JourneyCard from "@/components/journey/JourneyCard";
 import { useDashboardData, FOLLOWING } from "./useDashboardData";
 
 function formatCount(n: number, noun: string) {
@@ -143,6 +144,8 @@ function Dashboard() {
   const feedPosts = isFollowing ? posts : posts.filter((p) => !pinnedIds.has(p.id));
   const hasNoHobbies = myHobbies !== null && myHobbies.length === 0;
   const color = activeHobby ? getHobbyColor(activeHobby.name) : "#DB2777";
+  // Changes when you post, so the journey card's streak and counts update right away
+  const myPostCount = posts.filter((p) => p.author.id === me?.id).length;
 
   const emptyState = isFollowing ? (
     <>
@@ -195,7 +198,10 @@ function Dashboard() {
                 <ComposerSkeleton />
               </>
             ) : activeHobby ? (
-              <HiveHeader hobby={activeHobby} stats={activeHobbyStats} />
+              <>
+                <HiveHeader hobby={activeHobby} stats={activeHobbyStats} />
+                {me && <JourneyCard username={me.username} hobby={activeHobby} refreshKey={myPostCount} />}
+              </>
             ) : (
               isFollowing && <FollowingHeader />
             )}
