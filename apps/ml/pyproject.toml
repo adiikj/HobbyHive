@@ -1,24 +1,31 @@
 [project]
 name = "hobbyhive-ml"
 version = "0.1.0"
-description = "HobbyHive topic model: post embeddings, hive classification, and off-topic detection"
+description = "HobbyHive ML: topic model, semantic search, and Ask Bea (local RAG)"
 requires-python = ">=3.12,<3.13"
+# Runtime only — what the API needs on a small server
 dependencies = [
-  "fastembed>=0.7",
-  "scikit-learn>=1.5",
+  "onnxruntime>=1.20",
+  "tokenizers>=0.20",
   "numpy>=1.26",
   "fastapi>=0.115",
   "uvicorn>=0.30",
-  "matplotlib>=3.9",
   "psycopg[binary]>=3.2",
   "python-dotenv>=1.0",
+  "huggingface-hub>=0.25",
 ]
 
 [dependency-groups]
+# Training and evaluation (train.py, eval_search.py, eval_rag.py) — not needed on the server
+train = ["scikit-learn>=1.5", "matplotlib>=3.9", "fastembed>=0.7"]
+# Optional local LLM for Ask Bea rewrites (BEA_LOCAL_LLM=1)
+llm = ["onnxruntime-genai>=0.16"]
 dev = ["pytest>=8", "httpx>=0.27"]
 
 [tool.uv]
 package = false
+# Local development gets everything; on the server run `uv sync --no-default-groups`
+default-groups = ["train", "llm", "dev"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

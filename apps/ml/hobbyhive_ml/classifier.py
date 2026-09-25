@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-import joblib
 import numpy as np
 
 from .embedder import embed
@@ -34,9 +33,28 @@ class FlagRule:
     min_alternative_score: float  # …and another label must look likely
 
 
+class LinearSoftmax:
+    """Inference-only multinomial logistic regression: softmax(X·Wᵀ + b). Same maths as scikit-learn's
+    predict_proba, without importing scikit-learn (~60 MB) on the serving box. Weights come from train.py."""
+
+    def __init__(self, coef: np.ndarray, intercept: np.ndarray, classes: np.ndarray):
+        self.coef_, self.intercept_, self.classes_ = coef, intercept, classes
+
+    @classmethod
+    def load(cls, path: Path) -> "LinearSoftmax":
+        data = np.load(path, allow_pickle=False)
+        return cls(data["coef"], data["intercept"], data["classes"])
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        logits = X @ self.coef_.T + self.intercept_
+        logits -= logits.max(axis=1, keepdims=True)
+        exp = np.exp(logits)
+        return exp / exp.sum(axis=1, keepdims=True)
+
+
 @lru_cache(maxsize=1)
-def load() -> tuple[object, list[str], FlagRule, dict]:
-    model = joblib.load(MODELS_DIR / "classifier.joblib")
+def load() -> tuple[LinearSoftmax, list[str], FlagRule, dict]:
+    model = LinearSoftmax.load(MODELS_DIR / "classifier.npz")
     card = json.loads((MODELS_DIR / "model_card.json").read_text())
     rule = FlagRule(card["off_topic_rule"]["max_hive_score"], card["off_topic_rule"]["min_alternative_score"])
     return model, list(model.classes_), rule, card

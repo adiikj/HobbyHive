@@ -7,7 +7,7 @@ Pipeline:
   4. Tune logistic regression's C with 5-fold cross-validation.
   5. Pick the off-topic threshold from out-of-fold probabilities (never the test set).
   6. Report test metrics, a confusion matrix, off-topic flagging quality, and a check on real HobbyHive posts.
-  7. Refit on all data and save models/classifier.joblib + models/model_card.json.
+  7. Refit on all data and save models/classifier.npz (weights for numpy inference) + models/model_card.json.
 
 Run: uv run python train.py
 """
@@ -20,7 +20,6 @@ import random
 from datetime import datetime, timezone
 from pathlib import Path
 
-import joblib
 import matplotlib
 
 matplotlib.use("Agg")
@@ -39,7 +38,7 @@ from sklearn.metrics import (  # noqa: E402
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_val_predict, train_test_split  # noqa: E402
 from sklearn.pipeline import make_pipeline  # noqa: E402
 
-from hobbyhive_ml.classifier import OFF_TOPIC, FlagRule, placement_scores, should_flag  # noqa: E402
+from hobbyhive_ml.classifier import OFF_TOPIC, FlagRule, LinearSoftmax, placement_scores, should_flag  # noqa: E402
 from hobbyhive_ml.embedder import MODEL_NAME, embed  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent
@@ -262,7 +261,10 @@ def main() -> None:
 
     # --- Final model: refit on everything, save with a model card -----------------------------
     final = LogisticRegression(max_iter=5000, C=best_c).fit(X, labels)
-    joblib.dump(final, MODELS / "classifier.joblib")
+    # Serving needs only the weights (numpy softmax, see classifier.LinearSoftmax) — no scikit-learn at runtime
+    np.savez(MODELS / "classifier.npz", coef=final.coef_, intercept=final.intercept_, classes=final.classes_.astype(str))
+    served = LinearSoftmax(final.coef_, final.intercept_, final.classes_)
+    assert np.allclose(served.predict_proba(X[:50]), final.predict_proba(X[:50]), atol=1e-6), "numpy export mismatch"
     card = {
         "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "embedding_model": MODEL_NAME,
@@ -323,7 +325,7 @@ def main() -> None:
             *[f"- \"{e['text']}\" ({e['hive']} → {e['suggested']})" for e in real["flagged_examples"]],
         ]
     (REPORTS / "metrics.md").write_text("\n".join(lines) + "\n")
-    print(f"saved models/classifier.joblib, models/model_card.json, reports/metrics.md, reports/confusion_matrix.png")
+    print("saved models/classifier.npz, models/model_card.json, reports/metrics.md, reports/confusion_matrix.png")
 
 
 if __name__ == "__main__":

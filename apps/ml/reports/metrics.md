@@ -39,7 +39,7 @@ Flag when P(own hive) < 0.13 and another label ≥ 0.30. Tuned on out-of-fold pr
 | | Recall | False alarms | False alarms (vague) | Precision |
 |---|---|---|---|---|
 | Calibration | 54.8% | 2.0% | 4.0% | 96.6% |
-| Test | 65.4% | 3.3% | 4.0% | 94.4% |
+| Test | 66.3% | 4.1% | 4.0% | 93.2% |
 
 ## Misclassified test posts
 
