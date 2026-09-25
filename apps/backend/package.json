@@ -15,7 +15,6 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "db:seed:e2e": "tsx prisma/seedE2E.ts",
     "db:seed:demo": "tsx prisma/seedDemo.ts"
   },
   "prisma": {
