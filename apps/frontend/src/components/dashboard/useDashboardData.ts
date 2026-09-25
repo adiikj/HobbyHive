@@ -35,7 +35,7 @@ export interface ComposerImage {
 
 const LAST_HIVE_KEY = "hobbyhive:lastHive";
 
-function readLastHive(): string | null {
+export function readLastHive(): string | null {
   try {
     return localStorage.getItem(LAST_HIVE_KEY);
   } catch {

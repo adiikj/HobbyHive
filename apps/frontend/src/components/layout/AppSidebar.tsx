@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Home, Compass, MessageCircle, User, Settings, PenSquare, Bookmark, type LucideIcon } from "lucide-react";
+import { getMyHobbies } from "@/api/api";
 import { useCurrentUser } from "@/lib/currentUser";
 import Logo from "@/components/brand/Logo";
+import BeaAvatar from "@/components/bea/BeaAvatar";
 import NotificationBell from "@/components/dashboard/NotificationBell";
+import { readLastHive } from "@/components/dashboard/useDashboardData";
 import AccountMenu from "./AccountMenu";
 
 const navItemClass = (active: boolean) =>
@@ -21,6 +24,28 @@ function NavItem({ href, label, icon: Icon, active }: { href: string; label: str
       <Icon size={21} strokeWidth={active ? 2.4 : 2} className={active ? "text-brand" : undefined} />
       {label}
     </Link>
+  );
+}
+
+/** Ask Bea in the hive you're looking at, else the last hive you opened, else your first hive. */
+function AskBeaNavItem() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentHive = pathname.match(/^\/hobbies\/([^/]+)/)?.[1] ?? null;
+  const active = Boolean(currentHive) && searchParams.get("tab") === "ask";
+
+  const open = async () => {
+    let slug = currentHive ?? readLastHive();
+    if (!slug) slug = (await getMyHobbies().catch(() => []))[0]?.slug ?? null;
+    router.push(slug ? `/hobbies/${slug}?tab=ask` : "/explore");
+  };
+
+  return (
+    <button type="button" onClick={open} className={navItemClass(active)} aria-current={active ? "page" : undefined}>
+      <BeaAvatar size={22} />
+      Ask Bea
+    </button>
   );
 }
 
@@ -43,6 +68,7 @@ function AppSidebar() {
         <nav aria-label="Main" className="space-y-1">
           <NavItem href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
           <NavItem href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} />
+          <AskBeaNavItem />
           <NavItem href="/messages" label="Messages" icon={MessageCircle} active={pathname.startsWith("/messages")} />
           <NotificationBell
             size={21}

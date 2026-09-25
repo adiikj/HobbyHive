@@ -40,11 +40,19 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
-  const [tab, setTab] = useState<HobbyTab>(
+  const tabFromUrl: HobbyTab =
     requestedTab === "ask" || requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
       ? requestedTab
-      : "posts"
-  );
+      : "posts";
+  const [tab, setTab] = useState<HobbyTab>(tabFromUrl);
+
+  // Follow ?tab when it changes after mount (e.g. "Ask Bea" in the sidebar while already in this hive)
+  useEffect(() => setTab(tabFromUrl), [tabFromUrl]);
+
+  const selectTab = (key: HobbyTab) => {
+    setTab(key);
+    router.replace(key === "posts" ? `/hobbies/${slug}` : `/hobbies/${slug}?tab=${key}`, { scroll: false });
+  };
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -244,7 +252,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
               key={key}
               role="tab"
               aria-selected={isActive}
-              onClick={() => setTab(key)}
+              onClick={() => selectTab(key)}
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-quick font-bold transition-colors sm:px-3 sm:text-sm ${
                 isActive ? "text-white shadow-sm" : "text-chblack/55 hover:text-chblack"
               }`}
