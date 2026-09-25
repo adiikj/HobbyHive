@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getHobbies, setMyHobbies, type Hobby } from "@/api/api";
+import { Check } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
+import Logo from "@/components/brand/Logo";
+import { HexIcon, primaryButtonClass } from "@/components/ui/Page";
+import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 
 interface HobbySelectorProps {
   title: string;
@@ -11,9 +15,11 @@ interface HobbySelectorProps {
   submitLabel: string;
   initialSelectedIds?: string[];
   onSaved: (hobbies: Hobby[]) => void;
+  /** Render just the grid and save bar, for use inside a page that supplies its own header (settings). */
+  embedded?: boolean;
 }
 
-function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSaved }: HobbySelectorProps) {
+function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSaved, embedded = false }: HobbySelectorProps) {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(initialSelectedIds));
   const [isLoading, setIsLoading] = useState(true);
@@ -57,81 +63,93 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
     }
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-8 md:p-10">
-      <motion.h1
-        className="text-4xl md:text-5xl lg:text-6xl font-bnt font-bold text-black mb-3 text-center"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {title}
-      </motion.h1>
-
-      {subtitle && (
-        <p className="font-pop text-chblack/70 mb-8 md:mb-12 text-center max-w-lg">{subtitle}</p>
-      )}
-
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl bg-white/50" />
-          ))}
-        </div>
-      ) : (
-        <>
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+  const grid = isLoading ? (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-32 rounded-2xl bg-line" />
+      ))}
+    </div>
+  ) : (
+    <motion.div
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+      initial="hidden"
+      animate="visible"
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.04 } } }}
+    >
+      {hobbies.map((hobby) => {
+        const isSelected = selectedIds.has(hobby.id);
+        const color = getHobbyColor(hobby.name);
+        return (
+          <motion.button
+            key={hobby.id}
+            type="button"
+            onClick={() => toggleHobby(hobby.id)}
+            aria-pressed={isSelected}
+            variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}
+            whileTap={{ scale: 0.97 }}
+            className="relative flex flex-col items-center justify-center gap-2.5 rounded-2xl border-2 bg-surface p-5 font-pop font-semibold text-chblack transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            style={{
+              borderColor: isSelected ? color : "rgb(var(--c-line))",
+              backgroundColor: isSelected ? withAlpha(color, 0.1) : "rgb(var(--c-surface))",
             }}
           >
-            {hobbies.map((hobby) => {
-              const isSelected = selectedIds.has(hobby.id);
-              return (
-                <motion.button
-                  key={hobby.id}
-                  type="button"
-                  onClick={() => toggleHobby(hobby.id)}
-                  variants={{ hidden: { opacity: 0, scale: 0.9 }, visible: { opacity: 1, scale: 1 } }}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className={`flex flex-col items-center justify-center gap-2 rounded-xl p-5 border-2 transition-colors font-pop font-semibold ${
-                    isSelected
-                      ? "bg-pink-600 border-pink-600 text-white shadow-lg"
-                      : "bg-white border-transparent text-chblack hover:border-pink-200"
-                  }`}
-                >
-                  <span className="text-3xl">{hobby.icon ?? "✨"}</span>
-                  <span>{hobby.name}</span>
-                </motion.button>
-              );
-            })}
-          </motion.div>
-
-          {error && (
-            <p className="font-pop text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-2 text-sm mt-6">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="mt-8 w-full max-w-xs font-quick font-semibold text-white bg-black py-3 rounded-full shadow-md shadow-black/10 hover:shadow-lg hover:-translate-y-0.5 transition-all flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0"
-          >
-            {isSaving ? (
-              <span className="border-t-2 border-white w-5 h-5 rounded-full animate-spin" />
-            ) : (
-              submitLabel
+            {isSelected && (
+              <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
+                <Check size={13} strokeWidth={3} />
+              </span>
             )}
-          </button>
-        </>
-      )}
+            <HexIcon fill={isSelected ? "rgb(var(--c-surface))" : withAlpha(color, 0.14)} icon={hobby.icon ?? "✨"} size={56} />
+            <span>{hobby.name}</span>
+          </motion.button>
+        );
+      })}
+    </motion.div>
+  );
+
+  const footer = !isLoading && (
+    <div className={`sticky z-10 mt-6 ${embedded ? "bottom-20 lg:bottom-4" : "bottom-4"}`}>
+      <div className="flex items-center justify-between gap-3 rounded-full border border-line bg-surface/90 py-2 pl-5 pr-2 shadow-lg shadow-black/5 backdrop-blur">
+        <p className={`text-sm ${error ? "text-red-600" : "text-chblack/60"}`}>
+          {error || (
+            <>
+              <span className="font-semibold text-chblack">{selectedIds.size}</span> selected
+            </>
+          )}
+        </p>
+        <button type="button" onClick={handleSave} disabled={isSaving} className={`${primaryButtonClass} min-w-[8rem] py-2.5`}>
+          {isSaving ? <span className="h-4 w-4 animate-spin rounded-full border-t-2 border-white" /> : submitLabel}
+        </button>
+      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div>
+        {grid}
+        {footer}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-canvas font-pop">
+      <div className="mx-auto w-full max-w-3xl px-4 pb-10 pt-8 sm:px-6 sm:pt-14">
+        <div className="mb-8 text-center">
+          <Logo size={44} className="mx-auto" />
+          <motion.h1
+            className="mt-4 font-bnt text-5xl leading-[0.9] text-chblack sm:text-7xl"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {title.toUpperCase()}
+          </motion.h1>
+          {subtitle && <p className="mx-auto mt-3 max-w-lg text-chblack/60">{subtitle}</p>}
+        </div>
+        {grid}
+        {footer}
+      </div>
     </div>
   );
 }

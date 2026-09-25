@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { CalendarDays, Clock, MapPin, Plus, Users } from "lucide-react";
 import { getHobbyEvents, createEvent, rsvpToEvent, cancelRsvp, type HobbyEvent } from "@/api/api";
 import Skeleton from "@/components/ui/Skeleton";
+import { Card, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
+import { withAlpha } from "@/lib/hobbyTheme";
 
 interface HobbyEventsProps {
   slug: string;
+  /** The hobby's colour, for date tiles and RSVP buttons. */
+  color: string;
 }
 
 function formatEventTime(iso: string) {
@@ -18,8 +23,7 @@ function formatEventTime(iso: string) {
   });
 }
 
-function HobbyEvents({ slug }: HobbyEventsProps) {
-  const router = useRouter();
+function HobbyEvents({ slug, color }: HobbyEventsProps) {
   const [events, setEvents] = useState<HobbyEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rsvpLoadingId, setRsvpLoadingId] = useState<string | null>(null);
@@ -82,112 +86,149 @@ function HobbyEvents({ slug }: HobbyEventsProps) {
     }
   };
 
+  const upcomingCount = events.filter((e) => new Date(e.startsAt).getTime() >= Date.now()).length;
+
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-chblack/55">
+          {isLoading ? "\u00a0" : upcomingCount === 0 ? "Nothing on the calendar yet." : `${upcomingCount} upcoming`}
+        </p>
         <button
           onClick={() => setShowForm((s) => !s)}
-          className="text-sm font-quick font-semibold text-white bg-pink-600 hover:bg-pink-700 rounded-full px-5 py-2"
+          className={showForm ? secondaryButtonClass : primaryButtonClass}
         >
-          {showForm ? "Cancel" : "Create Event"}
+          {showForm ? (
+            "Cancel"
+          ) : (
+            <>
+              <Plus size={16} /> Plan an event
+            </>
+          )}
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-xl shadow-md p-5 space-y-3">
+        <Card className="space-y-3 p-5">
+          <p className="font-bnt text-2xl leading-none text-chblack">NEW EVENT</p>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Event title"
-            className="w-full font-pop text-sm p-3 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-pink-500"
+            placeholder="What's happening?"
+            aria-label="Event title"
+            className={inputClass}
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description (optional)"
+            placeholder="Details (optional)"
+            aria-label="Event details"
             rows={2}
-            className="w-full font-pop text-sm p-3 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-pink-500 resize-none"
+            className={`${inputClass} resize-none`}
           />
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Location or link (optional)"
-            className="w-full font-pop text-sm p-3 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-pink-500"
-          />
-          <input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            className="w-full font-pop text-sm p-3 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-pink-500"
-          />
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-          <button
-            onClick={handleCreate}
-            disabled={isCreating}
-            className="w-full text-sm font-quick font-semibold text-white bg-black rounded-full px-5 py-2.5 disabled:opacity-60"
-          >
-            {isCreating ? "Creating..." : "Create Event"}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Location or link (optional)"
+              aria-label="Location"
+              className={inputClass}
+            />
+            <input
+              type="datetime-local"
+              value={startsAt}
+              onChange={(e) => setStartsAt(e.target.value)}
+              aria-label="Starts at"
+              className={inputClass}
+            />
+          </div>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button onClick={handleCreate} disabled={isCreating} className={`${primaryButtonClass} w-full py-2.5`}>
+            {isCreating ? "Creating…" : "Create event"}
           </button>
-        </div>
+        </Card>
       )}
 
       {isLoading ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-md p-5 space-y-3">
-              <Skeleton className="h-5 w-1/2 rounded-full bg-gray-200" />
-              <Skeleton className="h-3 w-1/3 rounded-full bg-gray-200" />
-              <Skeleton className="h-3 w-2/3 rounded-full bg-gray-100" />
-            </div>
+            <Card key={i} as="div" className="flex gap-4 p-4">
+              <Skeleton className="h-16 w-14 shrink-0 rounded-xl bg-line" />
+              <div className="flex-1 space-y-2 pt-1">
+                <Skeleton className="h-4 w-1/2 rounded-full bg-line" />
+                <Skeleton className="h-3 w-1/3 rounded-full bg-canvas" />
+              </div>
+            </Card>
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center bg-white rounded-xl shadow-md p-8">
-          <p className="font-semibold text-lg">No upcoming events.</p>
-          <p className="text-gray-600 mt-1">Be the first to organize one.</p>
+        <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
+          <CalendarDays size={28} className="mx-auto" style={{ color }} />
+          <p className="mt-2 font-bnt text-3xl text-chblack">NO EVENTS YET</p>
+          <p className="mt-1 text-sm text-chblack/55">Jam session, meetup, watch party: be the first to organise one.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {events.map((event) => (
-            <div key={event.id} className="bg-white rounded-xl shadow-md p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-bnt text-xl text-chblack">{event.title}</p>
-                  <p className="font-pop text-sm text-pink-600 font-semibold mt-1">
-                    {formatEventTime(event.startsAt)}
-                  </p>
-                  {event.location && <p className="font-pop text-sm text-chblack/60 mt-1">📍 {event.location}</p>}
-                  {event.description && (
-                    <p className="font-pop text-sm text-chblack/70 mt-2">{event.description}</p>
-                  )}
-                  <button
-                    onClick={() => router.push(`/profile/${event.creator.username}`)}
-                    className="font-pop text-xs text-chblack/40 mt-2 hover:underline"
-                  >
-                    Organized by {event.creator.name}
-                  </button>
+        <div className="space-y-3">
+          {events.map((event) => {
+            const date = new Date(event.startsAt);
+            const isPast = date.getTime() < Date.now();
+            return (
+              <Card key={event.id} as="article" className={`flex gap-4 p-4 sm:p-5 ${isPast ? "opacity-60" : ""}`}>
+                <div
+                  className="flex h-16 w-14 shrink-0 flex-col items-center justify-center rounded-xl"
+                  style={{ backgroundColor: withAlpha(color, 0.12), color }}
+                >
+                  <span className="text-[11px] font-quick font-bold uppercase leading-none">
+                    {date.toLocaleDateString(undefined, { month: "short" })}
+                  </span>
+                  <span className="mt-0.5 font-bnt text-3xl leading-none">{date.getDate()}</span>
                 </div>
 
-                <button
-                  onClick={() => handleToggleRsvp(event)}
-                  disabled={rsvpLoadingId === event.id}
-                  className={`text-sm font-quick font-semibold rounded-full px-4 py-2 shrink-0 disabled:opacity-60 ${
-                    event.isAttending
-                      ? "bg-gray-100 text-chblack hover:bg-gray-200"
-                      : "bg-pink-600 text-white hover:bg-pink-700"
-                  }`}
-                >
-                  {event.isAttending ? "Going" : "RSVP"}
-                </button>
-              </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-chblack">{event.title}</h3>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-chblack/55">
+                        <span className="flex items-center gap-1">
+                          <Clock size={14} /> {formatEventTime(event.startsAt)}
+                        </span>
+                        {event.location && (
+                          <span className="flex min-w-0 items-center gap-1">
+                            <MapPin size={14} className="shrink-0" /> <span className="truncate">{event.location}</span>
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {!isPast && (
+                      <button
+                        onClick={() => handleToggleRsvp(event)}
+                        disabled={rsvpLoadingId === event.id}
+                        className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-quick font-bold transition-colors disabled:opacity-50 ${
+                          event.isAttending ? "border border-line text-chblack hover:bg-canvas" : "text-white hover:opacity-90"
+                        }`}
+                        style={event.isAttending ? undefined : { backgroundColor: color }}
+                      >
+                        {event.isAttending ? "Going ✓" : "RSVP"}
+                      </button>
+                    )}
+                  </div>
 
-              <p className="font-pop text-xs text-chblack/40 mt-3">
-                {event.attendeeCount} {event.attendeeCount === 1 ? "person" : "people"} going
-              </p>
-            </div>
-          ))}
+                  {event.description && <p className="mt-2 text-sm leading-relaxed text-chblack/75">{event.description}</p>}
+
+                  <div className="mt-3 flex items-center justify-between gap-3 text-xs text-chblack/45">
+                    <Link href={`/profile/${event.creator.username}`} className="hover:underline">
+                      Organised by <span className="font-semibold text-chblack/70">{event.creator.name}</span>
+                    </Link>
+                    <span className="flex items-center gap-1">
+                      <Users size={13} /> {event.attendeeCount} going
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

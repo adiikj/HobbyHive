@@ -43,34 +43,34 @@ function MessagesList({ activeConversationId = null }: MessagesListProps) {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-r from-somig to-beige">
-      <div className="flex items-center gap-2 px-4 py-4 shrink-0">
+    <div className="flex flex-col h-full bg-canvas font-pop">
+      <div className="flex items-center gap-2 px-4 pt-5 pb-4 shrink-0 lg:pt-8">
         <button
           onClick={() => router.push("/dashboard")}
-          className="p-1 -ml-1 rounded-full hover:bg-white/40 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+          className="p-1 -ml-1 rounded-full hover:bg-surface lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           aria-label="Back to dashboard"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-bnt text-2xl text-chblack">Messages</h1>
+        <h1 className="font-bnt text-5xl leading-[0.9] text-chblack">MESSAGES</h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 pb-4">
         {isLoading ? (
           <>
             {Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-3">
-                <Skeleton className="w-14 h-14 rounded-full bg-white/50 shrink-0" />
+                <Skeleton className="w-12 h-12 rounded-full bg-line shrink-0" />
                 <div className="min-w-0 flex-1 space-y-2">
-                  <Skeleton className="h-3 rounded-full bg-white/50 w-2/5" />
-                  <Skeleton className="h-3 rounded-full bg-white/30 w-4/5" />
+                  <Skeleton className="h-3 rounded-full bg-line w-2/5" />
+                  <Skeleton className="h-3 rounded-full bg-line/60 w-4/5" />
                 </div>
               </div>
             ))}
           </>
         ) : conversations.length === 0 ? (
-          <div className="text-center px-6 py-10">
-            <p className="font-quick font-semibold text-chblack">No conversations yet</p>
+          <div className="mx-2 mt-2 rounded-2xl border border-dashed border-chblack/15 text-center px-6 py-10">
+            <p className="font-bnt text-3xl text-chblack">NO CHATS YET</p>
             <p className="font-pop text-sm text-chblack/50 mt-1">
               Message someone from their profile to start one.
             </p>
@@ -82,15 +82,15 @@ function MessagesList({ activeConversationId = null }: MessagesListProps) {
               <button
                 key={c.id}
                 onClick={() => router.push(`/messages/${c.id}`)}
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 transition-colors focus-visible:outline-none focus-visible:bg-white/50 ${
-                  isActive ? "bg-white/60" : "hover:bg-white/30"
+                className={`flex items-center gap-3 w-full text-left rounded-2xl px-3 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                  isActive ? "bg-surface shadow-sm ring-1 ring-line" : "hover:bg-surface/70"
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={c.otherUser?.avatarUrl || "/images/5.png"}
                   alt={c.otherUser?.name ?? "User"}
-                  className="w-14 h-14 rounded-full object-cover shrink-0"
+                  className="w-12 h-12 rounded-full object-cover shrink-0"
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
@@ -116,7 +116,7 @@ function MessagesList({ activeConversationId = null }: MessagesListProps) {
                   </p>
                 </div>
                 {c.unreadCount > 0 && (
-                  <span className="bg-pink-600 text-white text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shrink-0">
+                  <span className="bg-brand text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center shrink-0">
                     {c.unreadCount > 9 ? "9+" : c.unreadCount}
                   </span>
                 )}

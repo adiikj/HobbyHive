@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { getMyHobbies } from "@/api/api";
 import HobbySelector from "@/components/hobbies/HobbySelector";
 import Skeleton from "@/components/ui/Skeleton";
+import { PageContainer, PageHeader } from "@/components/ui/Page";
+import SettingsTabs from "@/components/settings/SettingsTabs";
 
 function EditHobbies() {
   const router = useRouter();
@@ -16,27 +18,26 @@ function EditHobbies() {
       .catch(() => setInitialSelectedIds([]));
   }, []);
 
-  if (initialSelectedIds === null) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-8 md:p-10">
-        <Skeleton className="h-10 w-64 rounded-full bg-white/50 mb-8" />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-3xl">
+  return (
+    <PageContainer width="default">
+      <PageHeader eyebrow="Settings" title="Your hives" subtitle="Your feed only ever shows the hobbies you pick here." />
+      <SettingsTabs />
+      {initialSelectedIds === null ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl bg-white/50" />
+            <Skeleton key={i} className="h-32 rounded-2xl bg-line" />
           ))}
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <HobbySelector
-      title="Edit Your Hobbies"
-      subtitle="Update what your feed shows you."
-      submitLabel="Save Changes"
-      initialSelectedIds={initialSelectedIds}
-      onSaved={() => router.push("/dashboard")}
-    />
+      ) : (
+        <HobbySelector
+          embedded
+          title="Your hives"
+          submitLabel="Save changes"
+          initialSelectedIds={initialSelectedIds}
+          onSaved={() => router.push("/dashboard")}
+        />
+      )}
+    </PageContainer>
   );
 }
 

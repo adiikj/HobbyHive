@@ -1,23 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldCheck, Trophy } from "lucide-react";
 import {
   getHobbyBySlug,
   getHobbyPosts,
   addMyHobby,
   leaveHobby,
+  getHobbyPinnedPosts,
   type HobbyDetail,
   type Post,
 } from "@/api/api";
 import PostCard from "@/components/dashboard/PostCard";
 import Skeleton from "@/components/ui/Skeleton";
+import HobbyGlyph from "@/components/brand/HobbyGlyph";
+import { PostListSkeleton } from "@/components/ui/Skeletons";
+import { PageContainer, HexIcon, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
+import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import HobbyLiveRoom from "./HobbyLiveRoom";
 import HobbyEvents from "./HobbyEvents";
+import HobbyChallenges from "@/components/challenges/HobbyChallenges";
 
-type HobbyTab = "posts" | "room" | "events";
+type HobbyTab = "posts" | "room" | "events" | "challenges";
 
 interface HobbyPageProps {
   slug: string;
@@ -29,12 +36,30 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
-  const [tab, setTab] = useState<HobbyTab>("posts");
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const [tab, setTab] = useState<HobbyTab>(
+    requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" ? requestedTab : "posts"
+  );
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingPosts, setIsLoadingPosts] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
+
+  const refreshPinned = useCallback(() => {
+    getHobbyPinnedPosts(slug).then(setPinnedPosts).catch(() => setPinnedPosts([]));
+  }, [slug]);
+
+  useEffect(() => {
+    refreshPinned();
+  }, [refreshPinned]);
+
+  const removePost = (postId: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setPinnedPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
 
   useEffect(() => {
     setIsLoading(true);
@@ -86,153 +111,196 @@ function HobbyPage({ slug }: HobbyPageProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10">
-        <div className="max-w-2xl mx-auto">
-          <Skeleton className="w-9 h-9 rounded-full bg-white/50 mb-6" />
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-10 mb-6 space-y-3">
-            <Skeleton className="h-8 w-1/2 rounded-full bg-gray-200" />
-            <Skeleton className="h-3 w-1/3 rounded-full bg-gray-100" />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-20 rounded-full bg-white/50" />
-            <Skeleton className="h-9 w-24 rounded-full bg-white/50" />
-            <Skeleton className="h-9 w-20 rounded-full bg-white/50" />
-          </div>
+      <PageContainer>
+        <Skeleton className="mb-6 h-56 w-full rounded-3xl bg-line" />
+        <div className="mb-6 flex gap-2">
+          <Skeleton className="h-10 w-24 rounded-full bg-line" />
+          <Skeleton className="h-10 w-28 rounded-full bg-line" />
+          <Skeleton className="h-10 w-24 rounded-full bg-line" />
         </div>
-      </div>
+        <Skeleton className="h-40 w-full rounded-2xl bg-line" />
+      </PageContainer>
     );
   }
 
   if (!hobby) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-somig to-beige p-6 text-center">
-        <p className="font-pop text-chblack/70">{error || "Hobby not found."}</p>
-      </div>
+      <PageContainer>
+        <div className="rounded-2xl border border-dashed border-chblack/15 p-12 text-center">
+          <p className="font-bnt text-4xl text-chblack">HIVE NOT FOUND</p>
+          <p className="mt-1 text-sm text-chblack/55">{error || "This hobby doesn't exist, or it moved."}</p>
+          <Link href="/explore" className={`${secondaryButtonClass} mt-5`}>
+            Browse hives
+          </Link>
+        </div>
+      </PageContainer>
     );
   }
 
+  const color = getHobbyColor(hobby.name);
+  const tabs: { key: HobbyTab; label: string; icon: typeof Newspaper }[] = [
+    { key: "posts", label: "Posts", icon: Newspaper },
+    { key: "room", label: "Live Room", icon: Radio },
+    { key: "events", label: "Events", icon: CalendarDays },
+    { key: "challenges", label: "Challenges", icon: Trophy },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => router.push("/explore")}
-            className="p-2 rounded-full bg-white shadow hover:bg-gray-50"
-          >
-            <ArrowLeft size={20} />
-          </button>
-        </div>
+    <PageContainer>
+      <button
+        onClick={() => router.back()}
+        className="mb-4 inline-flex items-center gap-1.5 rounded-full px-2 py-1 -ml-2 text-sm font-quick font-bold text-chblack/55 transition-colors hover:text-chblack"
+      >
+        <ArrowLeft size={18} /> Back
+      </button>
 
-        <motion.div
-          className="bg-white rounded-2xl shadow-xl p-6 sm:p-10 mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="font-bnt text-3xl sm:text-4xl text-chblack">
-                {hobby.icon} {hobby.name}
-              </h1>
-              <p className="font-pop text-chblack/50 mt-2">
-                {hobby.membersCount} {hobby.membersCount === 1 ? "member" : "members"} ·{" "}
-                {hobby.postsCount} {hobby.postsCount === 1 ? "post" : "posts"}
+      <motion.section
+        className="relative mb-6 overflow-hidden rounded-3xl border p-6 sm:p-8"
+        style={{
+          background: `linear-gradient(135deg, ${withAlpha(color, 0.22)} 0%, ${withAlpha(color, 0.06)} 55%, rgb(var(--c-surface)) 100%)`,
+          borderColor: withAlpha(color, 0.2),
+        }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <HobbyGlyph color={withAlpha(color, 0.12)} size={300} className="pointer-events-none absolute -right-16 -top-24" />
+        <HobbyGlyph color={withAlpha(color, 0.08)} size={140} className="pointer-events-none absolute right-40 -bottom-20" />
+
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-end gap-4 min-w-0">
+            <HexIcon fill="rgb(var(--c-surface))" icon={hobby.icon} size={76} className="drop-shadow-sm" />
+            <div className="min-w-0">
+              <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+                Hive
               </p>
+              <h1 className="truncate font-bnt text-6xl leading-[0.85] text-chblack sm:text-7xl">{hobby.name.toUpperCase()}</h1>
+              <p className="mt-2 text-sm text-chblack/60">
+                <span className="font-semibold text-chblack">{hobby.membersCount}</span>{" "}
+                {hobby.membersCount === 1 ? "member" : "members"} ·{" "}
+                <span className="font-semibold text-chblack">{hobby.postsCount}</span>{" "}
+                {hobby.postsCount === 1 ? "post" : "posts"}
+              </p>
+              {hobby.moderators && hobby.moderators.length > 0 && (
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs text-chblack/55">
+                  <ShieldCheck size={13} style={{ color }} /> Moderated by
+                  {hobby.moderators.map((m, i) => (
+                    <span key={m.id}>
+                      <Link href={`/profile/${m.username}`} className="font-semibold text-chblack hover:underline">
+                        {m.name}
+                      </Link>
+                      {i < hobby.moderators!.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
+          </div>
 
+          <div className="flex shrink-0 items-center gap-2">
+            {hobby.isMember && (
+              <Link href={`/dashboard?hive=${hobby.slug}`} className={secondaryButtonClass}>
+                Open in feed
+              </Link>
+            )}
             <button
               onClick={handleToggleMembership}
               disabled={isMembershipLoading}
-              className={`text-sm font-quick font-semibold rounded-full px-5 py-2 shrink-0 disabled:opacity-60 ${
+              className={
                 hobby.isMember
-                  ? "bg-gray-100 text-chblack hover:bg-gray-200"
-                  : "bg-pink-600 text-white hover:bg-pink-700"
-              }`}
+                  ? "group inline-flex items-center gap-1.5 rounded-full bg-surface/80 px-5 py-2 text-sm font-quick font-bold text-chblack ring-1 ring-black/5 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50"
+                  : primaryButtonClass
+              }
             >
-              {hobby.isMember ? "Joined" : "Join"}
+              {hobby.isMember ? (
+                <>
+                  <Check size={16} className="group-hover:hidden" />
+                  <span className="group-hover:hidden">Joined</span>
+                  <span className="hidden group-hover:inline">Leave hive</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={16} /> Join hive
+                </>
+              )}
             </button>
           </div>
-
-          {error && <p className="font-pop text-red-600 text-sm mt-4">{error}</p>}
-        </motion.div>
-
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setTab("posts")}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-              tab === "posts" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            Posts
-          </button>
-          <button
-            onClick={() => setTab("room")}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-              tab === "room" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            Live Room
-          </button>
-          <button
-            onClick={() => setTab("events")}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-              tab === "events" ? "bg-pink-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            Events
-          </button>
         </div>
 
-        {tab === "room" ? (
-          <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} />
-        ) : tab === "events" ? (
-          <HobbyEvents slug={hobby.slug} />
-        ) : (
-          <div className="space-y-6">
-            {isLoadingPosts ? (
-              <>
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="p-4 bg-white rounded-xl shadow-md space-y-3">
-                    <div className="flex items-center gap-2.5">
-                      <Skeleton className="w-9 h-9 rounded-full bg-gray-200 shrink-0" />
-                      <div className="flex-1 space-y-1.5">
-                        <Skeleton className="h-3 w-28 rounded-full bg-gray-200" />
-                        <Skeleton className="h-3 w-16 rounded-full bg-gray-100" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-3 w-full rounded-full bg-gray-100" />
-                    <Skeleton className="h-3 w-4/5 rounded-full bg-gray-100" />
-                  </div>
-                ))}
-              </>
-            ) : posts.length === 0 ? (
-              <div className="text-center bg-white rounded-xl shadow-md p-8">
-                <p className="font-semibold text-lg">No posts yet.</p>
-                <p className="text-gray-600 mt-1">Be the first to post about {hobby.name}.</p>
-              </div>
-            ) : (
-              <>
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
+        {error && <p className="relative mt-4 text-sm text-red-600">{error}</p>}
+      </motion.section>
 
-                {nextCursor && (
-                  <div className="flex justify-center">
-                    <button
-                      onClick={handleLoadMore}
-                      disabled={isLoadingMore}
-                      className="px-6 py-2 rounded-full bg-white shadow-md text-pink-600 font-semibold disabled:opacity-50"
-                    >
-                      {isLoadingMore ? "Loading..." : "Load more"}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+      <div role="tablist" aria-label={`${hobby.name} sections`} className="mb-5 flex gap-1 rounded-full border border-line bg-surface p-1">
+        {tabs.map(({ key, label, icon: Icon }) => {
+          const isActive = tab === key;
+          return (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setTab(key)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-quick font-bold transition-colors sm:px-3 sm:text-sm ${
+                isActive ? "text-white shadow-sm" : "text-chblack/55 hover:text-chblack"
+              }`}
+              style={isActive ? { backgroundColor: color } : undefined}
+            >
+              <Icon size={16} className="shrink-0" /> <span className={isActive ? "" : "hidden sm:inline"}>{label}</span>
+            </button>
+          );
+        })}
       </div>
-    </div>
+
+      {tab === "room" ? (
+        <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} color={color} />
+      ) : tab === "events" ? (
+        <HobbyEvents slug={hobby.slug} color={color} />
+      ) : tab === "challenges" ? (
+        <HobbyChallenges slug={hobby.slug} color={color} isModerator={Boolean(hobby.isModerator)} />
+      ) : (
+        <div className="space-y-4">
+          {isLoadingPosts ? (
+            <PostListSkeleton />
+          ) : posts.length === 0 && pinnedPosts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
+              <p className="font-bnt text-3xl" style={{ color }}>
+                QUIET FOR NOW
+              </p>
+              <p className="mt-1 text-sm text-chblack/60">Be the first to post about {hobby.name}.</p>
+            </div>
+          ) : (
+            <>
+              {pinnedPosts.length > 0 && (
+                <section>
+                  <p className="mb-2 flex items-center gap-1.5 px-1 text-xs font-quick font-bold uppercase tracking-wider text-chblack/45">
+                    <Pin size={13} /> Pinned by moderators
+                  </p>
+                  <div className="bg-surface rounded-2xl border border-line divide-y divide-line">
+                    {pinnedPosts.map((post) => (
+                      <PostCard key={post.id} post={post} showHobby={false} onDeleted={removePost} onPinnedChange={refreshPinned} />
+                    ))}
+                  </div>
+                </section>
+              )}
+              <div className="bg-surface rounded-2xl border border-line divide-y divide-line">
+                {posts
+                  .filter((post) => !pinnedPosts.some((p) => p.id === post.id))
+                  .map((post) => (
+                    <PostCard key={post.id} post={post} showHobby={false} onDeleted={removePost} onPinnedChange={refreshPinned} />
+                  ))}
+              </div>
+
+              {nextCursor && (
+                <div className="flex justify-center">
+                  <button onClick={handleLoadMore} disabled={isLoadingMore} className={secondaryButtonClass}>
+                    {isLoadingMore ? "Loading…" : "Show more"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </PageContainer>
   );
 }
 

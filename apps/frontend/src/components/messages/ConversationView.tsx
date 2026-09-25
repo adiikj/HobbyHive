@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, AlertCircle } from "lucide-react";
+import { ArrowLeft, Check, AlertCircle, SendHorizontal } from "lucide-react";
 import {
   getMessages,
   sendMessage,
@@ -121,11 +121,11 @@ function ConversationView({ conversationId }: ConversationViewProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white shrink-0">
+    <div className="flex flex-col h-full bg-surface font-pop">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-line bg-surface/90 backdrop-blur shrink-0 lg:py-4">
         <button
           onClick={() => router.push("/messages")}
-          className="p-1 -ml-1 rounded-full hover:bg-gray-100 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
+          className="p-1 -ml-1 rounded-full hover:bg-canvas lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           aria-label="Back to messages"
         >
           <ArrowLeft size={20} />
@@ -138,13 +138,14 @@ function ConversationView({ conversationId }: ConversationViewProps) {
         />
         <button
           onClick={() => otherUser && router.push(`/profile/${otherUser.username}`)}
-          className="font-quick font-semibold text-chblack hover:underline focus-visible:outline-none focus-visible:underline"
+          className="min-w-0 text-left focus-visible:outline-none focus-visible:underline group"
         >
-          {otherUser?.name ?? "Conversation"}
+          <span className="block truncate font-semibold text-chblack group-hover:underline">{otherUser?.name ?? "Conversation"}</span>
+          {otherUser && <span className="block truncate text-xs text-chblack/45">@{otherUser.username}</span>}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-gradient-to-r from-somig to-beige">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 bg-canvas">
         {isLoading ? (
           <div className="space-y-3">
             {[
@@ -156,7 +157,7 @@ function ConversationView({ conversationId }: ConversationViewProps) {
               ["w-24", "justify-start"],
             ].map(([w, justify], i) => (
               <div key={i} className={`flex ${justify}`}>
-                <Skeleton className={`h-9 ${w} rounded-[20px] bg-white/50`} />
+                <Skeleton className={`h-9 ${w} rounded-[20px] bg-line`} />
               </div>
             ))}
           </div>
@@ -188,8 +189,8 @@ function ConversationView({ conversationId }: ConversationViewProps) {
                     isFailed
                       ? "bg-pink-300 text-white cursor-pointer"
                       : isMine
-                        ? "bg-pink-600 text-white"
-                        : "bg-white text-chblack shadow-sm"
+                        ? "bg-brand text-white"
+                        : "bg-surface text-chblack ring-1 ring-line"
                   }`}
                   onClick={() => isFailed && handleRetry(m)}
                 >
@@ -212,23 +213,30 @@ function ConversationView({ conversationId }: ConversationViewProps) {
         <div ref={bottomRef} />
       </div>
 
-      <div className="p-3 sm:p-4 border-t border-gray-100 bg-white flex items-center gap-3 shrink-0">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSend();
+        }}
+        className="p-3 sm:p-4 border-t border-line bg-surface flex items-center gap-2 shrink-0"
+      >
         <input
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Message..."
-          className="flex-1 min-w-0 px-4 py-2.5 rounded-full outline-none border border-gray-200 bg-gray-50 font-pop text-sm focus:border-pink-300 focus:bg-white transition-colors"
+          placeholder="Message…"
+          aria-label="Message"
+          className="flex-1 min-w-0 px-4 py-2.5 rounded-full border border-line bg-canvas text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:bg-surface transition-colors"
         />
         <button
-          onClick={handleSend}
+          type="submit"
           disabled={!draft.trim()}
-          className="font-quick font-semibold text-sm text-pink-600 disabled:text-chblack/25 shrink-0 px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 rounded"
+          aria-label="Send"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand text-white transition-opacity disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
-          Send
+          <SendHorizontal size={18} />
         </button>
-      </div>
+      </form>
     </div>
   );
 }

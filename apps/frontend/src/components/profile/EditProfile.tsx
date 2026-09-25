@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { updateProfile } from "@/api/api";
 import { useCurrentUser, setCurrentUser } from "@/lib/currentUser";
 import Skeleton from "@/components/ui/Skeleton";
+import { PageContainer, PageHeader, Card, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
+import SettingsTabs from "@/components/settings/SettingsTabs";
 
 function EditProfile() {
   const router = useRouter();
@@ -42,84 +44,93 @@ function EditProfile() {
     }
   };
 
+  const header = (
+    <>
+      <PageHeader eyebrow="Settings" title="Your account" subtitle="How you show up to other hobbyists." />
+      <SettingsTabs />
+    </>
+  );
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10 flex justify-center">
-        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-10">
-          <Skeleton className="h-7 w-48 rounded-full bg-gray-200 mb-6" />
-          <div className="space-y-5">
-            <Skeleton className="h-11 w-full rounded-xl bg-gray-100" />
-            <Skeleton className="h-20 w-full rounded-xl bg-gray-100" />
-            <Skeleton className="h-11 w-full rounded-xl bg-gray-100" />
-          </div>
-          <Skeleton className="h-11 w-full rounded-full bg-gray-200 mt-6" />
-        </div>
-      </div>
+      <PageContainer width="narrow">
+        {header}
+        <Card className="space-y-5 p-5 sm:p-6">
+          <Skeleton className="h-20 w-20 rounded-full bg-line" />
+          <Skeleton className="h-11 w-full rounded-xl bg-canvas" />
+          <Skeleton className="h-24 w-full rounded-xl bg-canvas" />
+          <Skeleton className="h-11 w-full rounded-xl bg-canvas" />
+        </Card>
+      </PageContainer>
     );
   }
 
+  const labelClass = "mb-1.5 block text-sm font-quick font-bold text-chblack/70";
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-somig to-beige p-6 sm:p-10 flex justify-center">
-      <motion.div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 sm:p-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <h1 className="font-bnt text-2xl sm:text-3xl text-chblack mb-6">Edit Your Profile</h1>
-
-        <div className="space-y-5">
-          <div>
-            <label className="font-quick text-sm font-medium text-chblack/80 mb-1.5 block">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="font-pop text-chblack bg-white border border-chgrey/20 w-full text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
+    <PageContainer width="narrow">
+      {header}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <Card className="p-5 sm:p-6">
+          <div className="mb-6 flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={avatarUrl || "/images/5.png"} alt="" className="h-20 w-20 rounded-full object-cover ring-4 ring-canvas" />
+            <div className="min-w-0">
+              <p className="truncate font-bnt text-3xl leading-none text-chblack">{(name || "Your name").toUpperCase()}</p>
+              <p className="mt-1 truncate text-sm text-chblack/45">@{me?.username}</p>
+            </div>
           </div>
 
-          <div>
-            <label className="font-quick text-sm font-medium text-chblack/80 mb-1.5 block">Bio</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={3}
-              placeholder="Tell people what you're into"
-              className="font-pop text-chblack bg-white border border-chgrey/20 w-full text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none"
-            />
+          <div className="space-y-5">
+            <div>
+              <label htmlFor="profile-name" className={labelClass}>
+                Name
+              </label>
+              <input id="profile-name" type="text" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+            </div>
+
+            <div>
+              <label htmlFor="profile-bio" className={labelClass}>
+                Bio
+              </label>
+              <textarea
+                id="profile-bio"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                placeholder="Tell people what you're into"
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="profile-avatar" className={labelClass}>
+                Avatar image URL
+              </label>
+              <input
+                id="profile-avatar"
+                type="url"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="https://…"
+                className={inputClass}
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="font-quick text-sm font-medium text-chblack/80 mb-1.5 block">
-              Avatar Image URL
-            </label>
-            <input
-              type="text"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://…"
-              className="font-pop text-chblack bg-white border border-chgrey/20 w-full text-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-        </div>
+          {error && <div className="mt-4 rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">{error}</div>}
 
-        {error && (
-          <div className="font-pop text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-sm mt-4">
-            {error}
+          <div className="mt-6 flex justify-end gap-2">
+            <button type="button" onClick={() => router.back()} className={secondaryButtonClass}>
+              Cancel
+            </button>
+            <button type="button" onClick={handleSave} disabled={isSaving} className={primaryButtonClass}>
+              {isSaving ? <span className="h-4 w-4 animate-spin rounded-full border-t-2 border-white" /> : "Save changes"}
+            </button>
           </div>
-        )}
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving}
-          className="mt-6 w-full font-quick font-semibold text-white bg-black py-3 rounded-full shadow-md shadow-black/10 hover:shadow-lg hover:-translate-y-0.5 transition-all flex justify-center items-center disabled:opacity-70 disabled:hover:translate-y-0"
-        >
-          {isSaving ? <span className="border-t-2 border-white w-5 h-5 rounded-full animate-spin" /> : "Save Changes"}
-        </button>
+        </Card>
       </motion.div>
-    </div>
+    </PageContainer>
   );
 }
 

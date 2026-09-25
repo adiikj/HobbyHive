@@ -1,28 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { SendHorizontal } from "lucide-react";
 import { getHobbyRoomMessages, type HobbyRoomMessage } from "@/api/api";
 import { getSocket } from "@/lib/socket";
 import Skeleton from "@/components/ui/Skeleton";
+import { Card } from "@/components/ui/Page";
+import { useCurrentUser } from "@/lib/currentUser";
 
 interface HobbyLiveRoomProps {
   hobbyId: string;
   slug: string;
+  color: string;
 }
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
-function HobbyLiveRoom({ hobbyId, slug }: HobbyLiveRoomProps) {
-  const router = useRouter();
+function HobbyLiveRoom({ hobbyId, slug, color }: HobbyLiveRoomProps) {
+  const { user: me } = useCurrentUser();
   const [messages, setMessages] = useState<HobbyRoomMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -48,8 +52,10 @@ function HobbyLiveRoom({ hobbyId, slug }: HobbyLiveRoomProps) {
     };
   }, [hobbyId, slug]);
 
+  // Keep the newest message in view — scrolls the chat box only, never the page
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
   const handleSend = () => {
@@ -78,71 +84,92 @@ function HobbyLiveRoom({ hobbyId, slug }: HobbyLiveRoomProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md flex flex-col h-[28rem]">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <Card as="div" className="flex h-[32rem] flex-col overflow-hidden">
+      <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inset-0 animate-ping rounded-full opacity-60" style={{ backgroundColor: color }} />
+          <span className="relative h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+        </span>
+        <p className="text-sm font-semibold text-chblack">Live room</p>
+        <p className="truncate text-xs text-chblack/45">Messages appear for everyone in the hive instantly</p>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-canvas/60 p-4">
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex gap-2">
-                <Skeleton className="w-8 h-8 rounded-full bg-gray-200 shrink-0" />
-                <div className="flex-1 space-y-1.5 max-w-[70%]">
-                  <Skeleton className="h-2.5 w-24 rounded-full bg-gray-200" />
-                  <Skeleton className="h-3 w-4/5 rounded-full bg-gray-100" />
-                </div>
+              <div key={i} className={`flex gap-2 ${i % 2 ? "flex-row-reverse" : ""}`}>
+                <Skeleton className="h-8 w-8 shrink-0 rounded-full bg-line" />
+                <Skeleton className="h-10 w-1/2 rounded-2xl bg-line" />
               </div>
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <p className="text-center text-chblack/50 py-10">No one&apos;s said anything yet. Break the ice.</p>
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <p className="font-bnt text-3xl text-chblack">SAY HI</p>
+            <p className="mt-1 text-sm text-chblack/55">No one&apos;s said anything yet. Break the ice.</p>
+          </div>
         ) : (
-          messages.map((m) => (
-            <div key={m.id} className="flex gap-2">
-              <button onClick={() => router.push(`/profile/${m.author.username}`)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={m.author.avatarUrl || "/images/5.png"}
-                  alt={m.author.name}
-                  className="w-8 h-8 rounded-full object-cover shrink-0"
-                />
-              </button>
-              <div>
-                <p className="font-pop text-sm">
-                  <button
-                    onClick={() => router.push(`/profile/${m.author.username}`)}
-                    className="font-semibold hover:underline"
+          messages.map((m) => {
+            const isMine = m.author.id === me?.id;
+            return (
+              <div key={m.id} className={`flex items-end gap-2 ${isMine ? "flex-row-reverse" : ""}`}>
+                {!isMine && (
+                  <Link href={`/profile/${m.author.username}`} className="shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={m.author.avatarUrl || "/images/5.png"} alt={m.author.name} className="h-8 w-8 rounded-full object-cover" />
+                  </Link>
+                )}
+                <div className={`max-w-[75%] ${isMine ? "items-end text-right" : ""} flex flex-col`}>
+                  {!isMine && (
+                    <Link href={`/profile/${m.author.username}`} className="mb-0.5 ml-3 text-xs font-semibold text-chblack/60 hover:underline">
+                      {m.author.name}
+                    </Link>
+                  )}
+                  <p
+                    className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-left text-sm leading-relaxed ${
+                      isMine ? "rounded-br-md text-white" : "rounded-bl-md border border-line bg-surface text-chblack"
+                    }`}
+                    style={isMine ? { backgroundColor: color } : undefined}
                   >
-                    {m.author.name}
-                  </button>{" "}
-                  <span className="text-chblack/40 text-xs">{formatTime(m.createdAt)}</span>
-                </p>
-                <p className="font-pop text-sm text-chblack/80">{m.content}</p>
+                    {m.content}
+                  </p>
+                  <span className="mx-3 mt-0.5 text-[10px] text-chblack/35">{formatTime(m.createdAt)}</span>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
-        <div ref={bottomRef} />
       </div>
 
-      {error && <p className="text-red-600 text-xs px-4">{error}</p>}
+      {error && <p className="px-4 pt-2 text-xs text-red-600">{error}</p>}
 
-      <div className="p-3 border-t border-gray-100 flex gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSend();
+        }}
+        className="flex gap-2 border-t border-line p-3"
+      >
         <input
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Say something..."
-          className="flex-1 min-w-0 p-2 rounded-full outline-none border border-gray-300 font-pop text-sm"
+          placeholder="Message the hive…"
+          aria-label="Message"
+          className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-4 py-2.5 text-sm focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
         />
         <button
-          onClick={handleSend}
+          type="submit"
           disabled={isSending || !draft.trim()}
-          className="bg-pink-600 text-white px-5 py-2 rounded-full font-quick font-semibold text-sm disabled:opacity-50"
+          aria-label="Send"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40"
+          style={{ backgroundColor: color }}
         >
-          Send
+          <SendHorizontal size={18} />
         </button>
-      </div>
-    </div>
+      </form>
+    </Card>
   );
 }
 

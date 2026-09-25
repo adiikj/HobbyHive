@@ -11,11 +11,11 @@ function MessagesShell({ children }: { children: ReactNode }) {
   const hasOpenConversation = Boolean(activeConversationId);
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)] lg:h-screen overflow-hidden bg-white">
+    <div className="flex h-[calc(100dvh-5rem)] lg:h-screen overflow-hidden bg-canvas">
       <div
         className={`${
           hasOpenConversation ? "hidden lg:flex" : "flex"
-        } w-full lg:w-[380px] lg:border-r lg:border-gray-100 flex-col shrink-0`}
+        } w-full lg:w-[360px] lg:border-r lg:border-line flex-col shrink-0`}
       >
         <MessagesList activeConversationId={activeConversationId} />
       </div>
