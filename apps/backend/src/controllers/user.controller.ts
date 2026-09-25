@@ -2,23 +2,18 @@ import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import { google } from "googleapis";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
 import type { User, Prisma } from "@prisma/client";
 
-const oAuth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
-oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+// Nodemailer's Gmail OAuth2 support fetches and refreshes access tokens itself from the refresh token,
+// so the googleapis client (~76 MB resident) isn't needed. One transporter, created on first use and reused.
+let transporter: nodemailer.Transporter | null = null;
 
-const getTransporter = async () => {
-  const { token } = await oAuth2Client.getAccessToken();
-  return nodemailer.createTransport({
+const getTransporter = async () =>
+  (transporter ??= nodemailer.createTransport({
     service: "gmail",
     auth: {
       type: "OAuth2",
@@ -26,10 +21,8 @@ const getTransporter = async () => {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-      accessToken: token ?? undefined,
     },
-  });
-};
+  }));
 
 const generateAccessToken = (user: User) =>
   jwt.sign(

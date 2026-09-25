@@ -28,20 +28,7 @@ vi.mock("../src/services/ml.service.js", () => ({
   toVectorLiteral: (v: number[]) => `[${v.join(",")}]`,
 }));
 
-// user.controller.ts talks to real Google/Gmail APIs to send OTP emails — never let tests hit the network
-vi.mock("googleapis", () => ({
-  google: {
-    auth: {
-      OAuth2: vi.fn().mockImplementation(function MockOAuth2() {
-        return {
-          setCredentials: vi.fn(),
-          getAccessToken: vi.fn().mockResolvedValue({ token: "mock-access-token" }),
-        };
-      }),
-    },
-  },
-}));
-
+// user.controller.ts sends OTP emails through Gmail — never let tests hit the network
 vi.mock("nodemailer", () => ({
   default: {
     createTransport: vi.fn().mockReturnValue({
