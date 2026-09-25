@@ -1,30 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Heart, MessageCircle, Send, Check } from "lucide-react";
-import { likePost, unlikePost, getComments, addComment, type Post, type Comment } from "@/api/api";
-import { getHobbyColor } from "@/lib/hobbyTheme";
-import Skeleton from "@/components/ui/Skeleton";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Heart, MessageCircle, Send, Check, Pin, Trophy, TrendingUp } from "lucide-react";
+import { likePost, unlikePost, type Post } from "@/api/api";
+import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import HobbyGlyph from "@/components/brand/HobbyGlyph";
+import MentionText from "@/components/posts/MentionText";
+import PhotoCarousel from "@/components/posts/PhotoCarousel";
+import CommentThread from "@/components/posts/CommentThread";
+import PostMenu from "@/components/posts/PostMenu";
+import SaveButton from "./SaveButton";
 import { timeAgo } from "@/lib/time";
 
 interface PostCardProps {
   post: Post;
+  /** Show which hobby the post belongs to — only useful in feeds that mix hobbies (e.g. Following). */
+  showHobby?: boolean;
+  /** Open the comment thread on mount (e.g. arriving from a comment notification). */
+  autoOpenComments?: boolean;
+  /** Called after the author or a moderator deletes the post, so the list can drop it. */
+  onDeleted?: (postId: string) => void;
+  /** Called after a moderator pins/unpins, so the hive's pinned section can refresh. */
+  onPinnedChange?: (postId: string, pinned: boolean) => void;
 }
 
-function PostCard({ post: initialPost }: PostCardProps) {
-  const router = useRouter();
+function PostCard({ post: initialPost, showHobby = true, autoOpenComments = false, onDeleted, onPinnedChange }: PostCardProps) {
   const [post, setPost] = useState(initialPost);
-  const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<Comment[] | null>(null);
-  const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showComments, setShowComments] = useState(autoOpenComments);
   const [isCopied, setIsCopied] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
-  const goToAuthor = () => router.push(`/profile/${post.author.username}`);
-  const goToHobby = () => router.push(`/hobbies/${post.hobby.slug}`);
   const hobbyColor = getHobbyColor(post.hobby.name);
+  const images = post.images?.length ? post.images : post.imageUrl ? [post.imageUrl] : [];
 
   const toggleLike = async () => {
     const wasLiked = post.isLiked;
@@ -40,41 +49,9 @@ function PostCard({ post: initialPost }: PostCardProps) {
     }
   };
 
-  const toggleComments = async () => {
-    const next = !showComments;
-    setShowComments(next);
-
-    if (next && comments === null) {
-      setIsLoadingComments(true);
-      try {
-        setComments(await getComments(post.id));
-      } catch {
-        setComments([]);
-      } finally {
-        setIsLoadingComments(false);
-      }
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!commentText.trim()) return;
-
-    setIsSubmittingComment(true);
-    try {
-      const comment = await addComment(post.id, commentText);
-      setComments((prev) => (prev ? [...prev, comment] : [comment]));
-      setPost((p) => ({ ...p, commentsCount: p.commentsCount + 1 }));
-      setCommentText("");
-    } catch {
-      // best-effort — leave the draft text in place so the user can retry
-    } finally {
-      setIsSubmittingComment(false);
-    }
-  };
-
   const handleShare = async () => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/hobbies/${post.hobby.slug}#${post.id}`);
+      await navigator.clipboard.writeText(`${window.location.origin}/posts/${post.id}`);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 1500);
     } catch {
@@ -82,124 +59,137 @@ function PostCard({ post: initialPost }: PostCardProps) {
     }
   };
 
+  if (isDeleted) return null;
+
+  const badgeClass = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-quick font-bold";
+
   return (
-    <div className="p-4 bg-white rounded-xl shadow-md">
-      <div className="flex items-center gap-2.5">
-        <button
-          onClick={goToAuthor}
-          className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.author.avatarUrl || "/images/5.png"}
-            alt={post.author.name}
-            className="w-9 h-9 rounded-full object-cover"
-          />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={goToAuthor}
-              className="font-semibold text-sm hover:underline focus-visible:outline-none focus-visible:underline"
+    <article className="flex gap-3 px-4 py-4 sm:px-5">
+      <Link
+        href={`/profile/${post.author.username}`}
+        className="shrink-0 self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={post.author.avatarUrl || "/images/5.png"} alt={post.author.name} className="w-10 h-10 rounded-full object-cover" />
+      </Link>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start gap-2">
+          <div className="flex min-w-0 flex-1 items-baseline gap-1.5 text-sm">
+            <Link
+              href={`/profile/${post.author.username}`}
+              className="font-semibold text-[15px] text-chblack truncate hover:underline focus-visible:outline-none focus-visible:underline"
             >
               {post.author.name}
-            </button>
-            <span className="text-chblack/30 text-xs">@{post.author.username}</span>
-            <span className="text-chblack/30 text-xs">· {timeAgo(post.createdAt)}</span>
-          </div>
-          <button
-            onClick={goToHobby}
-            style={{ backgroundColor: `${hobbyColor}1A`, color: hobbyColor }}
-            className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full mt-1 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
-          >
-            {post.hobby.icon} {post.hobby.name}
-          </button>
-        </div>
-      </div>
-
-      <p className="mt-2.5 text-chblack text-sm">{post.content}</p>
-      {post.imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={post.imageUrl} alt="Post attachment" className="mt-2.5 rounded-lg w-full max-h-96 object-cover" />
-      )}
-
-      <div className="flex gap-1 mt-3 -ml-2 text-chblack/50">
-        <button
-          onClick={toggleLike}
-          className={`flex items-center gap-1 px-2 py-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 ${
-            post.isLiked ? "text-red-500 hover:bg-red-50" : "hover:bg-beige hover:text-red-500"
-          }`}
-        >
-          <Heart size={16} fill={post.isLiked ? "currentColor" : "none"} />
-          <span className="text-xs">{post.likesCount}</span>
-        </button>
-        <button
-          onClick={toggleComments}
-          className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-beige hover:text-blue-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
-        >
-          <MessageCircle size={16} />
-          <span className="text-xs">{post.commentsCount}</span>
-        </button>
-        <button
-          onClick={handleShare}
-          className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-beige hover:text-green-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500"
-          aria-label="Copy link to post"
-        >
-          {isCopied ? <Check size={16} className="text-green-600" /> : <Send size={16} />}
-        </button>
-      </div>
-
-      {showComments && (
-        <div className="mt-2.5 border-t border-chgrey/10 pt-3">
-          {isLoadingComments ? (
-            <div className="space-y-2">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="flex gap-2">
-                  <Skeleton className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
-                  <Skeleton className="h-3 flex-1 rounded-full bg-gray-100 mt-1" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {comments?.length === 0 && <p className="text-chblack/50 text-xs">No comments yet.</p>}
-              {comments?.map((comment) => (
-                <div key={comment.id} className="flex gap-2 text-xs">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={comment.author.avatarUrl || "/images/5.png"}
-                    alt={comment.author.name}
-                    className="w-6 h-6 rounded-full object-cover shrink-0"
-                  />
-                  <p>
-                    <span className="font-semibold">{comment.author.name}</span>{" "}
-                    <span className="text-chblack/70">{comment.content}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex gap-2 mt-2.5">
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddComment()}
-              placeholder="Add a comment..."
-              className="flex-1 min-w-0 p-1.5 px-3.5 rounded-full border border-chgrey/20 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-            <button
-              onClick={handleAddComment}
-              disabled={isSubmittingComment || !commentText.trim()}
-              className="text-white bg-pink-600 hover:bg-pink-700 font-semibold text-xs px-3.5 rounded-full transition-colors disabled:opacity-50 disabled:hover:bg-pink-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 focus-visible:ring-offset-1"
+            </Link>
+            <span className="text-chblack/40 truncate">@{post.author.username}</span>
+            <Link
+              href={`/posts/${post.id}`}
+              className="shrink-0 text-chblack/40 hover:underline focus-visible:outline-none focus-visible:underline"
+              title={new Date(post.createdAt).toLocaleString()}
             >
-              {isSubmittingComment ? "..." : "Send"}
-            </button>
+              · {timeAgo(post.createdAt)}
+            </Link>
           </div>
+          <PostMenu
+            postId={post.id}
+            isOwn={Boolean(post.isOwn)}
+            canModerate={Boolean(post.canModerate)}
+            isPinned={Boolean(post.pinnedAt)}
+            onPinnedChange={(pinned) => {
+              setPost((p) => ({ ...p, pinnedAt: pinned ? new Date().toISOString() : null }));
+              onPinnedChange?.(post.id, pinned);
+            }}
+            onDeleted={() => {
+              setIsDeleted(true);
+              onDeleted?.(post.id);
+            }}
+          />
         </div>
-      )}
-    </div>
+
+        {(showHobby || post.pinnedAt || post.challenge || post.progressLog) && (
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            {post.pinnedAt && (
+              <span className={`${badgeClass} bg-chblack/5 text-chblack/60`}>
+                <Pin size={11} /> Pinned
+              </span>
+            )}
+            {showHobby && (
+              <Link href={`/hobbies/${post.hobby.slug}`} style={{ color: hobbyColor }} className="inline-flex items-center gap-1 text-[11px] font-quick font-bold hover:underline">
+                <HobbyGlyph color={hobbyColor} size={10} /> {post.hobby.name}
+              </Link>
+            )}
+            {post.challenge && (
+              <Link
+                href={`/challenges/${post.challenge.id}`}
+                className={`${badgeClass} hover:opacity-80`}
+                style={{ backgroundColor: withAlpha(hobbyColor, 0.12), color: hobbyColor }}
+              >
+                <Trophy size={11} /> {post.challenge.title}
+              </Link>
+            )}
+            {post.progressLog && (
+              <Link href={`/progress/${post.progressLog.id}`} className={`${badgeClass} bg-emerald-500/10 text-emerald-700 hover:opacity-80 dark:text-emerald-300`}>
+                <TrendingUp size={11} /> {post.progressLog.title}
+              </Link>
+            )}
+          </div>
+        )}
+
+        <p className="mt-1 text-[15px] leading-relaxed text-chblack whitespace-pre-wrap break-words">
+          <MentionText text={post.content} />
+        </p>
+        <PhotoCarousel images={images} alt={`Photo from ${post.author.name}`} />
+
+        <div className="flex items-center gap-1 mt-2 -ml-2 text-chblack/50">
+          <button
+            onClick={toggleLike}
+            aria-pressed={post.isLiked}
+            aria-label={post.isLiked ? "Unlike" : "Like"}
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+              post.isLiked
+                ? "text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                : "hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500"
+            }`}
+          >
+            <motion.span
+              key={post.isLiked ? "liked" : "unliked"}
+              initial={post.isLiked ? { scale: 0.5 } : false}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className="flex"
+            >
+              <Heart size={18} fill={post.isLiked ? "currentColor" : "none"} />
+            </motion.span>
+            <span className="text-sm tabular-nums">{post.likesCount}</span>
+          </button>
+          <button
+            onClick={() => setShowComments((s) => !s)}
+            aria-expanded={showComments}
+            aria-label="Comments"
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors hover:bg-sky-50 dark:hover:bg-sky-500/10 hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+              showComments ? "text-sky-600" : ""
+            }`}
+          >
+            <MessageCircle size={18} />
+            <span className="text-sm tabular-nums">{post.commentsCount}</span>
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            aria-label="Copy link to post"
+          >
+            {isCopied ? <Check size={18} className="text-emerald-600" /> : <Send size={18} />}
+            {isCopied && <span className="text-xs font-semibold text-emerald-600">Link copied</span>}
+          </button>
+          <SaveButton postId={post.id} initialSaved={Boolean(post.isSaved)} />
+        </div>
+
+        {showComments && (
+          <CommentThread postId={post.id} onCommentAdded={() => setPost((p) => ({ ...p, commentsCount: p.commentsCount + 1 }))} />
+        )}
+      </div>
+    </article>
   );
 }
 
