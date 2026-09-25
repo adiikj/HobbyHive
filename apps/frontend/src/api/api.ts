@@ -277,7 +277,7 @@ export const registerUser = async ({ name, username, email, password }: Register
     const response = await axios.post(`${BASE_URL}/register`, { name, username, email, password });
     return response.data;
   } catch (error) {
-    const message = getErrorMessage(error, "Error registering user.");
+    const message = getErrorMessage(error, "We couldn't create your account. Please try again.");
     throw new Error(message);
   }
 };
@@ -292,7 +292,7 @@ export const verifyOTP = async (email: string, otp: string) => {
 
     return response.data;
   } catch (error) {
-    const message = getErrorMessage(error, "Error verifying OTP");
+    const message = getErrorMessage(error, "We couldn't check that code. Please try again.");
     throw new Error(message);
   }
 };
@@ -310,7 +310,7 @@ export const logoutUser = async (token: string) => {
 
     return response.data;
   } catch (error) {
-    const message = getErrorMessage(error, "Error logging out");
+    const message = getErrorMessage(error, "We couldn't sign you out. Please try again.");
     throw new Error(message);
   }
 };
@@ -973,12 +973,38 @@ export const markConversationRead = async (conversationId: string): Promise<void
   }
 };
 
-function getErrorMessage(error: unknown, fallback: string): string {
+// Server/library wording that shouldn't reach people ("Request failed with status code 500", Prisma, stack traces…)
+const TECHNICAL = /internal server error|status code|prisma|invocation|stack|econn|etimedout|network error|typeerror|syntaxerror|referenceerror|unexpected token|undefined|cannot (read|get|post)|failed to fetch/i;
+const isFriendly = (message: unknown): message is string =>
+  typeof message === "string" && message.trim().length > 0 && message.length <= 200 && !TECHNICAL.test(message);
+
+const STATUS_MESSAGES: Record<number, string> = {
+  401: "Please sign in again to continue.",
+  403: "You don't have permission to do that.",
+  404: "We couldn't find that. It may have been removed.",
+  408: "That took too long. Please try again.",
+  413: "That's too large to upload. Please try something smaller.",
+  429: "You're going a bit fast. Please wait a moment and try again.",
+};
+export const SERVER_ERROR_MESSAGE = "Something went wrong on our side. Please try again in a moment.";
+
+/** A message a person can act on, whatever went wrong: offline, timeouts, 4xx, 5xx or a crash. */
+export function getErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
-    return error.response?.data?.message || error.message || fallback;
+    if (!error.response) {
+      return error.code === "ECONNABORTED" || error.code === "ETIMEDOUT"
+        ? "That took too long. Please check your connection and try again."
+        : "Can't reach HobbyHive right now. Please check your connection and try again.";
+    }
+    const { status } = error.response;
+    const serverMessage = (error.response.data as { message?: unknown } | undefined)?.message;
+    // The API writes its own messages for people; only fall back when there's none or it's technical
+    if (isFriendly(serverMessage) && status < 500) return serverMessage;
+    if (status >= 500) return isFriendly(serverMessage) && status !== 500 ? serverMessage : SERVER_ERROR_MESSAGE;
+    return STATUS_MESSAGES[status] ?? (isFriendly(fallback) ? fallback : SERVER_ERROR_MESSAGE);
   }
-  if (error instanceof Error) return error.message;
-  return fallback;
+  if (error instanceof Error && isFriendly(error.message)) return error.message;
+  return isFriendly(fallback) ? fallback : SERVER_ERROR_MESSAGE;
 }
 
 const SAVED_URL = BASE_URL.replace(/\/users$/, "/saved");
