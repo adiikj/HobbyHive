@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
+  // Toggled on <html> by lib/theme (in-app pages only — marketing/auth pages stay light)
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
@@ -19,8 +21,15 @@ export default {
         beige: "#F8F9FA",
         chgrey: "#343A40",
         cogrey: "#6C757D",
-        chblack: "#212529",
+        // Ink, surfaces, and dividers are CSS variables (globals.css) so they flip in dark mode
+        chblack: "rgb(var(--c-ink) / <alpha-value>)",
         mugrbl: "#343A40",
+        // App surfaces: a quiet neutral canvas, white sheets, and hairline dividers. Brand pink is for
+        // primary actions only; each hobby's own colour (lib/hobbyTheme) tints the page you're in.
+        canvas: "rgb(var(--c-canvas) / <alpha-value>)",
+        surface: "rgb(var(--c-surface) / <alpha-value>)",
+        line: "rgb(var(--c-line) / <alpha-value>)",
+        brand: "#DB2777",
       },
       keyframes: {
         slideInLeft: {

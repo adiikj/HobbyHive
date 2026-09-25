@@ -18,8 +18,8 @@ function Logo({ size = 32, className }: LogoProps) {
       role="img"
       aria-label="HobbyHive"
     >
-      <path d={SMALL_HEX} fill="#ADE8E6" stroke="#F8F9FA" strokeWidth={3} strokeLinejoin="round" />
-      <path d={BIG_HEX} fill="#DB2777" stroke="#F8F9FA" strokeWidth={3} strokeLinejoin="round" />
+      <path d={SMALL_HEX} style={{ fill: "#ADE8E6", stroke: "rgb(var(--c-canvas, 248 249 250))" }} strokeWidth={3} strokeLinejoin="round" />
+      <path d={BIG_HEX} style={{ fill: "#DB2777", stroke: "rgb(var(--c-canvas, 248 249 250))" }} strokeWidth={3} strokeLinejoin="round" />
     </svg>
   );
 }
