@@ -29,7 +29,7 @@ describe("SignIn", () => {
 
     await user.type(screen.getByPlaceholderText("Enter email or username"), "aditya");
     await user.type(screen.getByPlaceholderText("Enter password"), "wrong-password");
-    await user.click(screen.getByRole("button", { name: "Sign In" }));
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     expect(await screen.findByText("Invalid credentials")).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
@@ -43,7 +43,7 @@ describe("SignIn", () => {
 
     await user.type(screen.getByPlaceholderText("Enter email or username"), "aditya");
     await user.type(screen.getByPlaceholderText("Enter password"), "correct-password");
-    await user.click(screen.getByRole("button", { name: "Sign In" }));
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/dashboard"));
     expect(localStorage.getItem("authToken")).toBe("token-123");

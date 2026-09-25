@@ -17,6 +17,10 @@ vi.mock("@/api/api", () => ({
   unlikePost: (...args: unknown[]) => unlikePostMock(...args),
   getComments: (...args: unknown[]) => getCommentsMock(...args),
   addComment: (...args: unknown[]) => addCommentMock(...args),
+  // The comment box's @mention picker loads the current user and the people they follow
+  getUserProfile: () => Promise.reject(new Error("not signed in")),
+  getFollowers: () => Promise.resolve([]),
+  getFollowingUsers: () => Promise.resolve([]),
 }));
 
 const post: Post = {
