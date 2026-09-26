@@ -14,11 +14,12 @@ export const postSelect = {
   images: true,
   createdAt: true,
   pinnedAt: true,
+  feedbackAsk: true,
   hobby: { select: { id: true, name: true, slug: true, icon: true } },
   author: { select: { id: true, name: true, username: true, avatarUrl: true } },
   challenge: { select: { id: true, title: true, endsAt: true } },
   progressLog: { select: { id: true, title: true } },
-  _count: { select: { likes: true, comments: true } },
+  _count: { select: { likes: true, comments: true, feedback: true } },
 } satisfies Prisma.PostSelect;
 
 export type RawPost = Prisma.PostGetPayload<{ select: typeof postSelect }>;
@@ -47,6 +48,9 @@ export const toPostResponse = (post: RawPost, viewer: ViewerState = EMPTY_VIEWER
   progressLog: post.progressLog,
   likesCount: post._count.likes,
   commentsCount: post._count.comments,
+  // "Feedback wanted": the author's specific ask, and how many structured replies it has
+  feedbackAsk: post.feedbackAsk,
+  feedbackCount: post._count.feedback,
   isLiked: viewer.liked.has(post.id),
   isSaved: viewer.saved.has(post.id),
   canModerate: viewer.moderatedHobbyIds.has(post.hobby.id),
@@ -125,11 +129,22 @@ export const uploadPostImage = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const MAX_POST_IMAGES = 4;
+const MAX_FEEDBACK_ASK = 140;
+
+/** A post's "feedback wanted" question: optional, trimmed, and short enough to read at a glance. */
+export const parseFeedbackAsk = (raw: unknown) => {
+  if (raw === undefined || raw === null || raw === "") return null;
+  if (typeof raw !== "string") throw new ApiError(400, "Invalid feedback question");
+  const ask = raw.trim();
+  if (ask.length > MAX_FEEDBACK_ASK) throw new ApiError(400, `Keep the question under ${MAX_FEEDBACK_ASK} characters`);
+  return ask || null;
+};
 
 // Create a post tagged to exactly one hobby — optionally with up to 4 photos, as a challenge entry,
 // and/or as the next entry in one of the author's progress logs
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
   const { content, hobbyId, imageUrl, images, challengeId, progressLogId } = req.body;
+  const feedbackAsk = parseFeedbackAsk(req.body.feedbackAsk);
   const userId = req.user!.id;
 
   if (!content || typeof content !== "string" || !content.trim()) {
@@ -180,6 +195,7 @@ export const createPost = asyncHandler(async (req: Request, res: Response) => {
       imageUrl: photos[0] ?? null,
       challengeId: challengeId ? String(challengeId) : null,
       progressLogId: progressLogId ? String(progressLogId) : null,
+      feedbackAsk,
     },
     select: postSelect,
   });

@@ -59,3 +59,13 @@ export const notifyReply = async (commentAuthorId: string, actorId: string, post
   if (commentAuthorId === actorId) return;
   await prisma.notification.create({ data: { userId: commentAuthorId, actorId, type: "REPLY", postId } });
 };
+
+export const notifyFeedback = async (postAuthorId: string, actorId: string, postId: string) => {
+  if (postAuthorId === actorId) return;
+  await prisma.notification.create({ data: { userId: postAuthorId, actorId, type: "FEEDBACK", postId } });
+};
+
+export const notifyFeedbackHelpful = async (feedbackAuthorId: string, actorId: string, postId: string) => {
+  if (feedbackAuthorId === actorId) return;
+  await prisma.notification.create({ data: { userId: feedbackAuthorId, actorId, type: "FEEDBACK_HELPFUL", postId } });
+};

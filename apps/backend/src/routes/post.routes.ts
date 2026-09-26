@@ -13,6 +13,7 @@ import {
 import { savePost, unsavePost } from "../controllers/saved.controller.js";
 import { similarPosts, dismissFlag } from "../controllers/ml.controller.js";
 import { listComments, addComment } from "../controllers/comment.controller.js";
+import { listFeedback, giveFeedback, setFeedbackAsk } from "../controllers/feedback.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { uploadImage } from "../middlewares/upload.middleware.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -43,5 +44,8 @@ router.get("/:postId/comments", listComments);
 router.post("/:postId/comments", verifyJWT, addComment);
 router.put("/:postId/save", verifyJWT, savePost);
 router.delete("/:postId/save", verifyJWT, unsavePost);
+router.get("/:postId/feedback", verifyJWT, listFeedback);
+router.post("/:postId/feedback", verifyJWT, giveFeedback);
+router.put("/:postId/feedback-ask", verifyJWT, setFeedbackAsk);
 
 export default router;

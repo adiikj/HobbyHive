@@ -11,6 +11,7 @@ import { listHobbyChallenges, createChallenge } from "../controllers/challenge.c
 import { listFlaggedPosts } from "../controllers/ml.controller.js";
 import { getHobbyEvents, createEvent } from "../controllers/event.controller.js";
 import { getHobbySkills } from "../controllers/skill.controller.js";
+import { listFeedbackRequests, listHiveMentors } from "../controllers/feedback.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -29,5 +30,7 @@ router.get("/:slug/challenges", verifyJWT, listHobbyChallenges);
 router.post("/:slug/challenges", verifyJWT, createChallenge);
 router.get("/:slug/flagged", verifyJWT, listFlaggedPosts);
 router.get("/:slug/skills", verifyJWT, getHobbySkills);
+router.get("/:slug/feedback-requests", verifyJWT, listFeedbackRequests);
+router.get("/:slug/mentors", verifyJWT, listHiveMentors);
 
 export default router;

@@ -22,6 +22,7 @@ import {
 import { getUserPosts } from "../controllers/post.controller.js";
 import { getJourney } from "../controllers/journey.controller.js";
 import { getUserSkills } from "../controllers/skill.controller.js";
+import { getUserReputation } from "../controllers/feedback.controller.js";
 import { listUserProgressLogs } from "../controllers/progress.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -47,6 +48,7 @@ router.patch("/:username", verifyJWT, updateProfile);
 router.get("/:username/posts", verifyJWT, getUserPosts);
 router.get("/:username/journey", verifyJWT, getJourney);
 router.get("/:username/skills", verifyJWT, getUserSkills);
+router.get("/:username/reputation", verifyJWT, getUserReputation);
 router.get("/:username/progress", verifyJWT, listUserProgressLogs);
 router.get("/:username/followers", getFollowers);
 router.get("/:username/following", getFollowingList);
