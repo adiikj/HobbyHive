@@ -26,6 +26,7 @@ const sessionSelect = {
   postId: true,
   createdAt: true,
   hobby: { select: { id: true, name: true, slug: true, icon: true } },
+  skill: { select: { id: true, name: true } },
 } satisfies Prisma.PracticeSessionSelect;
 
 const parseMinutes = (raw: unknown) => {
@@ -98,7 +99,23 @@ export const logPractice = asyncHandler(async (req: Request, res: Response) => {
   const membership = await prisma.userHobby.findFirst({ where: { userId, hobbyId }, select: { id: true } });
   if (!membership) throw new ApiError(403, "Join this hive to log practice in it");
 
-  const session = await prisma.practiceSession.create({ data, select: sessionSelect });
+  let skillId: string | null = null;
+  if (req.body.skillId !== undefined && req.body.skillId !== null && req.body.skillId !== "") {
+    const skill = await prisma.skill.findFirst({ where: { id: String(req.body.skillId), hobbyId }, select: { id: true } });
+    if (!skill) throw new ApiError(400, "That skill isn't part of this hive");
+    skillId = skill.id;
+  }
+
+  const session = await prisma.practiceSession.create({ data: { ...data, skillId }, select: sessionSelect });
+
+  // Practising a skill means you're learning it (never downgrades one you've already done)
+  if (skillId) {
+    await prisma.userSkill.upsert({
+      where: { userId_skillId: { userId, skillId } },
+      update: {},
+      create: { userId, skillId, status: "LEARNING" },
+    });
+  }
   res.status(201).json(new ApiResponse(201, session, "Practice logged"));
 });
 
