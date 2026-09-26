@@ -30,6 +30,16 @@ describe("weekly streaks", () => {
     expect(s).toMatchObject({ current: 0, best: 3 });
   });
 
+  it("counts practice weeks too, so you never have to post to keep a streak", () => {
+    const s = weeklyStreaks([], now, [
+      { date: day("2026-09-15"), minutes: 30 },
+      { date: day("2026-09-22"), minutes: 20 },
+      { date: day("2026-09-23"), minutes: 45 },
+    ]);
+    expect(s).toMatchObject({ current: 2, activeThisWeek: true });
+    expect(s.weeks[11]).toMatchObject({ posts: 0, sessions: 2, minutes: 65 });
+  });
+
   it("returns 12 weeks of activity, oldest first", () => {
     const s = weeklyStreaks([day("2026-09-22"), day("2026-09-23")], now);
     expect(s.weeks).toHaveLength(12);
@@ -53,14 +63,20 @@ describe("GET /api/v1/users/:username/journey", () => {
     ] as never);
     prismaMock.userHobby.findMany.mockResolvedValueOnce([{ createdAt: day("2026-08-30"), hobby }] as never);
     prismaMock.progressLog.findMany.mockResolvedValueOnce([]);
+    prismaMock.practiceSession.findMany.mockResolvedValueOnce([
+      { startedAt: day("2026-09-02"), durationMin: 200, focus: "turns", hobby },
+      { startedAt: day("2026-09-09"), durationMin: 120, focus: "turns", hobby },
+    ] as never);
 
     const res = await request(app).get("/api/v1/users/aditya/journey").set(auth(token));
 
     expect(res.status).toBe(200);
-    expect(res.body.data.stats).toEqual({ posts: 2, photos: 1, challengesEntered: 1, logs: 0 });
+    expect(res.body.data.stats).toMatchObject({ posts: 2, photos: 1, challengesEntered: 1, logs: 0, practiceSessions: 2, practiceMinutes: 320 });
     expect(res.body.data.milestones.map((m: { type: string }) => m.type)).toEqual([
+      "practice_hours",
       "first_photo",
       "challenge_entry",
+      "first_practice",
       "first_post",
       "joined",
     ]);

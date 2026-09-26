@@ -7,6 +7,9 @@ import { prisma } from "../db/prisma.js";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const WEEKS_SHOWN = 12;
 const POST_MILESTONES = [10, 25, 50, 100, 250];
+const PRACTICE_HOUR_MILESTONES = [5, 10, 25, 50, 100, 250];
+const MAX_SESSIONS = 2000;
+const FOCUS_WINDOW_WEEKS = 4;
 const MAX_POSTS = 1000;
 const MAX_MILESTONES = 60;
 
@@ -18,7 +21,11 @@ export type Milestone =
   | { type: "first_post" | "first_photo"; date: Date; hobby: HobbyRef; post: PostRef }
   | { type: "challenge_entry"; date: Date; hobby: HobbyRef; post: PostRef; challengeTitle: string }
   | { type: "log_started"; date: Date; hobby: HobbyRef; logId: string; logTitle: string }
-  | { type: "post_count"; date: Date; hobby: HobbyRef; post: PostRef; count: number };
+  | { type: "post_count"; date: Date; hobby: HobbyRef; post: PostRef; count: number }
+  | { type: "first_practice"; date: Date; hobby: HobbyRef; focus: string; minutes: number }
+  | { type: "practice_hours"; date: Date; hobby: HobbyRef; hours: number };
+
+type PracticeRef = { date: Date; minutes: number };
 
 /** Monday 00:00 UTC of the week `date` falls in. */
 export const weekStart = (date: Date) => {
@@ -28,11 +35,12 @@ export const weekStart = (date: Date) => {
 };
 
 /**
- * Weekly streaks: a week counts when it has at least one post. The current streak stays alive through
- * this week until it ends, so a streak doesn't read 0 on a Monday morning.
+ * Weekly streaks: a week counts when you practised or posted in it. Posting is optional; logging practice
+ * alone keeps a streak going. The current streak stays alive through this week until it ends, so a
+ * streak doesn't read 0 on a Monday morning.
  */
-export const weeklyStreaks = (postDates: Date[], now = new Date()) => {
-  const active = new Set(postDates.map(weekStart));
+export const weeklyStreaks = (postDates: Date[], now = new Date(), practice: PracticeRef[] = []) => {
+  const active = new Set([...postDates, ...practice.map((p) => p.date)].map(weekStart));
   const thisWeek = weekStart(now);
   const activeThisWeek = active.has(thisWeek);
 
@@ -50,7 +58,13 @@ export const weeklyStreaks = (postDates: Date[], now = new Date()) => {
 
   const weeks = Array.from({ length: WEEKS_SHOWN }, (_, i) => {
     const start = thisWeek - (WEEKS_SHOWN - 1 - i) * WEEK_MS;
-    return { start: new Date(start), posts: postDates.filter((d) => weekStart(d) === start).length };
+    const inWeek = practice.filter((p) => weekStart(p.date) === start);
+    return {
+      start: new Date(start),
+      posts: postDates.filter((d) => weekStart(d) === start).length,
+      sessions: inWeek.length,
+      minutes: inWeek.reduce((sum, p) => sum + p.minutes, 0),
+    };
   });
 
   return { current, best, activeThisWeek, weeks };
@@ -72,7 +86,7 @@ export const getJourney = asyncHandler(async (req: Request, res: Response) => {
   const inHobby = hobby ? { hobbyId: hobby.id } : {};
   const hobbySelect = { select: { id: true, name: true, slug: true, icon: true } } as const;
 
-  const [posts, memberships, logs, challenge] = await Promise.all([
+  const [posts, memberships, logs, challenge, sessions] = await Promise.all([
     prisma.post.findMany({
       where: { authorId: user.id, ...inHobby },
       orderBy: { createdAt: "asc" },
@@ -108,6 +122,13 @@ export const getJourney = asyncHandler(async (req: Request, res: Response) => {
           select: { id: true, title: true, prompt: true, endsAt: true },
         })
       : null,
+    // Practice is shown to anyone viewing the journey, but never the private note
+    prisma.practiceSession.findMany({
+      where: { userId: user.id, ...inHobby },
+      orderBy: { startedAt: "asc" },
+      take: MAX_SESSIONS,
+      select: { startedAt: true, durationMin: true, focus: true, hobby: hobbySelect },
+    }),
   ]);
 
   const photoOf = (p: (typeof posts)[number]) => p.images[0] ?? p.imageUrl ?? null;
@@ -133,12 +154,35 @@ export const getJourney = asyncHandler(async (req: Request, res: Response) => {
     }
     perHobby.set(p.hobby.id, seen);
   }
+  const practicePerHobby = new Map<string, number>();
+  for (const s of sessions) {
+    const before = practicePerHobby.get(s.hobby.id) ?? 0;
+    const after = before + s.durationMin;
+    if (before === 0) milestones.push({ type: "first_practice", date: s.startedAt, hobby: s.hobby, focus: s.focus, minutes: s.durationMin });
+    for (const hours of PRACTICE_HOUR_MILESTONES) {
+      if (before < hours * 60 && after >= hours * 60) milestones.push({ type: "practice_hours", date: s.startedAt, hobby: s.hobby, hours });
+    }
+    practicePerHobby.set(s.hobby.id, after);
+  }
   for (const log of logs) {
     milestones.push({ type: "log_started", date: log.createdAt, hobby: log.hobby, logId: log.id, logTitle: log.title });
   }
   milestones.sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const photos = posts.filter(photoOf);
+  const practice = sessions.map((s) => ({ date: s.startedAt, minutes: s.durationMin }));
+  const streak = weeklyStreaks(posts.map((p) => p.createdAt), new Date(), practice);
+
+  // What they've been working on lately, most practised first
+  const focusSince = weekStart(new Date()) - (FOCUS_WINDOW_WEEKS - 1) * WEEK_MS;
+  const focusMinutes = new Map<string, number>();
+  for (const s of sessions) {
+    if (s.startedAt.getTime() >= focusSince) focusMinutes.set(s.focus, (focusMinutes.get(s.focus) ?? 0) + s.durationMin);
+  }
+  const recentFocus = [...focusMinutes.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([focus, minutes]) => ({ focus, minutes }));
   const first = photos[0];
   const latest = photos[photos.length - 1];
 
@@ -152,8 +196,12 @@ export const getJourney = asyncHandler(async (req: Request, res: Response) => {
         photos: photos.length,
         challengesEntered: new Set(posts.map((p) => p.challengeId).filter(Boolean)).size,
         logs: logs.length,
+        practiceSessions: sessions.length,
+        practiceMinutes: sessions.reduce((sum, s) => sum + s.durationMin, 0),
+        practiceMinutesThisWeek: streak.weeks[streak.weeks.length - 1].minutes,
       },
-      streak: weeklyStreaks(posts.map((p) => p.createdAt)),
+      streak,
+      recentFocus,
       currentChallenge: challenge ? { ...challenge, entered: posts.some((p) => p.challengeId === challenge.id) } : null,
       logs: logs.slice(0, 3).map(({ _count, entries, ...log }) => ({
         ...log,
