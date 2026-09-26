@@ -6,9 +6,10 @@ import { getHobbies, setMyHobbies, type Hobby } from "@/api/api";
 import { Check } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
 import Logo from "@/components/brand/Logo";
-import HobbyIcon from "@/components/brand/HobbyIcon";
+import BeaAvatar from "@/components/bea/BeaAvatar";
 import { HexIcon, primaryButtonClass } from "@/components/ui/Page";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface HobbySelectorProps {
   title: string;
@@ -18,21 +19,28 @@ interface HobbySelectorProps {
   onSaved: (hobbies: Hobby[]) => void;
   /** Render just the grid and save bar, for use inside a page that supplies its own header (settings). */
   embedded?: boolean;
+  /** Where the floating save bar sits; defaults to clearing the app's mobile nav when embedded. */
+  saveBarOffset?: string;
 }
 
-function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSaved, embedded = false }: HobbySelectorProps) {
+function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSaved, embedded = false, saveBarOffset }: HobbySelectorProps) {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(initialSelectedIds));
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
 
-  useEffect(() => {
+  const loadHobbies = () => {
+    setIsLoading(true);
+    setLoadError("");
     getHobbies()
       .then(setHobbies)
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load hobbies"))
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load hobbies"))
       .finally(() => setIsLoading(false));
-  }, []);
+  };
+
+  useEffect(loadHobbies, []);
 
   const toggleHobby = (id: string) => {
     setSelectedIds((prev) => {
@@ -64,11 +72,25 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
     }
   };
 
+  // Nothing to pick from: the list failed to load, or the server has no hobbies yet
+  const unavailable = !isLoading && (loadError || hobbies.length === 0);
+
   const grid = isLoading ? (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
         <Skeleton key={i} className="h-32 rounded-2xl bg-line" />
       ))}
+    </div>
+  ) : unavailable ? (
+    <div role="alert" className="flex flex-col items-center rounded-2xl border border-line bg-surface px-6 py-12 text-center">
+      <BeaAvatar size={64} />
+      <p className="mt-4 font-semibold text-chblack">{loadError ? "Couldn't load the hives" : "No hives to pick from yet"}</p>
+      <p className="mt-1 max-w-sm text-sm text-chblack/60">
+        {loadError || "The hive list came back empty. This usually clears up in a moment."}
+      </p>
+      <button type="button" onClick={loadHobbies} className={`${primaryButtonClass} mt-5`}>
+        Try again
+      </button>
     </div>
   ) : (
     <motion.div
@@ -107,8 +129,8 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
     </motion.div>
   );
 
-  const footer = !isLoading && (
-    <div className={`sticky z-10 mt-6 ${embedded ? "bottom-20 lg:bottom-4" : "bottom-4"}`}>
+  const footer = !isLoading && !unavailable && (
+    <div className={`sticky z-10 mt-6 ${saveBarOffset ?? (embedded ? "bottom-20 lg:bottom-4" : "bottom-4")}`}>
       <div className="flex items-center justify-between gap-3 rounded-full border border-line bg-surface/90 py-2 pl-5 pr-2 shadow-lg shadow-black/5 backdrop-blur">
         <p className={`text-sm ${error ? "text-red-600" : "text-chblack/60"}`}>
           {error || (

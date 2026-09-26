@@ -48,4 +48,17 @@ describe("HobbySelector", () => {
     expect(setMyHobbiesMock).toHaveBeenCalledWith(["hobby_dance"]);
     expect(onSaved).toHaveBeenCalledWith([hobbies[0]]);
   });
+
+  it("explains an empty hobby list instead of showing a zero-count save bar, and retries", async () => {
+    getHobbiesMock.mockResolvedValueOnce([]);
+    const user = userEvent.setup();
+
+    render(<HobbySelector title="Pick" submitLabel="Continue" onSaved={vi.fn()} />);
+
+    expect(await screen.findByText("No hives to pick from yet")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("Dance")).toBeInTheDocument();
+  });
 });
