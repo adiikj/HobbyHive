@@ -12,6 +12,7 @@ import { listFlaggedPosts } from "../controllers/ml.controller.js";
 import { getHobbyEvents, createEvent } from "../controllers/event.controller.js";
 import { getHobbySkills } from "../controllers/skill.controller.js";
 import { listFeedbackRequests, listHiveMentors } from "../controllers/feedback.controller.js";
+import { getGuide, addGuideEntry } from "../controllers/guide.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -32,5 +33,7 @@ router.get("/:slug/flagged", verifyJWT, listFlaggedPosts);
 router.get("/:slug/skills", verifyJWT, getHobbySkills);
 router.get("/:slug/feedback-requests", verifyJWT, listFeedbackRequests);
 router.get("/:slug/mentors", verifyJWT, listHiveMentors);
+router.get("/:slug/guide", verifyJWT, getGuide);
+router.post("/:slug/guide", verifyJWT, addGuideEntry);
 
 export default router;

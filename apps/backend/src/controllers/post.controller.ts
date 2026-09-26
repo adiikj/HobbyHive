@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
 import { notifyLike, notifyNewPost, notifyMentions } from "../services/notification.service.js";
 import { analyzePostInBackground } from "../services/ml.service.js";
+import { MENTOR_MIN_HELPFUL } from "../utils/reputation.js";
 
 export const postSelect = {
   id: true,
@@ -30,9 +31,17 @@ export type ViewerState = {
   saved: Set<string>;
   /** Hobbies (of the posts in question) the viewer moderates. */
   moderatedHobbyIds: Set<string>;
+  /** Hobbies where the viewer can add posts to the hive guide: moderators, and members at Mentor level. */
+  curatorHobbyIds: Set<string>;
 };
 
-const EMPTY_VIEWER_STATE: ViewerState = { userId: null, liked: new Set(), saved: new Set(), moderatedHobbyIds: new Set() };
+const EMPTY_VIEWER_STATE: ViewerState = {
+  userId: null,
+  liked: new Set(),
+  saved: new Set(),
+  moderatedHobbyIds: new Set(),
+  curatorHobbyIds: new Set(),
+};
 
 export const toPostResponse = (post: RawPost, viewer: ViewerState = EMPTY_VIEWER_STATE) => ({
   id: post.id,
@@ -54,6 +63,7 @@ export const toPostResponse = (post: RawPost, viewer: ViewerState = EMPTY_VIEWER
   isLiked: viewer.liked.has(post.id),
   isSaved: viewer.saved.has(post.id),
   canModerate: viewer.moderatedHobbyIds.has(post.hobby.id),
+  canCurate: viewer.curatorHobbyIds.has(post.hobby.id),
   isOwn: viewer.userId === post.author.id,
 });
 
@@ -62,19 +72,29 @@ export const getViewerState = async (userId: string, posts: Pick<RawPost, "id" |
   if (posts.length === 0) return { ...EMPTY_VIEWER_STATE, userId };
   const postIds = posts.map((p) => p.id);
   const hobbyIds = [...new Set(posts.map((p) => p.hobby.id))];
-  const [likes, saves, moderated] = await Promise.all([
+  const [likes, saves, moderated, helpful] = await Promise.all([
     prisma.like.findMany({ where: { userId, postId: { in: postIds } }, select: { postId: true } }),
     prisma.savedPost.findMany({ where: { userId, postId: { in: postIds } }, select: { postId: true } }),
     prisma.userHobby.findMany({
       where: { userId, role: "MODERATOR", hobbyId: { in: hobbyIds } },
       select: { hobbyId: true },
     }),
+    // Helpful feedback the viewer has given in these hives, for mentor-level curation rights
+    prisma.feedback.findMany({
+      where: { authorId: userId, helpfulAt: { not: null }, post: { hobbyId: { in: hobbyIds } } },
+      select: { post: { select: { hobbyId: true } } },
+    }),
   ]);
+  const moderatedHobbyIds = new Set(moderated.map((m) => m.hobbyId));
+  const helpfulPerHive = new Map<string, number>();
+  for (const f of helpful ?? []) helpfulPerHive.set(f.post.hobbyId, (helpfulPerHive.get(f.post.hobbyId) ?? 0) + 1);
+  const mentorHobbyIds = [...helpfulPerHive].filter(([, n]) => n >= MENTOR_MIN_HELPFUL).map(([id]) => id);
   return {
     userId,
     liked: new Set(likes.map((l) => l.postId)),
     saved: new Set(saves.map((s) => s.postId)),
-    moderatedHobbyIds: new Set(moderated.map((m) => m.hobbyId)),
+    moderatedHobbyIds,
+    curatorHobbyIds: new Set([...moderatedHobbyIds, ...mentorHobbyIds]),
   };
 };
 

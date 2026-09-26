@@ -19,6 +19,7 @@ import practiceRouter from "./routes/practice.routes.js";
 import skillRouter from "./routes/skill.routes.js";
 import goalRouter from "./routes/goal.routes.js";
 import feedbackRouter from "./routes/feedback.routes.js";
+import guideRouter from "./routes/guide.routes.js";
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use("/api/v1/practice", practiceRouter);
 app.use("/api/v1/skills", skillRouter);
 app.use("/api/v1/goals", goalRouter);
 app.use("/api/v1/feedback", feedbackRouter);
+app.use("/api/v1/guide", guideRouter);
 
 app.use("/api", notFoundHandler);
 app.use(errorHandler);

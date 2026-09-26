@@ -5,6 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
 import { notifyFeedback, notifyFeedbackHelpful } from "../services/notification.service.js";
 import { getViewerState, parseFeedbackAsk, postSelect, toPostResponse } from "./post.controller.js";
+import { mentorLevel } from "../utils/reputation.js";
 
 const MIN_TEXT = 3;
 const MAX_TEXT = 400;
@@ -14,11 +15,7 @@ const REQUESTS_SHOWN = 30;
 
 const authorSelect = { select: { id: true, name: true, username: true, avatarUrl: true } } as const;
 
-export type MentorLevel = "Helper" | "Mentor" | "Guide";
-
-/** Reputation in a hive comes only from feedback the asker marked helpful. */
-export const mentorLevel = (helpful: number): MentorLevel | null =>
-  helpful >= 10 ? "Guide" : helpful >= 3 ? "Mentor" : helpful >= 1 ? "Helper" : null;
+export { mentorLevel, type MentorLevel } from "../utils/reputation.js";
 
 /** Helpful-feedback counts per user in one hive. */
 const helpfulCounts = async (hobbyId: string, userIds: string[]) => {
