@@ -28,9 +28,58 @@ html.dark {
   color-scheme: dark;
 }
 
+/*
+ * The hive you're in (lib/hiveScope sets --hive and data-hive on <html>). Canvas and dividers mix in
+ * --hive-tint of it (tailwind.config), so each hive feels like its own room; surfaces stay neutral.
+ * --hive-strength (set per hive from its chroma) evens it out, so grey hives read as tinted as violet ones.
+ * Registered so switching hives fades instead of snapping.
+ */
+@property --hive {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #db2777;
+}
+
+@property --hive-tint {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  --hive: #db2777;
+  --hive-tint: 0; /* share of the hive colour mixed into canvas (0–1) */
+  transition:
+    --hive 0.5s ease,
+    --hive-tint 0.5s ease;
+  /* The tinted canvas and divider colours, for inline styles (Tailwind's canvas/line match these) */
+  --canvas-color: color-mix(in oklab, var(--hive) calc(var(--hive-tint) * 100%), rgb(var(--c-canvas)));
+  --line-color: color-mix(in oklab, var(--hive) calc(var(--hive-tint) * 200%), rgb(var(--c-line)));
+  caret-color: var(--hive);
+  accent-color: var(--hive);
+}
+
+html[data-hive] {
+  --hive-tint: calc(0.06 * var(--hive-strength, 1));
+}
+
+html.dark[data-hive] {
+  --hive-tint: calc(0.1 * var(--hive-strength, 1));
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--hive) 25%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+}
+
 body {
   overflow-x: hidden;
-  background-color: rgb(var(--c-canvas));
+  background-color: var(--canvas-color);
   color: rgb(var(--c-ink));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

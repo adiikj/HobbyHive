@@ -26,10 +26,13 @@ export default {
         mugrbl: "#343A40",
         // App surfaces: a quiet neutral canvas, white sheets, and hairline dividers. Brand pink is for
         // primary actions only; each hobby's own colour (lib/hobbyTheme) tints the page you're in.
-        canvas: "rgb(var(--c-canvas) / <alpha-value>)",
+        // Canvas and dividers pick up a little of the current hive (globals.css --hive-tint, none outside a hive)
+        canvas: "color-mix(in oklab, var(--hive) calc(var(--hive-tint) * 100%), rgb(var(--c-canvas) / <alpha-value>))",
         surface: "rgb(var(--c-surface) / <alpha-value>)",
-        line: "rgb(var(--c-line) / <alpha-value>)",
+        line: "color-mix(in oklab, var(--hive) calc(var(--hive-tint) * 200%), rgb(var(--c-line) / <alpha-value>))",
         brand: "#DB2777",
+        // The current hive's colour (lib/hiveScope); brand pink outside a hive
+        hive: "color-mix(in srgb, var(--hive) calc(<alpha-value> * 100%), transparent)",
       },
       keyframes: {
         slideInLeft: {
