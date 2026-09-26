@@ -13,7 +13,8 @@ import {
   rejectFollowRequest,
   type Notification,
 } from "@/api/api";
-import { getHobbyColor } from "@/lib/hobbyTheme";
+import { getHobbyColor, getHobbyText } from "@/lib/hobbyTheme";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 import { timeAgo } from "@/lib/time";
 import Skeleton from "@/components/ui/Skeleton";
 
@@ -239,7 +240,13 @@ function NotificationBell({
                       )}
                       {n.post && (
                         <p className="mt-1 flex items-center gap-1.5 text-xs text-chblack/55">
-                          <span className="h-3 w-0.5 shrink-0 rounded-full" style={{ backgroundColor: getHobbyColor(n.post.hobby.name) }} />
+                          <span
+                            className="inline-flex shrink-0 items-center gap-1 font-quick font-bold"
+                            style={{ color: getHobbyText(getHobbyColor(n.post.hobby.name)) }}
+                          >
+                            <HobbyIcon name={n.post.hobby.name} size={12} /> {n.post.hobby.name}
+                          </span>
+                          <span className="text-chblack/30">·</span>
                           <span className="truncate">{n.post.content}</span>
                         </p>
                       )}
