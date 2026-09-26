@@ -23,6 +23,9 @@ function withinRateLimit(userId: string): boolean {
   return allowed;
 }
 
+/** Shared with the practice coach, which runs the same local retrieval. */
+export const withinAskRateLimit = withinRateLimit;
+
 /** Test hook: forget rate-limit history. */
 export const resetAskRateLimit = () => recentAsks.clear();
 
