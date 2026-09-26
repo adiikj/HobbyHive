@@ -10,6 +10,7 @@ import BeaAvatar from "@/components/bea/BeaAvatar";
 import NotificationBell from "@/components/dashboard/NotificationBell";
 import { readLastHive } from "@/components/dashboard/useDashboardData";
 import AccountMenu from "./AccountMenu";
+import CurrentHiveChip from "./CurrentHiveChip";
 
 const navItemClass = (active: boolean) =>
   `flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-[15px] font-quick transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
@@ -98,8 +99,11 @@ function AppSidebar() {
         </button>
       </div>
 
-      <div data-tour="account">
-        <AccountMenu variant="full" />
+      <div>
+        <CurrentHiveChip />
+        <div data-tour="account">
+          <AccountMenu variant="full" />
+        </div>
       </div>
     </aside>
   );

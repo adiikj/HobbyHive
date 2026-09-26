@@ -19,7 +19,8 @@ export function PageContainer({
   className?: string;
 }) {
   return (
-    <div className="min-h-screen bg-canvas font-pop">
+    // No background of its own: the body's hive-tinted canvas and HivePattern show through
+    <div className="min-h-screen font-pop">
       <div className={`mx-auto w-full ${WIDTHS[width]} px-4 pt-5 pb-16 sm:px-6 lg:px-8 lg:pt-10 ${className}`}>{children}</div>
     </div>
   );
