@@ -145,11 +145,17 @@ async function main() {
   const hobbiesBySlug = await ensureHobbies();
   const demoUsers = await ensureDemoUsers();
 
+  // If a real account already has the viewer's username, the demo viewer gets "<username>_demo" instead
+  const usernameTaken = await prisma.user.findFirst({
+    where: { username: VIEWER.username, NOT: { email: VIEWER.email } },
+    select: { id: true },
+  });
   const viewer = await prisma.user.upsert({
     where: { email: VIEWER.email },
     update: {},
     create: {
       ...VIEWER,
+      username: usernameTaken ? `${VIEWER.username}_demo` : VIEWER.username,
       password: await bcrypt.hash(DEMO_PASSWORD, 10),
       otp: "000000",
       otpVerified: true,
