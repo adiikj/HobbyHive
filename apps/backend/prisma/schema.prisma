@@ -44,6 +44,7 @@ model User {
   practiceSessions      PracticeSession[]
   skills                UserSkill[]
   goals                 Goal[]
+  feedbackGiven         Feedback[]
 }
 
 model Hobby {
@@ -80,6 +81,8 @@ model Post {
   progressLogId String?
   // Set when a hive moderator pins the post to the top of the hive
   pinnedAt      DateTime?
+  // Set when the author wants feedback: the specific thing they're asking ("is my spotting late?")
+  feedbackAsk   String?
 
   // Topic model (apps/ml): a 384-d sentence embedding (pgvector) for semantic search / similar posts,
   // plus how well the post fits its hive. All nullable: the ML service is optional and runs async.
@@ -102,10 +105,12 @@ model Post {
   saves         SavedPost[]
   // Set when this post was shared from a practice session
   practiceSession PracticeSession?
+  feedback        Feedback[]
 
   @@index([hobbyId, createdAt])
   @@index([authorId])
   @@index([challengeId])
+  @@index([hobbyId, feedbackAsk])
   @@index([progressLogId, createdAt])
   @@index([hobbyId, flaggedAt])
 }
@@ -233,6 +238,8 @@ enum NotificationType {
   NEW_POST
   MENTION
   REPLY
+  FEEDBACK
+  FEEDBACK_HELPFUL
 }
 
 model Notification {
@@ -486,4 +493,24 @@ model Goal {
 
   @@index([userId, status])
   @@index([hobbyId])
+}
+
+// A structured reply to a "feedback wanted" post: what's working, one thing to try, and where to look.
+// The post's author can mark it helpful, which is what mentor reputation is built from.
+model Feedback {
+  id        String    @id @default(cuid())
+  postId    String
+  authorId  String
+  working   String
+  tryNext   String
+  // Where to look: a clip timestamp ("0:42") or a photo ("photo 2")
+  at        String?
+  helpfulAt DateTime?
+  createdAt DateTime  @default(now())
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, authorId])
+  @@index([authorId, helpfulAt])
 }
