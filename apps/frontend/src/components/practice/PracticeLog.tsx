@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpRight, Lock, Plus, Share2, Timer, Trash2 } from "lucide-react";
+import { ArrowUpRight, Lock, Plus, Share2, Timer, Trash2, Trophy } from "lucide-react";
 import { deletePractice, getMyHobbies, getMyPractice, sharePractice, type Hobby, type PracticeSession } from "@/api/api";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import Skeleton from "@/components/ui/Skeleton";
@@ -235,6 +235,9 @@ function PracticeLog() {
         action={
           <div className="flex items-center gap-2">
             {activeHobby && <StartPracticeButton hobby={activeHobby} className="hidden sm:flex" />}
+            <Link href="/practice/recap" className={secondaryButtonClass}>
+              <Trophy size={15} /> Weekly recap
+            </Link>
             <button type="button" onClick={() => setLogging(true)} className={secondaryButtonClass}>
               <Plus size={15} /> Log session
             </button>

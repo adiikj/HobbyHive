@@ -1482,3 +1482,40 @@ export const getUserReputation = (username: string) =>
     () => axios.get(`${BASE_URL}/${username}/reputation`, authConfig()),
     "Couldn't load reputation"
   );
+
+// ---------- Weekly recap ----------
+
+export type PersonalBest =
+  | { kind: "week_minutes"; value: number; previous: number }
+  | { kind: "longest_session"; value: number; previous: number; focus: string }
+  | { kind: "streak"; value: number; previous: number };
+
+export interface HiveWeek {
+  hobby: JourneyHobby;
+  sessions: number;
+  minutes: number;
+  topFocus: string | null;
+  skillsDone: string[];
+  goalsAchieved: string[];
+}
+
+export interface WeeklyRecap {
+  weekStart: string;
+  weekEnd: string;
+  isCurrentWeek: boolean;
+  totals: { sessions: number; minutes: number; activeDays: number; posts: number };
+  previousMinutes: number;
+  perHive: HiveWeek[];
+  feedback: { given: number; markedHelpful: number };
+  streak: number;
+  personalBests: PersonalBest[];
+  hasActivity: boolean;
+}
+
+/** Your week in review; `week` is any date in it (defaults to this week). */
+export const getRecap = (week?: string | null) =>
+  request<WeeklyRecap>(() => axios.get(`${PRACTICE_URL}/recap`, authConfig(week ? { week } : undefined)), "Couldn't load your recap");
+
+/** Post one hive's part of a week's recap to that hive. */
+export const shareRecap = (input: { week: string; hobbyId: string; caption?: string }) =>
+  request<Post>(() => axios.post(`${PRACTICE_URL}/recap/share`, input, authConfig()), "Couldn't share your recap");

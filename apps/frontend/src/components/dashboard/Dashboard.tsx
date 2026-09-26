@@ -17,6 +17,7 @@ import Composer from "./Composer";
 import ChallengeBanner from "@/components/challenges/ChallengeBanner";
 import JourneyCard from "@/components/journey/JourneyCard";
 import StartPracticeButton from "@/components/practice/StartPracticeButton";
+import RecapBanner from "@/components/practice/RecapBanner";
 import { useDashboardData, FOLLOWING } from "./useDashboardData";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
@@ -189,6 +190,7 @@ function Dashboard() {
           </div>
 
           <div className="space-y-4 px-4 pb-12 sm:px-0">
+            {!hasNoHobbies && <RecapBanner />}
             {hasNoHobbies && (
               <section className="rounded-3xl border border-line bg-surface p-6 text-center">
                 <p className="font-bnt text-4xl text-chblack">PICK YOUR FIRST HIVE</p>
