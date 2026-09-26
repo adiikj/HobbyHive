@@ -19,7 +19,8 @@ import Skeleton from "@/components/ui/Skeleton";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
 import { PageContainer, HexIcon, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
+import { useHiveScope } from "@/lib/hiveScope";
 import HobbyLiveRoom from "./HobbyLiveRoom";
 import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
@@ -30,6 +31,8 @@ import CoachCard from "@/components/bea/CoachCard";
 import FlaggedQueue from "./FlaggedQueue";
 import AskBea from "@/components/bea/AskBea";
 import HobbyIcon from "@/components/brand/HobbyIcon";
+import HiveEmptyState from "./HiveEmptyState";
+import { writeLastHive } from "@/components/dashboard/useDashboardData";
 
 type HobbyTab = "posts" | "skills" | "feedback" | "guide" | "ask" | "room" | "events" | "challenges" | "review";
 
@@ -40,6 +43,11 @@ interface HobbyPageProps {
 function HobbyPage({ slug }: HobbyPageProps) {
   const router = useRouter();
   const [hobby, setHobby] = useState<HobbyDetail | null>(null);
+  useHiveScope(hobby);
+  // Opening a hive you belong to makes it the one Home opens on next
+  useEffect(() => {
+    if (hobby?.isMember) writeLastHive(hobby.slug);
+  }, [hobby?.isMember, hobby?.slug]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
@@ -191,9 +199,9 @@ function HobbyPage({ slug }: HobbyPageProps) {
 
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4 min-w-0">
-            <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={76} className="drop-shadow-sm" />
+            <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color: getHobbyText(color) }} />} size={76} className="drop-shadow-sm" />
             <div className="min-w-0">
-              <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+              <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
                 Hive
               </p>
               <h1 className="truncate font-bnt text-6xl leading-[0.85] text-chblack sm:text-7xl">{hobby.name.toUpperCase()}</h1>
@@ -205,7 +213,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
               </p>
               {hobby.moderators && hobby.moderators.length > 0 && (
                 <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs text-chblack/55">
-                  <ShieldCheck size={13} style={{ color }} /> Moderated by
+                  <ShieldCheck size={13} style={{ color: getHobbyText(color) }} /> Moderated by
                   {hobby.moderators.map((m, i) => (
                     <span key={m.id}>
                       <Link href={`/profile/${m.username}`} className="font-semibold text-chblack hover:underline">
@@ -268,7 +276,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
               className={`flex shrink-0 grow items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-quick font-bold transition-colors sm:px-3 sm:text-sm ${
                 isActive ? "text-white shadow-sm" : "text-chblack/55 hover:text-chblack"
               }`}
-              style={isActive ? { backgroundColor: color } : undefined}
+              style={isActive ? { backgroundColor: color, color: getHobbyInk(color) } : undefined}
             >
               <Icon size={16} className="shrink-0" /> <span className={`whitespace-nowrap ${isActive ? "" : "hidden sm:inline"}`}>{label}</span>
             </button>
@@ -300,12 +308,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
           {isLoadingPosts ? (
             <PostListSkeleton />
           ) : posts.length === 0 && pinnedPosts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
-              <p className="font-bnt text-3xl" style={{ color }}>
-                QUIET FOR NOW
-              </p>
-              <p className="mt-1 text-sm text-chblack/60">Be the first to post about {hobby.name}.</p>
-            </div>
+            <HiveEmptyState hobby={hobby.name} />
           ) : (
             <>
               {pinnedPosts.length > 0 && (

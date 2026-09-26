@@ -43,7 +43,7 @@ export function readLastHive(): string | null {
   }
 }
 
-function writeLastHive(slug: string) {
+export function writeLastHive(slug: string) {
   try {
     localStorage.setItem(LAST_HIVE_KEY, slug);
   } catch {

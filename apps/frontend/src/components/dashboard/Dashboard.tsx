@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Pin, Search, Trophy, Users } from "lucide-react";
 import type { Hobby } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
+import { useHiveScope } from "@/lib/hiveScope";
 import Logo from "@/components/brand/Logo";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { ComposerSkeleton, HiveHeaderSkeleton, PostListSkeleton, CardRowsSkeleton } from "@/components/ui/Skeletons";
@@ -20,6 +22,7 @@ import StartPracticeButton from "@/components/practice/StartPracticeButton";
 import RecapBanner from "@/components/practice/RecapBanner";
 import { useDashboardData, FOLLOWING } from "./useDashboardData";
 import HobbyIcon from "@/components/brand/HobbyIcon";
+import HiveEmptyState from "@/components/hobbies/HiveEmptyState";
 
 function formatCount(n: number, noun: string) {
   return `${n.toLocaleString()} ${noun}${n === 1 ? "" : "s"}`;
@@ -66,11 +69,11 @@ function HiveHeader({ hobby, stats }: { hobby: Hobby; stats: Hobby | null }) {
 
       <div className="relative flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+          <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
             Your hive
           </p>
           <h1 className="mt-1 flex items-center gap-2.5 font-bnt text-5xl sm:text-6xl leading-[0.9] text-chblack">
-            <HobbyIcon name={hobby.name} className="h-10 w-10 sm:h-12 sm:w-12" style={{ color }} />
+            <HobbyIcon name={hobby.name} className="h-10 w-10 sm:h-12 sm:w-12" style={{ color: getHobbyText(color) }} />
             <span className="truncate">{hobby.name.toUpperCase()}</span>
           </h1>
           <p className="mt-2 text-sm text-chblack/60">
@@ -148,37 +151,34 @@ function Dashboard() {
     activePeople,
     discoverHobbies,
   } = useDashboardData();
+  useHiveScope(activeHobby);
+  const reduceMotion = useReducedMotion();
 
   const isFollowing = activeKey === FOLLOWING;
   // Pinned posts show once, in their own section above the feed
   const pinnedIds = new Set(pinnedPosts.map((p) => p.id));
   const feedPosts = isFollowing ? posts : posts.filter((p) => !pinnedIds.has(p.id));
   const hasNoHobbies = myHobbies !== null && myHobbies.length === 0;
-  const color = activeHobby ? getHobbyColor(activeHobby.name) : "#DB2777";
+  const color = activeHobby ? getHobbyColor(activeHobby.name) : BRAND_COLOR;
   // Changes when you post, so the journey card's streak and counts update right away
   const myPostCount = posts.filter((p) => p.author.id === me?.id).length;
 
-  const emptyState = isFollowing ? (
-    <>
-      <p className="font-bnt text-3xl text-chblack">NOBODY HERE YET</p>
-      <p className="mt-1 text-sm text-chblack/60">Follow people from your hives to see what they share, all in one place.</p>
-      <Link href="/explore" className="mt-4 inline-block rounded-full bg-chblack px-5 py-2 text-sm font-quick font-bold text-canvas hover:bg-chblack/85">
-        Find people
-      </Link>
-    </>
-  ) : (
-    <>
-      <p className="font-bnt text-3xl" style={{ color }}>
-        QUIET FOR NOW
-      </p>
-      <p className="mt-1 text-sm text-chblack/60">
-        Nothing in {activeHobby?.name ?? "this hive"} yet. Be the first to share something.
-      </p>
-    </>
-  );
+  const emptyState =
+    isFollowing || !activeHobby ? (
+      <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
+        <p className="font-bnt text-3xl text-chblack">NOBODY HERE YET</p>
+        <p className="mt-1 text-sm text-chblack/60">Follow people from your hives to see what they share, all in one place.</p>
+        <Link href="/explore" className="mt-4 inline-block rounded-full bg-chblack px-5 py-2 text-sm font-quick font-bold text-canvas hover:bg-chblack/85">
+          Find people
+        </Link>
+      </div>
+    ) : (
+      <HiveEmptyState hobby={activeHobby.name} />
+    );
 
   return (
-    <div className="min-h-screen bg-canvas font-pop">
+    // No background of its own: the body's hive-tinted canvas and HivePattern show through
+    <div className="min-h-screen font-pop">
       <MobileTopBar />
       {/* Starts once the hives (and the feed around them) have loaded, so it can point at them */}
       <WelcomeTour ready={myHobbies !== null && !isLoadingFeed} />
@@ -229,7 +229,7 @@ function Dashboard() {
                   href={`/hobbies/${activeHobby.slug}?tab=challenges`}
                   className="flex items-center gap-3 rounded-2xl border border-dashed border-chblack/20 p-4 text-sm text-chblack/60 transition-colors hover:border-chblack/40 hover:text-chblack"
                 >
-                  <Trophy size={18} style={{ color }} />
+                  <Trophy size={18} style={{ color: getHobbyText(color) }} />
                   <span className="flex-1">
                     <span className="font-semibold text-chblack">No challenge running.</span> As a moderator, you can start this week&apos;s.
                   </span>
@@ -267,50 +267,59 @@ function Dashboard() {
               />
             )}
 
-            {isLoadingFeed ? (
-              <PostListSkeleton />
-            ) : feedError ? (
-              <p className="rounded-2xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-4 text-center text-sm text-red-700 dark:text-red-300">{feedError}</p>
-            ) : feedPosts.length === 0 && pinnedPosts.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">{emptyState}</div>
-            ) : (
-              <>
-                {!isFollowing && pinnedPosts.length > 0 && (
-                  <section>
-                    <p className="mb-2 flex items-center gap-1.5 px-1 text-xs font-quick font-bold uppercase tracking-wider text-chblack/45">
-                      <Pin size={13} /> Pinned by moderators
-                    </p>
+            {/* Keyed by hive, so switching fades the new feed in like walking into another room */}
+            <motion.div
+              key={`${activeKey}:${isLoadingFeed ? "loading" : "ready"}`}
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="space-y-4"
+            >
+              {isLoadingFeed ? (
+                <PostListSkeleton />
+              ) : feedError ? (
+                <p className="rounded-2xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-4 text-center text-sm text-red-700 dark:text-red-300">{feedError}</p>
+              ) : feedPosts.length === 0 && pinnedPosts.length === 0 ? (
+                emptyState
+              ) : (
+                <>
+                  {!isFollowing && pinnedPosts.length > 0 && (
+                    <section>
+                      <p className="mb-2 flex items-center gap-1.5 px-1 text-xs font-quick font-bold uppercase tracking-wider text-chblack/45">
+                        <Pin size={13} /> Pinned by moderators
+                      </p>
+                      <div className="bg-surface rounded-2xl border border-line divide-y divide-line">
+                        {pinnedPosts.map((post) => (
+                          <PostCard key={post.id} post={post} showHobby={false} onDeleted={removePost} onPinnedChange={refreshPinned} />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                  {feedPosts.length > 0 && (
                     <div className="bg-surface rounded-2xl border border-line divide-y divide-line">
-                      {pinnedPosts.map((post) => (
-                        <PostCard key={post.id} post={post} showHobby={false} onDeleted={removePost} onPinnedChange={refreshPinned} />
+                      {feedPosts.map((post) => (
+                        <PostCard key={post.id} post={post} showHobby={isFollowing} onDeleted={removePost} onPinnedChange={refreshPinned} />
                       ))}
                     </div>
-                  </section>
-                )}
-                {feedPosts.length > 0 && (
-                  <div className="bg-surface rounded-2xl border border-line divide-y divide-line">
-                    {feedPosts.map((post) => (
-                      <PostCard key={post.id} post={post} showHobby={isFollowing} onDeleted={removePost} onPinnedChange={refreshPinned} />
-                    ))}
-                  </div>
-                )}
-                {nextCursor ? (
-                  <div className="flex justify-center">
-                    <button
-                      onClick={handleLoadMore}
-                      disabled={isLoadingMore}
-                      className="rounded-full border border-line bg-surface px-6 py-2 text-sm font-quick font-bold text-chblack/70 transition-colors hover:text-chblack disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                    >
-                      {isLoadingMore ? "Loading…" : "Show more"}
-                    </button>
-                  </div>
-                ) : (
-                  <p className="flex items-center justify-center gap-2 py-2 text-xs font-quick font-semibold text-chblack/35">
-                    <HobbyGlyph color={withAlpha(color, 0.5)} size={10} /> You&apos;re all caught up
-                  </p>
-                )}
-              </>
-            )}
+                  )}
+                  {nextCursor ? (
+                    <div className="flex justify-center">
+                      <button
+                        onClick={handleLoadMore}
+                        disabled={isLoadingMore}
+                        className="rounded-full border border-line bg-surface px-6 py-2 text-sm font-quick font-bold text-chblack/70 transition-colors hover:text-chblack disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                      >
+                        {isLoadingMore ? "Loading…" : "Show more"}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="flex items-center justify-center gap-2 py-2 text-xs font-quick font-semibold text-chblack/35">
+                      <HobbyGlyph color={withAlpha(color, 0.5)} size={10} /> You&apos;re all caught up
+                    </p>
+                  )}
+                </>
+              )}
+            </motion.div>
 
             <div className="xl:hidden pt-4">
               {activeKey === null ? (
