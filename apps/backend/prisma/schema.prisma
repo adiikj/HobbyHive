@@ -45,6 +45,7 @@ model User {
   skills                UserSkill[]
   goals                 Goal[]
   feedbackGiven         Feedback[]
+  guideEntries          GuideEntry[]
 }
 
 model Hobby {
@@ -64,6 +65,7 @@ model Hobby {
   practice     PracticeSession[]
   skills       Skill[]
   goals        Goal[]
+  guide        GuideEntry[]
 }
 
 model Post {
@@ -106,6 +108,7 @@ model Post {
   // Set when this post was shared from a practice session
   practiceSession PracticeSession?
   feedback        Feedback[]
+  guideEntries    GuideEntry[]
 
   @@index([hobbyId, createdAt])
   @@index([authorId])
@@ -443,6 +446,7 @@ model Skill {
   learners UserSkill[]
   goals    Goal[]
   sessions PracticeSession[]
+  guide    GuideEntry[]
 
   @@unique([hobbyId, slug])
   @@index([hobbyId, tier])
@@ -513,4 +517,23 @@ model Feedback {
 
   @@unique([postId, authorId])
   @@index([authorId, helpfulAt])
+}
+
+// A post a moderator or mentor added to their hive's guide, optionally under a skill, with a short note on why
+model GuideEntry {
+  id        String   @id @default(cuid())
+  hobbyId   String
+  skillId   String?
+  postId    String
+  addedById String
+  note      String?
+  createdAt DateTime @default(now())
+
+  hobby   Hobby  @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  skill   Skill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  post    Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  addedBy User   @relation(fields: [addedById], references: [id], onDelete: Cascade)
+
+  @@unique([hobbyId, postId])
+  @@index([hobbyId, skillId])
 }
