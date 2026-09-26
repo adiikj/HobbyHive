@@ -3,6 +3,7 @@ import axios from "axios";
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 const HOBBIES_URL = BASE_URL.replace(/\/users$/, "/hobbies");
 const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
+const PRACTICE_URL = BASE_URL.replace(/\/users$/, "/practice");
 const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
 const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
 const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
@@ -1244,15 +1245,32 @@ export type JourneyMilestone =
   | { type: "first_post" | "first_photo"; date: string; hobby: JourneyHobby; post: JourneyPostRef }
   | { type: "challenge_entry"; date: string; hobby: JourneyHobby; post: JourneyPostRef; challengeTitle: string }
   | { type: "log_started"; date: string; hobby: JourneyHobby; logId: string; logTitle: string }
-  | { type: "post_count"; date: string; hobby: JourneyHobby; post: JourneyPostRef; count: number };
+  | { type: "post_count"; date: string; hobby: JourneyHobby; post: JourneyPostRef; count: number }
+  | { type: "first_practice"; date: string; hobby: JourneyHobby; focus: string; minutes: number }
+  | { type: "practice_hours"; date: string; hobby: JourneyHobby; hours: number };
 
 export interface Journey {
   user: { id: string; name: string; username: string; avatarUrl: string | null };
   hobby: JourneyHobby | null;
   joinedAt: string | null;
-  stats: { posts: number; photos: number; challengesEntered: number; logs: number };
-  /** Weekly streaks: a week counts when it has at least one post. */
-  streak: { current: number; best: number; activeThisWeek: boolean; weeks: { start: string; posts: number }[] };
+  stats: {
+    posts: number;
+    photos: number;
+    challengesEntered: number;
+    logs: number;
+    practiceSessions: number;
+    practiceMinutes: number;
+    practiceMinutesThisWeek: number;
+  };
+  /** Weekly streaks: a week counts when you practised or posted in it. */
+  streak: {
+    current: number;
+    best: number;
+    activeThisWeek: boolean;
+    weeks: { start: string; posts: number; sessions: number; minutes: number }[];
+  };
+  /** What they've practised most over the last 4 weeks. */
+  recentFocus: { focus: string; minutes: number }[];
   currentChallenge: { id: string; title: string; prompt: string; endsAt: string; entered: boolean } | null;
   logs: { id: string; title: string; createdAt: string; hobby: JourneyHobby; entryCount: number; lastEntryAt: string | null }[];
   thenNow: { first: { postId: string; image: string; date: string }; latest: { postId: string; image: string; date: string } } | null;
@@ -1264,4 +1282,51 @@ export const getJourney = (username: string, hobbySlug?: string | null) =>
   request<Journey>(
     () => axios.get(`${BASE_URL}/${username}/journey`, authConfig(hobbySlug ? { hobby: hobbySlug } : undefined)),
     "Couldn't load this journey"
+  );
+
+// ---------- Practice sessions ----------
+
+export type PracticeFeel = "rough" | "okay" | "great";
+
+export interface PracticeSession {
+  id: string;
+  startedAt: string;
+  durationMin: number;
+  focus: string;
+  /** Private to you. */
+  note: string | null;
+  feel: PracticeFeel | null;
+  /** Set once the session has been shared to its hive. */
+  postId: string | null;
+  createdAt: string;
+  hobby: JourneyHobby;
+}
+
+export interface LogPracticeInput {
+  hobbyId: string;
+  durationMin: number;
+  focus: string;
+  note?: string;
+  feel?: PracticeFeel | null;
+  startedAt?: string;
+}
+
+export const logPractice = (input: LogPracticeInput) =>
+  request<PracticeSession>(() => axios.post(PRACTICE_URL, input, authConfig()), "Couldn't log this session");
+
+/** Your sessions, newest first, plus what you usually work on (for quick picks). */
+export const getMyPractice = (hobbySlug?: string | null) =>
+  request<{ sessions: PracticeSession[]; recentFocus: string[] }>(
+    () => axios.get(PRACTICE_URL, authConfig(hobbySlug ? { hobby: hobbySlug } : undefined)),
+    "Couldn't load your practice"
+  );
+
+export const deletePractice = (sessionId: string) =>
+  request<{ id: string }>(() => axios.delete(`${PRACTICE_URL}/${sessionId}`, authConfig()), "Couldn't delete this session");
+
+/** Share a session to its hive as a post. The private note is never shared. */
+export const sharePractice = (sessionId: string, { caption, images }: { caption?: string; images?: string[] } = {}) =>
+  request<Post>(
+    () => axios.post(`${PRACTICE_URL}/${sessionId}/share`, { caption, images }, authConfig()),
+    "Couldn't share this session"
   );

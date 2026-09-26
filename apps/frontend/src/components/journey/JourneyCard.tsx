@@ -2,19 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Flame, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Flame, Plus, Timer, TrendingUp } from "lucide-react";
 import { getJourney, type Hobby, type Journey } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
-import { timeAgo } from "@/lib/time";
+import { formatMinutes, timeAgo } from "@/lib/time";
+import { PRACTICE_LOGGED_EVENT } from "@/lib/practiceTimer";
+import LogPracticeSheet from "@/components/practice/LogPracticeSheet";
 import Skeleton from "@/components/ui/Skeleton";
 import ActivityStrip from "./ActivityStrip";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function streakHint({ current, activeThisWeek }: Journey["streak"]) {
-  if (activeThisWeek) return "You've posted this week. Nice.";
-  if (current > 0) return "Post this week to keep it going";
-  return "Post this week to start a streak";
+  if (activeThisWeek) return "You've shown up this week. Nice.";
+  if (current > 0) return "Practise this week to keep it going";
+  return "Log a practice session to start a streak";
 }
 
 /**
@@ -24,7 +26,16 @@ function streakHint({ current, activeThisWeek }: Journey["streak"]) {
 function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby: Hobby; refreshKey: number }) {
   const [journey, setJourney] = useState<Journey | null>(null);
   const [failed, setFailed] = useState(false);
+  const [practiceKey, setPracticeKey] = useState(0);
+  const [logging, setLogging] = useState(false);
   const color = getHobbyColor(hobby.name);
+
+  // A session saved anywhere (the timer dock, this card) refreshes the streak and totals
+  useEffect(() => {
+    const bump = () => setPracticeKey((k) => k + 1);
+    window.addEventListener(PRACTICE_LOGGED_EVENT, bump);
+    return () => window.removeEventListener(PRACTICE_LOGGED_EVENT, bump);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +45,7 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
     return () => {
       cancelled = true;
     };
-  }, [username, hobby.slug, refreshKey]);
+  }, [username, hobby.slug, refreshKey, practiceKey]);
 
   if (failed) return null; // a nice-to-have: the feed works without it
   if (!journey || journey.hobby?.slug !== hobby.slug) return <Skeleton className="h-44 w-full rounded-2xl bg-line" />;
@@ -68,9 +79,9 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
         </div>
         <dl className="grid grid-cols-3 gap-2 text-center">
           {[
+            ["This week", stats.practiceMinutesThisWeek ? formatMinutes(stats.practiceMinutesThisWeek) : "0"],
+            ["Practised", stats.practiceMinutes ? formatMinutes(stats.practiceMinutes) : "0"],
             ["Posts", stats.posts],
-            ["Photos", stats.photos],
-            ["Challenges", stats.challengesEntered],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl bg-canvas px-2 py-1.5">
               <dd className="font-bnt text-2xl leading-none text-chblack">{value}</dd>
@@ -83,6 +94,36 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
       <div className="mt-4">
         <ActivityStrip weeks={streak.weeks} color={color} />
       </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {journey.recentFocus.length > 0 && (
+          <>
+            <span className="text-xs text-chblack/50">Working on</span>
+            {journey.recentFocus.map((f) => (
+              <span key={f.focus} className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: withAlpha(color, 0.1), color }}>
+                {f.focus} · {formatMinutes(f.minutes)}
+              </span>
+            ))}
+          </>
+        )}
+        <span className="ml-auto flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setLogging(true)}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-quick font-bold text-chblack/55 hover:bg-canvas hover:text-chblack"
+          >
+            <Plus size={13} /> Log past session
+          </button>
+          <Link
+            href={`/practice?hobby=${hobby.slug}`}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-quick font-bold text-chblack/55 hover:bg-canvas hover:text-chblack"
+          >
+            <Timer size={13} /> Practice log
+          </Link>
+        </span>
+      </div>
+
+      <LogPracticeSheet open={logging} onClose={() => setLogging(false)} hobby={hobby} />
 
       {log ? (
         <Link

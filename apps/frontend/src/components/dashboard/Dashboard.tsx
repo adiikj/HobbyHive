@@ -16,6 +16,7 @@ import HiveRail from "./HiveRail";
 import Composer from "./Composer";
 import ChallengeBanner from "@/components/challenges/ChallengeBanner";
 import JourneyCard from "@/components/journey/JourneyCard";
+import StartPracticeButton from "@/components/practice/StartPracticeButton";
 import { useDashboardData, FOLLOWING } from "./useDashboardData";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
@@ -77,12 +78,15 @@ function HiveHeader({ hobby, stats }: { hobby: Hobby; stats: Hobby | null }) {
               : "Only " + hobby.name.toLowerCase() + ", nothing else."}
           </p>
         </div>
-        <Link
-          href={`/hobbies/${hobby.slug}`}
-          className="shrink-0 flex items-center gap-1 rounded-full bg-surface/80 px-3.5 py-2 text-xs font-quick font-bold text-chblack shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          Open hive <ArrowUpRight size={14} />
-        </Link>
+        <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+          <StartPracticeButton hobby={hobby} />
+          <Link
+            href={`/hobbies/${hobby.slug}`}
+            className="flex items-center gap-1 rounded-full bg-surface/80 px-3.5 py-2 text-xs font-quick font-bold text-chblack shadow-sm ring-1 ring-black/5 backdrop-blur transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            Open hive <ArrowUpRight size={14} />
+          </Link>
+        </div>
       </div>
     </section>
   );

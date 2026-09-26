@@ -19,3 +19,11 @@ export function timeLeft(iso: string): string {
   if (hours < 24) return `${hours}h left`;
   return `${Math.floor(hours / 24)}d left`;
 }
+
+/** 25 → "25 min", 90 → "1h 30m", 120 → "2h". */
+export const formatMinutes = (minutes: number) => {
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+};

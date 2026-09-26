@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Award, Camera, Flame, PenLine, TrendingUp, Trophy, UserPlus, type LucideIcon } from "lucide-react";
+import { ArrowRight, Award, Camera, Clock, Flame, PenLine, Timer, TrendingUp, Trophy, UserPlus, type LucideIcon } from "lucide-react";
 import { getJourney, type Journey, type JourneyMilestone } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import Skeleton from "@/components/ui/Skeleton";
+import { formatMinutes } from "@/lib/time";
 import ActivityStrip from "./ActivityStrip";
 
 const BRAND = "#DB2777";
@@ -27,6 +28,10 @@ function describe(m: JourneyMilestone): { icon: LucideIcon; title: string; href:
       return { icon: TrendingUp, title: `Started tracking “${m.logTitle}”`, href: `/progress/${m.logId}` };
     case "post_count":
       return { icon: Award, title: `${m.count} posts in ${m.hobby.name}`, href: `/posts/${m.post.id}` };
+    case "first_practice":
+      return { icon: Timer, title: `First practice session in ${m.hobby.name}: ${m.focus}, ${formatMinutes(m.minutes)}`, href: null };
+    case "practice_hours":
+      return { icon: Clock, title: `${m.hours} hours of ${m.hobby.name} practice`, href: null };
   }
 }
 
@@ -112,9 +117,9 @@ function JourneyTimeline({ username, firstName, isOwnProfile }: { username: stri
       <section className="rounded-2xl border border-line bg-surface p-4">
         <dl className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
           {[
+            ["Practised", stats.practiceMinutes ? formatMinutes(stats.practiceMinutes) : "0"],
+            ["Sessions", stats.practiceSessions],
             ["Posts", stats.posts],
-            ["Photos", stats.photos],
-            ["Challenges", stats.challengesEntered],
             ["Best streak", `${streak.best}w`],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl bg-canvas px-2 py-2">
@@ -126,7 +131,7 @@ function JourneyTimeline({ username, firstName, isOwnProfile }: { username: stri
         <p className="mb-2 mt-4 flex items-center gap-1.5 text-sm text-chblack/65">
           <Flame size={15} className={streak.current ? "text-brand" : "text-chblack/30"} />
           {streak.current
-            ? `${streak.current}-week streak${streak.activeThisWeek ? "" : " (post this week to keep it)"}`
+            ? `${streak.current}-week streak${streak.activeThisWeek ? "" : " (practise this week to keep it)"}`
             : "No active streak"}
         </p>
         <ActivityStrip weeks={streak.weeks} color={BRAND} />
