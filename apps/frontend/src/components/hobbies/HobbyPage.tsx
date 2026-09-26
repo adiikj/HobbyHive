@@ -32,6 +32,7 @@ import FlaggedQueue from "./FlaggedQueue";
 import AskBea from "@/components/bea/AskBea";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import HiveEmptyState from "./HiveEmptyState";
+import HiveWelcome from "./HiveWelcome";
 import { writeLastHive } from "@/components/dashboard/useDashboardData";
 
 type HobbyTab = "posts" | "skills" | "feedback" | "guide" | "ask" | "room" | "events" | "challenges" | "review";
@@ -43,7 +44,8 @@ interface HobbyPageProps {
 function HobbyPage({ slug }: HobbyPageProps) {
   const router = useRouter();
   const [hobby, setHobby] = useState<HobbyDetail | null>(null);
-  useHiveScope(hobby);
+  // null while loading means "not known yet" here, not "no hive"
+  useHiveScope(hobby ?? undefined);
   // Opening a hive you belong to makes it the one Home opens on next
   useEffect(() => {
     if (hobby?.isMember) writeLastHive(hobby.slug);
@@ -51,6 +53,8 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const closeWelcome = useCallback(() => setShowWelcome(false), []);
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const tabFromUrl: HobbyTab =
@@ -126,6 +130,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
       } else {
         await addMyHobby(hobby.id);
         setHobby({ ...hobby, isMember: true, membersCount: hobby.membersCount + 1 });
+        setShowWelcome(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update membership");
@@ -342,6 +347,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
           )}
         </div>
       )}
+      {showWelcome && <HiveWelcome hobby={hobby.name} slug={hobby.slug} onClose={closeWelcome} />}
     </PageContainer>
   );
 }
