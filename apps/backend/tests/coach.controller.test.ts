@@ -98,8 +98,17 @@ describe("POST /api/v1/ask/coach", () => {
     const spy = vi.spyOn(ml, "askBea").mockResolvedValueOnce({
       mode: "extractive",
       answer: [],
-      trace: {},
-      evidence: [{ chunk_id: "c", kind: "post", post_id: "p9", comment_id: null, author_name: "Mira K", author_username: "mira", text: "Drill spots on a wall first", created_at: "" }],
+      trace: {
+        candidates: [
+          { text: "Drill spots on a wall first", meaning_score: 0.68 },
+          { text: "Welcome to the hive!", meaning_score: 0.56 },
+        ],
+      },
+      evidence: [
+        { chunk_id: "c", kind: "post", post_id: "p9", comment_id: null, author_name: "Mira K", author_username: "mira", text: "Drill spots on a wall first", created_at: "" },
+        // Retrieved but only loosely related: left out of coaching tips
+        { chunk_id: "d", kind: "post", post_id: "p1", comment_id: null, author_name: "Adi", author_username: "adi", text: "Welcome to the hive!", created_at: "" },
+      ],
     } as never);
 
     const res = await request(app).post("/api/v1/ask/coach").set(auth(token)).send({ hobbySlug: "dance" });

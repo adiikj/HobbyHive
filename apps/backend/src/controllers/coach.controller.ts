@@ -11,6 +11,9 @@ const LOOKBACK_DAYS = 28;
 const NEGLECTED_DAYS = 14;
 const MAX_FOCUS = 2;
 const TIPS_PER_SKILL = 2;
+// Ask Bea's own cut-off (0.54) is tuned to answer questions; a coaching tip should clearly be about the skill.
+// On the demo hive, on-topic tips score 0.60+ and share words with the skill; unrelated ones cluster ~0.55.
+export const MIN_TIP_SCORE = 0.6;
 
 export interface CoachSkill {
   id: string;
@@ -190,7 +193,10 @@ export const coachWeek = asyncHandler(async (req: Request, res: Response) => {
       const lastNote = sessions.find((s) => s.skillId === f.skill.id && s.note)?.note ?? null;
       const result = await askBea(`${f.skill.name}: ${f.skill.description}`, hobby.slug);
       if (!result) mlAvailable = false;
-      const tips = (result?.evidence ?? []).slice(0, TIPS_PER_SKILL).map((e) => ({
+      const candidates = (result?.trace as { candidates?: { text: string; meaning_score: number }[] } | undefined)?.candidates ?? [];
+      const scores = new Map(candidates.map((c) => [c.text, c.meaning_score]));
+      const relevant = (result?.evidence ?? []).filter((e) => (scores.get(e.text) ?? 0) >= MIN_TIP_SCORE);
+      const tips = relevant.slice(0, TIPS_PER_SKILL).map((e) => ({
         postId: e.post_id,
         authorName: e.author_name,
         authorUsername: e.author_username,
