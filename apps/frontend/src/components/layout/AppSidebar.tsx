@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Home, Compass, MessageCircle, User, Settings, PenSquare, Bookmark, type LucideIcon } from "lucide-react";
+import { Home, Compass, MessageCircle, User, Settings, PenSquare, Bookmark, Timer, type LucideIcon } from "lucide-react";
 import { getMyHobbies } from "@/api/api";
 import { useCurrentUser } from "@/lib/currentUser";
 import Logo from "@/components/brand/Logo";
@@ -67,6 +67,7 @@ function AppSidebar() {
 
         <nav aria-label="Main" className="space-y-1">
           <NavItem href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
+          <NavItem href="/practice" label="Practice" icon={Timer} active={pathname.startsWith("/practice")} tour="nav-practice" />
           <NavItem href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} tour="nav-explore" />
           <AskBeaNavItem />
           <NavItem href="/messages" label="Messages" icon={MessageCircle} active={pathname.startsWith("/messages")} />

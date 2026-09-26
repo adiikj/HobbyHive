@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const AUTH_PAGES = ["/signin", "/signup"];
-const PROTECTED_PAGES = ["/dashboard", "/choice", "/settings", "/explore", "/hobbies", "/messages", "/posts", "/saved", "/challenges", "/progress"];
+const PROTECTED_PAGES = ["/dashboard", "/choice", "/settings", "/explore", "/hobbies", "/messages", "/posts", "/saved", "/challenges", "/progress", "/practice"];
 
 /**
  * Routing-only check: the token must be a JWT whose `exp` is still in the future. The signature
@@ -54,5 +54,6 @@ export const config = {
     "/saved/:path*",
     "/challenges/:path*",
     "/progress/:path*",
+    "/practice/:path*",
   ],
 };
