@@ -1,6 +1,6 @@
 <h1 align="center">HobbyHive</h1>
 
-<p align="center"><b>Your hobby. Your hive.</b><br>A hobby app that rewards doing the hobby, not posting about it: practice tracking, skill maps, structured feedback from people who've been there, and an AI coach grounded in what the community has actually shared.</p>
+<p align="center"><b>Your hobby. Your hive.</b><br>Post about your hobby to people who share it. Each hobby is its own hive, so your feed is only what you picked, and the likes, comments and streaks keep you coming back until the hobby becomes a habit.</p>
 
 <p align="center">
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js_15-000?logo=nextdotjs&logoColor=white">
@@ -14,34 +14,40 @@
 
 ## Why
 
-Social apps measure posts and likes. Getting better at a hobby is about practice, knowing what to work on next, and honest feedback. Each hobby on HobbyHive is its own hive, built around that.
+On a general social app, your dance clip sits between politics, ads and someone's lunch, in front of people who don't care about dance. On HobbyHive you pick your hobbies and each one is its own contained hive: you post to people who get it, and they see only that hobby.
+
+That audience is the point. A like or a comment from someone who knows how hard a clean double pirouette is feels good, so you practise, post again, and keep your streak alive. Repeated, that's a habit. Everything else in the app (practice tracking, skill maps, feedback, Bea) feeds that loop.
 
 ## Features
 
-- **Practice:** a timer that follows you around the app, a practice log, and streaks that count practice (posting is optional)
-- **Skills and goals:** a curated skill map per hive, "learn X by then" goals, profiles that show skills rather than follower counts
+- **Hives:** one contained feed per hobby with posts, photos, likes, comments and @mentions, plus weekly challenges, live rooms and events
+- **Streaks:** posting or logging practice each week keeps your streak going; a practice timer and log sit alongside your posts
+- **Skills and goals:** a curated skill map per hive, "learn X by then" goals, and profiles that show what you've learned
 - **Feedback requests:** ask something specific; replies are "what's working" and "one thing to try", and helpful replies earn mentor levels
 - **Bea, the practice coach:** plans your week from your own sessions and goals, backed by cited posts from the hive
 - **Weekly recap** with personal bests, shareable to the hive
 - **Hive guides:** helpful feedback and top posts sorted by skill, curated by moderators and mentors
-- Also: hive feeds, weekly challenges, live rooms, events, DMs, explore, saved collections, dark mode
+- Also: DMs, explore, saved collections, notifications, dark mode
 
 <table>
+  <tr>
+    <td><img src="docs/screenshots/hive-feed.png" alt="A hive's feed"><p align="center"><sub>A hive's feed: only that hobby</sub></p></td>
+    <td><img src="docs/screenshots/feedback.png" alt="Feedback request"><p align="center"><sub>Asking the hive for feedback</sub></p></td>
+  </tr>
   <tr>
     <td><img src="docs/screenshots/skills.png" alt="Skill map"><p align="center"><sub>Skill map and goals</sub></p></td>
     <td><img src="docs/screenshots/practice.png" alt="Practice log"><p align="center"><sub>Practice log and running timer</sub></p></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/coach.png" alt="Bea's weekly plan"><p align="center"><sub>Bea's weekly plan, with cited tips</sub></p></td>
-    <td><img src="docs/screenshots/feedback.png" alt="Feedback request"><p align="center"><sub>Structured feedback</sub></p></td>
-  </tr>
-  <tr>
     <td><img src="docs/screenshots/recap.png" alt="Weekly recap"><p align="center"><sub>Weekly recap</sub></p></td>
-    <td><img src="docs/screenshots/guide.png" alt="Hive guide"><p align="center"><sub>Hive guide</sub></p></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/profile.png" alt="Profile"><p align="center"><sub>Profile: skills first</sub></p></td>
-    <td><img src="docs/screenshots/dashboard-dark.png" alt="Dark mode"><p align="center"><sub>Dark mode</sub></p></td>
+    <td><img src="docs/screenshots/guide.png" alt="Hive guide"><p align="center"><sub>Hive guide</sub></p></td>
+    <td><img src="docs/screenshots/profile.png" alt="Profile"><p align="center"><sub>Profile</sub></p></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/dashboard-dark.png" alt="Dark mode"><p align="center"><sub>Dark mode</sub></p></td>
   </tr>
   <tr>
     <td colspan="2"><img src="docs/screenshots/landing.png" alt="Landing page"><p align="center"><sub>Landing page</sub></p></td>
