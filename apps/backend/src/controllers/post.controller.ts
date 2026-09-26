@@ -124,7 +124,7 @@ export const uploadPostImage = asyncHandler(async (req: Request, res: Response) 
   res.status(201).json(new ApiResponse(201, { url }, "Image uploaded successfully"));
 });
 
-const MAX_POST_IMAGES = 4;
+export const MAX_POST_IMAGES = 4;
 
 // Create a post tagged to exactly one hobby — optionally with up to 4 photos, as a challenge entry,
 // and/or as the next entry in one of the author's progress logs

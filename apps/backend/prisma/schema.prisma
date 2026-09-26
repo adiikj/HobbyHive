@@ -41,6 +41,7 @@ model User {
   challengesCreated     Challenge[]
   progressLogs          ProgressLog[]
   beaAnswers            BeaAnswer[]
+  practiceSessions      PracticeSession[]
 }
 
 model Hobby {
@@ -57,6 +58,7 @@ model Hobby {
   challenges   Challenge[]
   progressLogs ProgressLog[]
   beaAnswers   BeaAnswer[]
+  practice     PracticeSession[]
 }
 
 model Post {
@@ -94,6 +96,8 @@ model Post {
   comments      Comment[]
   notifications Notification[]
   saves         SavedPost[]
+  // Set when this post was shared from a practice session
+  practiceSession PracticeSession?
 
   @@index([hobbyId, createdAt])
   @@index([authorId])
@@ -376,4 +380,29 @@ model BeaAnswer {
 
   @@index([createdAt])
   @@index([userId, createdAt])
+}
+
+// Time spent practising a hobby: the core of someone's journey, whether or not they post about it
+model PracticeSession {
+  id          String   @id @default(cuid())
+  userId      String
+  hobbyId     String
+  startedAt   DateTime
+  durationMin Int
+  // What they worked on ("turns", "chord changes")
+  focus       String
+  // Private to the author
+  note        String?
+  // How it went: "rough" | "okay" | "great"
+  feel        String?
+  // Set when the session was shared to the hive as a post
+  postId      String?  @unique
+  createdAt   DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  post  Post? @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@index([hobbyId, startedAt])
 }

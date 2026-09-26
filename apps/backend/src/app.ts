@@ -15,6 +15,7 @@ import challengeRouter from "./routes/challenge.routes.js";
 import progressRouter from "./routes/progress.routes.js";
 import mlRouter from "./routes/ml.routes.js";
 import askRouter from "./routes/ask.routes.js";
+import practiceRouter from "./routes/practice.routes.js";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/v1/challenges", challengeRouter);
 app.use("/api/v1/progress", progressRouter);
 app.use("/api/v1/ml", mlRouter);
 app.use("/api/v1/ask", askRouter);
+app.use("/api/v1/practice", practiceRouter);
 
 app.use("/api", notFoundHandler);
 app.use(errorHandler);
