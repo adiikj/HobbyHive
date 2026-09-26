@@ -96,6 +96,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
             isOwn={Boolean(post.isOwn)}
             canModerate={Boolean(post.canModerate)}
             isPinned={Boolean(post.pinnedAt)}
+            guideHive={post.canCurate ? { name: post.hobby.name, slug: post.hobby.slug } : null}
             onPinnedChange={(pinned) => {
               setPost((p) => ({ ...p, pinnedAt: pinned ? new Date().toISOString() : null }));
               onPinnedChange?.(post.id, pinned);

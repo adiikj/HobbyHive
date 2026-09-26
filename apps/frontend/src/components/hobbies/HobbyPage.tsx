@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Sparkles, Trophy, Route, MessageSquareHeart } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Sparkles, Trophy, Route, MessageSquareHeart, BookOpen } from "lucide-react";
 import {
   getHobbyBySlug,
   getHobbyPosts,
@@ -25,12 +25,13 @@ import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
 import SkillTree from "@/components/skills/SkillTree";
 import HiveFeedback from "./HiveFeedback";
+import HiveGuide from "@/components/guide/HiveGuide";
 import CoachCard from "@/components/bea/CoachCard";
 import FlaggedQueue from "./FlaggedQueue";
 import AskBea from "@/components/bea/AskBea";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
-type HobbyTab = "posts" | "skills" | "feedback" | "ask" | "room" | "events" | "challenges" | "review";
+type HobbyTab = "posts" | "skills" | "feedback" | "guide" | "ask" | "room" | "events" | "challenges" | "review";
 
 interface HobbyPageProps {
   slug: string;
@@ -45,7 +46,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const tabFromUrl: HobbyTab =
-    requestedTab === "skills" || requestedTab === "feedback" || requestedTab === "ask" || requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
+    requestedTab === "skills" || requestedTab === "feedback" || requestedTab === "guide" || requestedTab === "ask" || requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
       ? requestedTab
       : "posts";
   const [tab, setTab] = useState<HobbyTab>(tabFromUrl);
@@ -158,6 +159,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
     { key: "posts", label: "Posts", icon: Newspaper },
     { key: "skills", label: "Skills", icon: Route },
     { key: "feedback", label: "Feedback", icon: MessageSquareHeart },
+    { key: "guide", label: "Guide", icon: BookOpen },
     { key: "ask", label: "Ask Bea", icon: Sparkles },
     { key: "room", label: "Live room", icon: Radio },
     { key: "events", label: "Events", icon: CalendarDays },
@@ -250,7 +252,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
         {error && <p className="relative mt-4 text-sm text-red-600">{error}</p>}
       </motion.section>
 
-      <div role="tablist" aria-label={`${hobby.name} sections`} className="mb-5 flex gap-1 rounded-full border border-line bg-surface p-1">
+      <div role="tablist" aria-label={`${hobby.name} sections`} className="no-scrollbar mb-5 flex gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1">
         {tabs.map(({ key, label, icon: Icon }) => {
           const isActive = tab === key;
           return (
@@ -259,7 +261,11 @@ function HobbyPage({ slug }: HobbyPageProps) {
               role="tab"
               aria-selected={isActive}
               onClick={() => selectTab(key)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-quick font-bold transition-colors sm:px-3 sm:text-sm ${
+              // Nine tabs don't fit the column, so the bar scrolls; keep the open one in view
+              ref={(el) => {
+                if (isActive) el?.scrollIntoView({ block: "nearest", inline: "nearest" });
+              }}
+              className={`flex shrink-0 grow items-center justify-center gap-1.5 rounded-full px-2 py-2 text-xs font-quick font-bold transition-colors sm:px-3 sm:text-sm ${
                 isActive ? "text-white shadow-sm" : "text-chblack/55 hover:text-chblack"
               }`}
               style={isActive ? { backgroundColor: color } : undefined}
@@ -274,6 +280,8 @@ function HobbyPage({ slug }: HobbyPageProps) {
         <SkillTree slug={hobby.slug} hobbyId={hobby.id} hobbyName={hobby.name} color={color} isMember={Boolean(hobby.isMember)} />
       ) : tab === "feedback" ? (
         <HiveFeedback slug={hobby.slug} hobbyName={hobby.name} color={color} />
+      ) : tab === "guide" ? (
+        <HiveGuide slug={hobby.slug} hobbyName={hobby.name} color={color} />
       ) : tab === "room" ? (
         <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} color={color} />
       ) : tab === "events" ? (

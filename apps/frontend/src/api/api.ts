@@ -69,6 +69,8 @@ export interface Post {
   progressLog?: { id: string; title: string } | null;
   /** The viewer moderates this post's hive (can pin / remove it). */
   canModerate?: boolean;
+  /** The viewer can add this post to its hive's guide (moderator, or Mentor level in the hive). */
+  canCurate?: boolean;
   /** The viewer wrote this post. */
   isOwn?: boolean;
   /** Set when the author asked for feedback: their specific question. */
@@ -1547,3 +1549,41 @@ export interface CoachPlan {
 /** "What should I practise this week?" for one hive. */
 export const getCoachPlan = (hobbySlug: string) =>
   request<CoachPlan>(() => axios.post(`${ASK_URL}/coach`, { hobbySlug }, authConfig()), "Bea couldn't plan your week");
+
+// ---------- Hive guides ----------
+
+export interface GuideSection {
+  /** null = the general section. */
+  skill: { id: string; name: string; tier: number } | null;
+  /** Posts moderators and mentors added, with why. */
+  curated: { id: string; note: string | null; createdAt: string; addedBy: { id: string; name: string; username: string }; canRemove: boolean; post: Post }[];
+  /** Feedback the person who asked marked helpful. */
+  helpful: {
+    id: string;
+    working: string;
+    tryNext: string;
+    at: string | null;
+    helpfulAt: string;
+    author: { id: string; name: string; username: string; avatarUrl: string | null };
+    mentorLevel: MentorLevel | null;
+    post: { id: string; ask: string | null; excerpt: string; author: { name: string; username: string } };
+  }[];
+  /** The hive's most-liked posts about this skill. */
+  popular: Post[];
+}
+
+export interface HiveGuide {
+  hive: { id: string; name: string; slug: string };
+  canCurate: boolean;
+  skills: { id: string; name: string; tier: number }[];
+  sections: GuideSection[];
+}
+
+export const getHiveGuide = (slug: string) =>
+  request<HiveGuide>(() => axios.get(`${HOBBIES_URL}/${slug}/guide`, authConfig()), "Couldn't load the guide");
+
+export const addToGuide = (slug: string, input: { postId: string; skillId?: string | null; note?: string }) =>
+  request<{ id: string }>(() => axios.post(`${HOBBIES_URL}/${slug}/guide`, input, authConfig()), "Couldn't add this to the guide");
+
+export const removeFromGuide = (entryId: string) =>
+  request<{ id: string }>(() => axios.delete(`${BASE_URL.replace(/\/users$/, "/guide")}/${entryId}`, authConfig()), "Couldn't remove this from the guide");

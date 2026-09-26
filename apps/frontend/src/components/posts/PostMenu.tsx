@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link2, MoreHorizontal, Pin, PinOff, Trash2 } from "lucide-react";
+import { BookOpen, Link2, MoreHorizontal, Pin, PinOff, Trash2 } from "lucide-react";
 import { deletePost, pinPost, unpinPost } from "@/api/api";
+import AddToGuideDialog from "@/components/guide/AddToGuideDialog";
 
 interface PostMenuProps {
   postId: string;
@@ -12,11 +13,15 @@ interface PostMenuProps {
   isPinned: boolean;
   onPinnedChange: (pinned: boolean) => void;
   onDeleted: () => void;
+  /** Set when the viewer can add this post to its hive's guide. */
+  guideHive?: { name: string; slug: string } | null;
 }
 
 /** The "…" menu on a post: copy link for everyone, pin for moderators, delete for the author or a moderator. */
-function PostMenu({ postId, isOwn, canModerate, isPinned, onPinnedChange, onDeleted }: PostMenuProps) {
+function PostMenu({ postId, isOwn, canModerate, isPinned, onPinnedChange, onDeleted, guideHive }: PostMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [addedToGuide, setAddedToGuide] = useState(false);
   const [error, setError] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -98,6 +103,20 @@ function PostMenu({ postId, isOwn, canModerate, isPinned, onPinnedChange, onDele
                 {isPinned ? <PinOff size={16} /> : <Pin size={16} />} {isPinned ? "Unpin from hive" : "Pin to hive"}
               </button>
             )}
+            {guideHive && (
+              <button
+                role="menuitem"
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  setGuideOpen(true);
+                }}
+                disabled={addedToGuide}
+                className={`${itemClass} text-chblack/80 disabled:opacity-50`}
+              >
+                <BookOpen size={16} /> {addedToGuide ? "In the hive guide" : "Add to hive guide"}
+              </button>
+            )}
             {(isOwn || canModerate) && (
               <button role="menuitem" type="button" onClick={remove} className={`${itemClass} text-red-600`}>
                 <Trash2 size={16} /> {isOwn ? "Delete post" : "Remove from hive"}
@@ -107,6 +126,9 @@ function PostMenu({ postId, isOwn, canModerate, isPinned, onPinnedChange, onDele
           </motion.div>
         )}
       </AnimatePresence>
+      {guideHive && (
+        <AddToGuideDialog open={guideOpen} onClose={() => setGuideOpen(false)} postId={postId} hive={guideHive} onAdded={() => setAddedToGuide(true)} />
+      )}
     </div>
   );
 }
