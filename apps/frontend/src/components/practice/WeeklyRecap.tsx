@@ -257,7 +257,7 @@ function WeeklyRecap() {
             <Card className="p-8 text-center">
               <p className="font-bnt text-3xl text-chblack">{recap.isCurrentWeek ? "NOTHING LOGGED YET" : "A QUIET WEEK"}</p>
               <p className="mt-1 text-sm text-chblack/60">
-                {recap.isCurrentWeek ? "Start the timer next time you practise and this fills up." : "Rest weeks count too. Your streak picks up again when you practise."}
+                {recap.isCurrentWeek ? "Start the timer next time you practise and this fills up." : "Rest weeks happen. Post or practise and your streak picks up again."}
               </p>
             </Card>
           )}

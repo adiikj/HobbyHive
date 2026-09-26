@@ -15,7 +15,7 @@ const QUESTIONS = [
   },
   {
     q: "How do streaks and challenges work?",
-    a: "Post in a hive at least once a week to keep your streak. Each hive also runs a weekly challenge: enter with a post before it ends and browse everyone's entries.",
+    a: "Post in a hive (or log a practice session) at least once a week to keep your streak. Each hive also runs a weekly challenge: enter with a post before it ends and browse everyone's entries.",
   },
   {
     q: "Does it cost anything to join?",

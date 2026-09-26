@@ -35,9 +35,8 @@ export const weekStart = (date: Date) => {
 };
 
 /**
- * Weekly streaks: a week counts when you practised or posted in it. Posting is optional; logging practice
- * alone keeps a streak going. The current streak stays alive through this week until it ends, so a
- * streak doesn't read 0 on a Monday morning.
+ * Weekly streaks: a week counts when you posted or practised in it, so quiet practice weeks still count.
+ * The current streak stays alive through this week until it ends, so a streak doesn't read 0 on a Monday morning.
  */
 export const weeklyStreaks = (postDates: Date[], now = new Date(), practice: PracticeRef[] = []) => {
   const active = new Set([...postDates, ...practice.map((p) => p.date)].map(weekStart));

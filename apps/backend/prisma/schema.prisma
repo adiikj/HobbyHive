@@ -396,7 +396,7 @@ model BeaAnswer {
   @@index([userId, createdAt])
 }
 
-// Time spent practising a hobby: the core of someone's journey, whether or not they post about it
+// Time spent practising a hobby; sessions feed streaks and can be shared to the hive as a post
 model PracticeSession {
   id          String   @id @default(cuid())
   userId      String

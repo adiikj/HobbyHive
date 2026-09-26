@@ -19,7 +19,7 @@ const STEPS: TourStep[] = [
   {
     targets: ["journey"],
     title: "Your journey",
-    body: "Your weekly streak and the last 12 weeks at a glance. Post at least once a week to keep the streak going.",
+    body: "Your weekly streak and the last 12 weeks at a glance. Post or log practice at least once a week to keep the streak going.",
     fallbackBody: "Once you join a hive, your weekly streak and activity show up on your home.",
   },
   {

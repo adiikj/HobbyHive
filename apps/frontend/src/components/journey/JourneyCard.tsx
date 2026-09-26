@@ -16,8 +16,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 function streakHint({ current, activeThisWeek }: Journey["streak"]) {
   if (activeThisWeek) return "You've shown up this week. Nice.";
-  if (current > 0) return "Practise this week to keep it going";
-  return "Log a practice session to start a streak";
+  if (current > 0) return "Post or practise this week to keep it going";
+  return "Post or log practice this week to start a streak";
 }
 
 /**

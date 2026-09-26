@@ -333,7 +333,7 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSk
                   <Share2 size={16} style={{ color }} />
                   <span>
                     <span className="block text-sm font-semibold text-chblack">Share to {hobby?.name ?? "your hive"}</span>
-                    <span className="block text-xs text-chblack/50">Optional. Your streak counts either way.</span>
+                    <span className="block text-xs text-chblack/50">Let the hive see your progress and cheer you on.</span>
                   </span>
                 </span>
                 <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} className="peer sr-only" />

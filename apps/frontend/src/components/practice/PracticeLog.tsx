@@ -231,7 +231,7 @@ function PracticeLog() {
       <PageHeader
         eyebrow="Your practice"
         title="Practice log"
-        subtitle="Time spent actually doing your hobby. Posting about it is optional; this counts either way."
+        subtitle="Every session keeps your streak going. Share the good ones with your hive and let them cheer you on."
         action={
           <div className="flex items-center gap-2">
             {activeHobby && <StartPracticeButton hobby={activeHobby} className="hidden sm:flex" />}

@@ -131,7 +131,7 @@ function JourneyTimeline({ username, firstName, isOwnProfile }: { username: stri
         <p className="mb-2 mt-4 flex items-center gap-1.5 text-sm text-chblack/65">
           <Flame size={15} className={streak.current ? "text-brand" : "text-chblack/30"} />
           {streak.current
-            ? `${streak.current}-week streak${streak.activeThisWeek ? "" : " (practise this week to keep it)"}`
+            ? `${streak.current}-week streak${streak.activeThisWeek ? "" : " (post or practise this week to keep it)"}`
             : "No active streak"}
         </p>
         <ActivityStrip weeks={streak.weeks} color={BRAND} />
