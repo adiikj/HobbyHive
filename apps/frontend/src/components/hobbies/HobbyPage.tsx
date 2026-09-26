@@ -25,6 +25,7 @@ import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
 import SkillTree from "@/components/skills/SkillTree";
 import HiveFeedback from "./HiveFeedback";
+import CoachCard from "@/components/bea/CoachCard";
 import FlaggedQueue from "./FlaggedQueue";
 import AskBea from "@/components/bea/AskBea";
 import HobbyIcon from "@/components/brand/HobbyIcon";
@@ -278,7 +279,10 @@ function HobbyPage({ slug }: HobbyPageProps) {
       ) : tab === "events" ? (
         <HobbyEvents slug={hobby.slug} color={color} />
       ) : tab === "ask" ? (
-        <AskBea hive={{ name: hobby.name, slug: hobby.slug }} initialQuestion={searchParams.get("q")} />
+        <div className="space-y-4">
+          {hobby.isMember && <CoachCard hive={{ name: hobby.name, slug: hobby.slug }} hobbyId={hobby.id} autoStart={searchParams.get("coach") === "1"} />}
+          <AskBea hive={{ name: hobby.name, slug: hobby.slug }} initialQuestion={searchParams.get("q")} />
+        </div>
       ) : tab === "review" && hobby.isModerator ? (
         <FlaggedQueue slug={hobby.slug} />
       ) : tab === "challenges" ? (

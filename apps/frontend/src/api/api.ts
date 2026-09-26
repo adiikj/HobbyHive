@@ -1519,3 +1519,31 @@ export const getRecap = (week?: string | null) =>
 /** Post one hive's part of a week's recap to that hive. */
 export const shareRecap = (input: { week: string; hobbyId: string; caption?: string }) =>
   request<Post>(() => axios.post(`${PRACTICE_URL}/recap/share`, input, authConfig()), "Couldn't share your recap");
+
+// ---------- Bea practice coach ----------
+
+export type CoachFocusKind = "goal" | "neglected" | "rough" | "learning" | "next";
+
+export interface CoachPlan {
+  assistant: string;
+  hive: { id: string; name: string; slug: string };
+  /** How much to practise this week, from your recent average. */
+  plan: { sessions: number; minutesEach: number; basis: string };
+  focus: {
+    skill: { id: string; name: string; description: string; tier: number };
+    kind: CoachFocusKind;
+    /** Why this skill, built from your own practice, goals and skill map. */
+    reason: string;
+    minutes: number;
+    /** Your own last note on this skill (private to you). */
+    lastNote: string | null;
+    /** What worked for others: cited posts from the hive. */
+    tips: { postId: string; authorName: string; authorUsername: string; text: string }[];
+  }[];
+  mlAvailable: boolean;
+  hasSkillMap: boolean;
+}
+
+/** "What should I practise this week?" for one hive. */
+export const getCoachPlan = (hobbySlug: string) =>
+  request<CoachPlan>(() => axios.post(`${ASK_URL}/coach`, { hobbySlug }, authConfig()), "Bea couldn't plan your week");

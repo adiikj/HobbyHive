@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Flame, Plus, Timer, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Flame, Plus, Sparkles, Timer, TrendingUp } from "lucide-react";
 import { getJourney, type Hobby, type Journey } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import { formatMinutes, timeAgo } from "@/lib/time";
@@ -119,6 +119,12 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
           >
             <Plus size={13} /> Log past session
           </button>
+          <Link
+            href={`/hobbies/${hobby.slug}?tab=ask&coach=1`}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-quick font-bold text-amber-700 hover:bg-amber-500/10 dark:text-amber-300"
+          >
+            <Sparkles size={13} /> Plan my week
+          </Link>
           <Link
             href={`/practice?hobby=${hobby.slug}`}
             className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-quick font-bold text-chblack/55 hover:bg-canvas hover:text-chblack"
