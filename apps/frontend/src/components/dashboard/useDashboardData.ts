@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCurrentUser } from "@/lib/currentUser";
+import { LAST_HIVE_KEY } from "@/lib/themeScript";
 import {
   getHobbyPosts,
   getFollowingFeed,
@@ -33,7 +34,6 @@ export interface ComposerImage {
   preview: string;
 }
 
-const LAST_HIVE_KEY = "hobbyhive:lastHive";
 
 export function readLastHive(): string | null {
   try {

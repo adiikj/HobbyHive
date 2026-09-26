@@ -6,9 +6,11 @@ import MobileNav from "./MobileNav";
 import PracticeDock from "@/components/practice/PracticeDock";
 import HivePattern from "./HivePattern";
 import { useAppTheme } from "@/lib/theme";
+import { useHiveScopeReset } from "@/lib/hiveScope";
 
 function AppShell({ children }: { children: ReactNode }) {
   useAppTheme();
+  useHiveScopeReset();
   return (
     <Suspense>
       <HivePattern />

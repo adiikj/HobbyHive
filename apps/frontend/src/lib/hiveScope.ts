@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
-import { getHobbyColor, hobbyChroma } from "./hobbyTheme";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { usePathname } from "next/navigation";
+import { getHobbyColor, hobbyTintStrength } from "./hobbyTheme";
 
 export interface ScopedHive {
   name: string;
@@ -32,28 +33,38 @@ export function useCurrentHive(): ScopedHive | null {
   );
 }
 
-/** Greys and teals need more tint to read as coloured than violet or fuchsia; 1 ≈ a typical hive. */
-function tintStrength(color: string) {
-  return Math.min(1.6, Math.max(0.75, (0.16 / hobbyChroma(color)) ** 0.8));
+function clearRoot() {
+  const root = document.documentElement;
+  root.style.removeProperty("--hive");
+  root.style.removeProperty("--hive-strength");
+  delete root.dataset.hive;
 }
 
 /**
  * Marks the page as "inside" a hive: sets --hive on <html> so the canvas, dividers and `hive`-coloured
  * accents take the hobby's colour (globals.css), and shows the hive in the sidebar and background.
  * The brand frame (logo, nav, Post) stays pink.
- * Pass null outside a hive (Following, loading) — everything falls back to brand pink with no tint.
+ * Pass `undefined` while the hive is still loading (keeps any tint the boot script applied before
+ * paint, lib/themeScript) and `null` when the page is definitely not in a hive (Following) — that
+ * drops the tint so everything falls back to brand pink.
  */
 export function useHiveScope(hive: ScopedHive | null | undefined) {
   const name = hive?.name;
   const slug = hive?.slug;
+  const outside = hive === null;
 
   useEffect(() => {
+    if (outside) {
+      // Only the boot script's guess can be left here — a real scope cleans up after itself
+      if (!current) clearRoot();
+      return;
+    }
     if (!name || !slug) return;
     const root = document.documentElement;
     const color = getHobbyColor(name);
     const scoped = { name, slug };
     root.style.setProperty("--hive", color);
-    root.style.setProperty("--hive-strength", tintStrength(color).toFixed(2));
+    root.style.setProperty("--hive-strength", hobbyTintStrength(color).toFixed(2));
     root.dataset.hive = name;
     setCurrent(scoped);
 
@@ -64,11 +75,27 @@ export function useHiveScope(hive: ScopedHive | null | undefined) {
     document.head.appendChild(meta);
 
     return () => {
-      root.style.removeProperty("--hive");
-      root.style.removeProperty("--hive-strength");
-      delete root.dataset.hive;
+      clearRoot();
       if (current === scoped) setCurrent(null);
       meta.remove();
     };
-  }, [name, slug]);
+  }, [name, slug, outside]);
+}
+
+/**
+ * For the app shell: after a client-side navigation, drops a tint no page has claimed — e.g. the boot
+ * script's guess when you leave Home before its hives load. Skips the first render so the boot tint
+ * survives while the landing page is still loading its hive.
+ */
+export function useHiveScopeReset() {
+  const pathname = usePathname();
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    // Runs after the new page's effects, so a page that already knows its hive has set `current`
+    if (!current) clearRoot();
+  }, [pathname]);
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Pin, Search, Trophy, Users } from "lucide-react";
 import type { Hobby } from "@/api/api";
-import { BRAND_COLOR, getHobbyColor, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, getHobbyVoice, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import { useHiveScope } from "@/lib/hiveScope";
 import Logo from "@/components/brand/Logo";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
@@ -151,7 +151,8 @@ function Dashboard() {
     activePeople,
     discoverHobbies,
   } = useDashboardData();
-  useHiveScope(activeHobby);
+  // Following (or no hives) is outside any hive; still loading is unknown, so the boot tint stays
+  useHiveScope(activeKey === FOLLOWING || myHobbies?.length === 0 ? null : (activeHobby ?? undefined));
   const reduceMotion = useReducedMotion();
 
   const isFollowing = activeKey === FOLLOWING;
@@ -314,7 +315,8 @@ function Dashboard() {
                     </div>
                   ) : (
                     <p className="flex items-center justify-center gap-2 py-2 text-xs font-quick font-semibold text-chblack/35">
-                      <HobbyGlyph color={withAlpha(color, 0.5)} size={10} /> You&apos;re all caught up
+                      <HobbyGlyph color={withAlpha(color, 0.5)} size={10} />{" "}
+                      {activeHobby && !isFollowing ? getHobbyVoice(activeHobby.name).caughtUp : "You're all caught up"}
                     </p>
                   )}
                 </>
