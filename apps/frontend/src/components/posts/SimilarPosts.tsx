@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { getSimilarPosts, type Post } from "@/api/api";
 import { getHobbyColor } from "@/lib/hobbyTheme";
-import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import Skeleton from "@/components/ui/Skeleton";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 /** "More like this": nearest neighbours by post embedding. Renders nothing if there are none (or ML is off). */
 function SimilarPosts({ postId }: { postId: string }) {
@@ -44,7 +44,7 @@ function SimilarPosts({ postId }: { postId: string }) {
                   )}
                   <span className="min-w-0">
                     <span className="flex items-center gap-1 text-[11px] font-quick font-bold" style={{ color }}>
-                      <HobbyGlyph color={color} size={9} /> {p.hobby.name} · {p.author.name}
+                      <HobbyIcon name={p.hobby.name} size={12} style={{ color }} /> {p.hobby.name} · {p.author.name}
                     </span>
                     <span className="mt-0.5 line-clamp-2 text-sm text-chblack/80">{p.content}</span>
                   </span>

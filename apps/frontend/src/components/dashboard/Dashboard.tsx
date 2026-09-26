@@ -17,6 +17,7 @@ import Composer from "./Composer";
 import ChallengeBanner from "@/components/challenges/ChallengeBanner";
 import JourneyCard from "@/components/journey/JourneyCard";
 import { useDashboardData, FOLLOWING } from "./useDashboardData";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 function formatCount(n: number, noun: string) {
   return `${n.toLocaleString()} ${noun}${n === 1 ? "" : "s"}`;
@@ -67,7 +68,7 @@ function HiveHeader({ hobby, stats }: { hobby: Hobby; stats: Hobby | null }) {
             Your hive
           </p>
           <h1 className="mt-1 flex items-center gap-2.5 font-bnt text-5xl sm:text-6xl leading-[0.9] text-chblack">
-            <span className="text-4xl sm:text-5xl">{hobby.icon}</span>
+            <HobbyIcon name={hobby.name} className="h-10 w-10 sm:h-12 sm:w-12" style={{ color }} />
             <span className="truncate">{hobby.name.toUpperCase()}</span>
           </h1>
           <p className="mt-2 text-sm text-chblack/60">

@@ -27,6 +27,7 @@ import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { PageContainer, Card, SectionTitle, HexIcon, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import ProfilePosts from "./ProfilePosts";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface ProfileViewProps {
   username: string;
@@ -422,7 +423,7 @@ function ProfileView({ username }: ProfileViewProps) {
                     className="flex items-center gap-3 rounded-2xl border p-3 transition-transform hover:-translate-y-0.5"
                     style={{ backgroundColor: withAlpha(color, 0.08), borderColor: withAlpha(color, 0.18) }}
                   >
-                    <HexIcon fill="rgb(var(--c-surface))" icon={hobby.icon} size={40} />
+                    <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={40} />
                     <span className="truncate font-semibold text-chblack">{hobby.name}</span>
                   </Link>
                 );

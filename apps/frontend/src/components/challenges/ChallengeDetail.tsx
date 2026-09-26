@@ -11,6 +11,7 @@ import PostCard from "@/components/dashboard/PostCard";
 import Skeleton from "@/components/ui/Skeleton";
 import { PageContainer, secondaryButtonClass } from "@/components/ui/Page";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 type Sort = "top" | "new";
 
@@ -91,7 +92,7 @@ function ChallengeDetail({ challengeId }: { challengeId: string }) {
           <Trophy size={160} className="pointer-events-none absolute -bottom-8 -right-6 rotate-12" style={{ color: withAlpha(color, 0.12) }} />
           <div className="relative">
             <Link href={`/hobbies/${challenge.hobby.slug}?tab=challenges`} className="text-xs font-quick font-bold uppercase tracking-[0.14em] hover:underline" style={{ color }}>
-              {challenge.hobby.icon} {challenge.hobby.name} challenge
+              <HobbyIcon name={challenge.hobby.name} className="mr-1 -translate-y-px" /> {challenge.hobby.name} challenge
             </Link>
             <h1 className="mt-1 font-bnt text-5xl leading-[0.9] text-chblack sm:text-6xl">{challenge.title.toUpperCase()}</h1>
             <p className="mt-3 max-w-md text-[15px] text-chblack/75">{challenge.prompt}</p>

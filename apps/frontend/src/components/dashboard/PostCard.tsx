@@ -6,13 +6,13 @@ import { motion } from "framer-motion";
 import { Heart, MessageCircle, Send, Check, Pin, Trophy, TrendingUp } from "lucide-react";
 import { likePost, unlikePost, type Post } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
-import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import MentionText from "@/components/posts/MentionText";
 import PhotoCarousel from "@/components/posts/PhotoCarousel";
 import CommentThread from "@/components/posts/CommentThread";
 import PostMenu from "@/components/posts/PostMenu";
 import SaveButton from "./SaveButton";
 import { timeAgo } from "@/lib/time";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface PostCardProps {
   post: Post;
@@ -116,7 +116,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
             )}
             {showHobby && (
               <Link href={`/hobbies/${post.hobby.slug}`} style={{ color: hobbyColor }} className="inline-flex items-center gap-1 text-[11px] font-quick font-bold hover:underline">
-                <HobbyGlyph color={hobbyColor} size={10} /> {post.hobby.name}
+                <HobbyIcon name={post.hobby.name} size={13} /> {post.hobby.name}
               </Link>
             )}
             {post.challenge && (

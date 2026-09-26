@@ -8,6 +8,7 @@ import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import { roundedHexagonPath } from "@/lib/hexagon";
 import Skeleton from "@/components/ui/Skeleton";
 import { FOLLOWING } from "./useDashboardData";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 const CELL = roundedHexagonPath(50, 50, 37, 10);
 const RING = roundedHexagonPath(50, 50, 47, 13);
@@ -74,7 +75,7 @@ function HiveSwitcher({ myHobbies, activeKey, onSelect }: HiveSwitcherProps) {
             className={`${cellButtonClass} ${isActive ? "text-chblack" : "text-chblack/50 hover:text-chblack"}`}
           >
             <HiveCell label={hobby.name} fill={isActive ? color : withAlpha(color, 0.16)} ring={isActive ? color : undefined}>
-              {hobby.icon}
+              <HobbyIcon name={hobby.name} style={{ color: isActive ? "#fff" : color }} />
             </HiveCell>
           </button>
         );

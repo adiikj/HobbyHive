@@ -11,6 +11,7 @@ import PostCard from "@/components/dashboard/PostCard";
 import Skeleton from "@/components/ui/Skeleton";
 import { PageContainer, inputClass, secondaryButtonClass } from "@/components/ui/Page";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -102,7 +103,7 @@ function ProgressLogView({ logId }: { logId: string }) {
         <TrendingUp size={150} className="pointer-events-none absolute -bottom-6 -right-4" style={{ color: withAlpha(color, 0.1) }} />
         <div className="relative">
           <p className="text-xs font-quick font-bold uppercase tracking-[0.14em]" style={{ color }}>
-            Progress log · {log.hobby.icon} {log.hobby.name}
+            Progress log · <HobbyIcon name={log.hobby.name} className="-translate-y-px" /> {log.hobby.name}
           </p>
           {editTitle !== null ? (
             <form onSubmit={saveTitle} className="mt-2 flex items-center gap-2">

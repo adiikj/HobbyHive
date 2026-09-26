@@ -14,6 +14,7 @@ import PostModal from "@/components/explore/PostModal";
 import { secondaryButtonClass } from "@/components/ui/Page";
 import { PhotoGridSkeleton, PostListSkeleton } from "@/components/ui/Skeletons";
 import JourneyTimeline from "@/components/journey/JourneyTimeline";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 type ProfileTab = "posts" | "photos" | "journey";
 
@@ -141,7 +142,7 @@ function ProfilePosts({ username, name, isOwnProfile }: { username: string; name
                           <TrendingUp size={48} className="absolute inset-0 m-auto" style={{ color: withAlpha(color, 0.5) }} />
                         )}
                         <span className="absolute left-2.5 top-2.5 rounded-full bg-black/40 px-2 py-0.5 text-[11px] font-quick font-bold text-white backdrop-blur">
-                          {log.hobby.icon} {log.hobby.name}
+                          <HobbyIcon name={log.hobby.name} className="mr-0.5 -translate-y-px" /> {log.hobby.name}
                         </span>
                       </div>
                       <div className="p-3.5">

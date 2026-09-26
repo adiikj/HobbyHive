@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { suggestHive, type HiveSuggestion } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 const DEBOUNCE_MS = 700;
 const MIN_CHARS = 20;
@@ -63,7 +64,7 @@ function HiveHint({ text, hobbyId, joinedSlugs, onSwitchHive }: HiveHintProps) {
           <>
             This sounds more like{" "}
             <span className="font-bold text-chblack">
-              {other.icon} {other.name}
+              <HobbyIcon name={other.name} className="-translate-y-px" style={{ color }} /> {other.name}
             </span>{" "}
             ({Math.round(other.confidence * 100)}% sure). Hives stay on-topic, so it may reach more of the right people there.{" "}
             {canSwitch ? (

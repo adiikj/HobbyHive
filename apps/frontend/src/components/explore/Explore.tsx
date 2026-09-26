@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, ArrowRight, Check, Flame, Images, Newspaper, Hexagon, Sparkles } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
-import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import PostCard from "@/components/dashboard/PostCard";
 import { PageContainer, PageHeader, Card, SectionTitle, HexIcon, secondaryButtonClass } from "@/components/ui/Page";
 import { PhotoGridSkeleton, PostListSkeleton } from "@/components/ui/Skeletons";
@@ -25,6 +24,7 @@ import {
 } from "@/api/api";
 import PhotoGrid from "./PhotoGrid";
 import PostModal from "./PostModal";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 type ExploreTab = "photos" | "posts" | "hives";
 
@@ -230,7 +230,7 @@ function Explore() {
                         href={`/hobbies/${h.slug}`}
                         className="flex items-center gap-2 rounded-full border border-line bg-surface py-1.5 pl-1.5 pr-4 text-sm font-quick font-bold text-chblack transition-colors hover:bg-canvas"
                       >
-                        <HexIcon fill={withAlpha(getHobbyColor(h.name), 0.16)} icon={h.icon} size={30} />
+                        <HexIcon fill={withAlpha(getHobbyColor(h.name), 0.16)} icon={<HobbyIcon name={h.name} style={{ color: getHobbyColor(h.name) }} />} size={30} />
                         {h.name}
                       </Link>
                     ))}
@@ -323,7 +323,7 @@ function Explore() {
                         <span className="absolute right-3 top-2 font-bnt text-3xl leading-none" style={{ color: withAlpha(color, 0.45) }}>
                           #{i + 1}
                         </span>
-                        <HexIcon fill="rgb(var(--c-surface))" icon={h.icon} size={44} />
+                        <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={h.name} style={{ color }} />} size={44} />
                         <span className="mt-4 truncate font-bnt text-2xl leading-none text-chblack">{h.name.toUpperCase()}</span>
                         <span className="mt-1 text-xs text-chblack/55">
                           {h.postCount} {h.postCount === 1 ? "post" : "posts"} this week
@@ -358,7 +358,7 @@ function Explore() {
                   ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-9 w-24 shrink-0 rounded-full bg-line" />)
                   : hobbies.map((h) => {
                       const color = getHobbyColor(h.name);
-                      return filterChip(h.slug, h.name, <HobbyGlyph color={hobbyFilter === h.slug ? "rgb(var(--c-surface))" : color} size={11} />, color);
+                      return filterChip(h.slug, h.name, <HobbyIcon name={h.name} size={15} style={{ color: hobbyFilter === h.slug ? "#fff" : color }} />, color);
                     })}
               </div>
             )}
@@ -378,7 +378,7 @@ function Explore() {
                     return (
                       <Card key={h.id} as="div" className="flex items-center gap-3 p-3.5 transition-shadow hover:shadow-sm">
                         <Link href={`/hobbies/${h.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
-                          <HexIcon fill={withAlpha(color, 0.16)} icon={h.icon} size={48} />
+                          <HexIcon fill={withAlpha(color, 0.16)} icon={<HobbyIcon name={h.name} style={{ color }} />} size={48} />
                           <span className="min-w-0">
                             <span className="block truncate font-semibold text-chblack">{h.name}</span>
                             <span className="block truncate text-xs text-chblack/50">

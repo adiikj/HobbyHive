@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 import type { Challenge, Hobby, ProgressLogSummary } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
-import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { MAX_POST_IMAGES, type ComposerImage } from "./useDashboardData";
 import HiveHint from "./HiveHint";
 import { useMentions } from "@/components/posts/MentionPicker";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface ComposerProps {
   hobby: Hobby;
@@ -412,7 +412,7 @@ function Composer({
             <p className="text-xs text-red-600 truncate">{error}</p>
           ) : (
             <span className="flex items-center gap-1.5 text-xs font-quick font-semibold text-chblack/50 truncate">
-              <HobbyGlyph color={color} size={11} /> Posting to {hobby.name}
+              <HobbyIcon name={hobby.name} size={14} style={{ color }} /> Posting to {hobby.name}
             </span>
           )}
         </div>

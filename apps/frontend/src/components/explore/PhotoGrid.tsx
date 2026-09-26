@@ -3,7 +3,7 @@
 import { Heart, MessageCircle } from "lucide-react";
 import type { Post } from "@/api/api";
 import { getHobbyColor } from "@/lib/hobbyTheme";
-import HobbyGlyph from "@/components/brand/HobbyGlyph";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface PhotoGridProps {
   posts: Post[];
@@ -36,7 +36,7 @@ function PhotoGrid({ posts, onOpen }: PhotoGridProps) {
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
             <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/35 px-2 py-0.5 text-[10px] font-quick font-bold text-white backdrop-blur">
-              <HobbyGlyph color={color} size={9} /> {post.hobby.name}
+              <HobbyIcon name={post.hobby.name} size={12} style={{ color }} /> {post.hobby.name}
             </span>
             <span className="absolute inset-0 flex items-center justify-center gap-4 bg-black/40 text-sm font-bold text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
               <span className="flex items-center gap-1.5">

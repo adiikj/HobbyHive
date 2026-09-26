@@ -8,9 +8,9 @@ import { getPost, type Post } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import PostCard from "@/components/dashboard/PostCard";
 import SimilarPosts from "./SimilarPosts";
-import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { PageContainer, secondaryButtonClass } from "@/components/ui/Page";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 /** A single post with its comment thread open — where notifications and shared links land. */
 function PostDetail({ postId }: { postId: string }) {
@@ -47,7 +47,7 @@ function PostDetail({ postId }: { postId: string }) {
             className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-quick font-bold"
             style={{ backgroundColor: withAlpha(color, 0.12), color }}
           >
-            <HobbyGlyph color={color} size={10} /> {post.hobby.name} hive <ArrowUpRight size={13} />
+            <HobbyIcon name={post.hobby.name} size={14} /> {post.hobby.name} hive <ArrowUpRight size={13} />
           </Link>
         )}
       </div>

@@ -19,6 +19,7 @@ import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import Skeleton from "@/components/ui/Skeleton";
 import SuggestedUserRow from "./SuggestedUserRow";
 import BeaAvatar from "@/components/bea/BeaAvatar";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 const ROOM_ACTIVE_WINDOW_MS = 15 * 60 * 1000;
 
@@ -293,7 +294,7 @@ function HiveRail({ hobby, people, discover, showSearch = true }: HiveRailProps)
                   >
                     <span className="relative flex w-9 h-9 shrink-0 items-center justify-center">
                       <HobbyGlyph color={withAlpha(hColor, 0.16)} size={36} className="absolute inset-0" />
-                      <span className="relative text-base">{h.icon}</span>
+                      <HobbyIcon name={h.name} size={18} className="relative" style={{ color: hColor }} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-chblack">{h.name}</span>

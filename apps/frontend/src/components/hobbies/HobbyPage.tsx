@@ -25,6 +25,7 @@ import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
 import FlaggedQueue from "./FlaggedQueue";
 import AskBea from "@/components/bea/AskBea";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 
 type HobbyTab = "posts" | "ask" | "room" | "events" | "challenges" | "review";
 
@@ -183,7 +184,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
 
         <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-end gap-4 min-w-0">
-            <HexIcon fill="rgb(var(--c-surface))" icon={hobby.icon} size={76} className="drop-shadow-sm" />
+            <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={76} className="drop-shadow-sm" />
             <div className="min-w-0">
               <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
                 Hive

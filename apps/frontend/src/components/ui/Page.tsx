@@ -65,7 +65,7 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
 
 const HEX = roundedHexagonPath(50, 50, 44, 12);
 
-/** A hobby's emoji on a hexagon cell — the brand shape, tinted with the hobby colour. */
+/** A hobby's icon on a hexagon cell — the brand shape, tinted with the hobby colour. */
 export function HexIcon({
   fill,
   icon,
@@ -82,7 +82,7 @@ export function HexIcon({
       <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
         <path d={HEX} style={{ fill }} />
       </svg>
-      <span className="relative leading-none" style={{ fontSize: size * 0.45 }}>
+      <span className="relative leading-none" style={{ fontSize: size * 0.52 }}>
         {icon}
       </span>
     </span>

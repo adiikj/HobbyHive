@@ -6,6 +6,7 @@ import { getHobbies, setMyHobbies, type Hobby } from "@/api/api";
 import { Check } from "lucide-react";
 import Skeleton from "@/components/ui/Skeleton";
 import Logo from "@/components/brand/Logo";
+import HobbyIcon from "@/components/brand/HobbyIcon";
 import { HexIcon, primaryButtonClass } from "@/components/ui/Page";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 
@@ -98,7 +99,7 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
                 <Check size={13} strokeWidth={3} />
               </span>
             )}
-            <HexIcon fill={isSelected ? "rgb(var(--c-surface))" : withAlpha(color, 0.14)} icon={hobby.icon ?? "✨"} size={56} />
+            <HexIcon fill={isSelected ? "rgb(var(--c-surface))" : withAlpha(color, 0.14)} icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={56} />
             <span>{hobby.name}</span>
           </motion.button>
         );
