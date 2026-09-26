@@ -40,7 +40,7 @@ function PhotoCarousel({ images, alt }: { images: string[]; alt: string }) {
   if (images.length === 0) return null;
 
   const arrowClass =
-    "absolute top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-surface/90 text-chblack shadow-md ring-1 ring-line transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand";
+    "absolute top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full bg-surface/90 text-chblack shadow-md ring-1 ring-line transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive";
 
   return (
     <>

@@ -13,7 +13,7 @@ import {
   type HobbyRoomMessage,
   type TrendingHobby,
 } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { timeAgo } from "@/lib/time";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import Skeleton from "@/components/ui/Skeleton";
@@ -64,7 +64,7 @@ function RailSearch() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search people, hobbies, posts"
         aria-label="Search"
-        className="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-sm text-chblack placeholder:text-chblack/35 focus:outline-none focus:ring-2 focus:ring-brand"
+        className="w-full rounded-full border border-line bg-surface py-2.5 pl-10 pr-4 text-sm text-chblack placeholder:text-chblack/35 focus:outline-none focus:ring-2 focus:ring-hive"
       />
     </form>
   );
@@ -150,7 +150,7 @@ function UpcomingEvents({ hobby, color }: { hobby: Hobby; color: string }) {
           href={eventsHref}
           className="group flex items-center gap-3 rounded-xl bg-canvas p-3 text-sm text-chblack/60 hover:text-chblack"
         >
-          <CalendarDays size={18} className="shrink-0" style={{ color }} />
+          <CalendarDays size={18} className="shrink-0" style={{ color: getHobbyText(color) }} />
           <span className="flex-1">No events planned yet. Start one?</span>
           <ArrowRight size={16} className="shrink-0 transition-transform group-hover:translate-x-0.5" />
         </Link>
@@ -216,10 +216,10 @@ function LiveRoomCard({ hobby, color }: { hobby: Hobby; color: string }) {
       title="LIVE ROOM"
       action={
         isActive ? (
-          <span className="flex items-center gap-1.5 text-xs font-quick font-bold" style={{ color }}>
+          <span className="flex items-center gap-1.5 text-xs font-quick font-bold" style={{ color: getHobbyText(color) }}>
             <span className="relative flex w-2 h-2">
-              <span className="absolute inset-0 rounded-full animate-ping opacity-60" style={{ backgroundColor: color }} />
-              <span className="relative w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+              <span className="absolute inset-0 rounded-full animate-ping opacity-60" style={{ backgroundColor: color, color: getHobbyInk(color) }} />
+              <span className="relative w-2 h-2 rounded-full" style={{ backgroundColor: color, color: getHobbyInk(color) }} />
             </span>
             Active now
           </span>
@@ -243,9 +243,9 @@ function LiveRoomCard({ hobby, color }: { hobby: Hobby; color: string }) {
       )}
       <Link
         href={`/hobbies/${hobby.slug}?tab=room`}
-        className="mt-3 flex items-center justify-center gap-2 rounded-full border border-line py-2 text-sm font-quick font-bold text-chblack transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className="mt-3 flex items-center justify-center gap-2 rounded-full border border-line py-2 text-sm font-quick font-bold text-chblack transition-colors hover:bg-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive"
       >
-        <Radio size={16} style={{ color }} /> Join the room
+        <Radio size={16} style={{ color: getHobbyText(color) }} /> Join the room
       </Link>
     </RailCard>
   );
@@ -261,7 +261,7 @@ interface HiveRailProps {
 
 /** Context for the hive that's open: what's coming up, who's around, and where else to go. */
 function HiveRail({ hobby, people, discover, showSearch = true }: HiveRailProps) {
-  const color = hobby ? getHobbyColor(hobby.name) : "#DB2777";
+  const color = hobby ? getHobbyColor(hobby.name) : BRAND_COLOR;
 
   return (
     <div className="space-y-4">

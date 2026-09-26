@@ -1,7 +1,7 @@
 "use client";
 
 import { Play, Timer } from "lucide-react";
-import { getHobbyColor } from "@/lib/hobbyTheme";
+import { getHobbyColor, getHobbyInk } from "@/lib/hobbyTheme";
 import { startPractice, usePracticeTimer } from "@/lib/practiceTimer";
 
 interface StartPracticeButtonProps {
@@ -29,8 +29,8 @@ function StartPracticeButton({ hobby, className = "" }: StartPracticeButtonProps
       type="button"
       data-tour="start-practice"
       onClick={() => startPractice({ id: hobby.id, name: hobby.name, slug: hobby.slug })}
-      className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-quick font-bold text-white shadow-md transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${className}`}
-      style={{ backgroundColor: color }}
+      className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-quick font-bold text-white shadow-md transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive focus-visible:ring-offset-2 ${className}`}
+      style={{ backgroundColor: color, color: getHobbyInk(color) }}
     >
       <Play size={13} className="fill-current" /> Start practice
     </button>

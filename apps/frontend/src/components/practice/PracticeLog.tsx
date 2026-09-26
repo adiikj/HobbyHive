@@ -8,7 +8,8 @@ import { deletePractice, getMyHobbies, getMyPractice, sharePractice, type Hobby,
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card, PageContainer, PageHeader, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
+import { useHiveScope } from "@/lib/hiveScope";
 import { PRACTICE_LOGGED_EVENT } from "@/lib/practiceTimer";
 import { formatMinutes } from "@/lib/time";
 import LogPracticeSheet from "./LogPracticeSheet";
@@ -79,7 +80,7 @@ function SessionRow({ session, onChange, onDelete }: { session: PracticeSession;
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span className="font-semibold text-chblack">{session.focus}</span>
-            <span className="text-sm font-semibold" style={{ color }}>
+            <span className="text-sm font-semibold" style={{ color: getHobbyText(color) }}>
               {formatMinutes(session.durationMin)}
             </span>
             {session.feel && <span className="rounded-full bg-canvas px-2 py-0.5 text-[11px] font-semibold text-chblack/60">{FEEL_LABEL[session.feel]}</span>}
@@ -105,7 +106,7 @@ function SessionRow({ session, onChange, onDelete }: { session: PracticeSession;
                 autoFocus
               />
               <div className="flex gap-2">
-                <button type="button" onClick={share} disabled={busy} className={`${primaryButtonClass} py-1.5`} style={{ backgroundColor: color }}>
+                <button type="button" onClick={share} disabled={busy} className={`${primaryButtonClass} py-1.5`} style={{ backgroundColor: color, color: getHobbyInk(color) }}>
                   Share to {session.hobby.name}
                 </button>
                 <button type="button" onClick={() => setSharing(false)} disabled={busy} className={`${secondaryButtonClass} py-1.5`}>
@@ -187,7 +188,8 @@ function PracticeLog() {
   }, [load]);
 
   const activeHobby = hobbies?.find((h) => h.slug === hobbySlug) ?? null;
-  const color = activeHobby ? getHobbyColor(activeHobby.name) : "#DB2777";
+  useHiveScope(activeHobby);
+  const color = activeHobby ? getHobbyColor(activeHobby.name) : BRAND_COLOR;
 
   const weeks = useMemo(() => {
     const groups: { start: number; minutes: number; sessions: PracticeSession[] }[] = [];
@@ -218,7 +220,7 @@ function PracticeLog() {
         onClick={() => setFilter(slug)}
         aria-pressed={on}
         className="flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-quick font-bold transition-colors"
-        style={on ? { backgroundColor: c, borderColor: c, color: "#fff" } : { borderColor: "rgb(var(--c-line))", color: "rgb(var(--c-ink) / 0.65)" }}
+        style={on ? { backgroundColor: c, borderColor: c, color: getHobbyInk(c) } : { borderColor: "var(--line-color)", color: "rgb(var(--c-ink) / 0.65)" }}
       >
         {slug && <HobbyIcon name={label} size={15} style={{ color: on ? "#fff" : c }} />}
         {label}
@@ -259,7 +261,7 @@ function PracticeLog() {
           ["Logged here", total ? formatMinutes(total) : "0"],
         ].map(([label, value]) => (
           <Card key={label} as="div" className="px-3 py-3 text-center">
-            <dd className="font-bnt text-3xl leading-none" style={{ color }}>
+            <dd className="font-bnt text-3xl leading-none" style={{ color: getHobbyText(color) }}>
               {sessions ? value : "–"}
             </dd>
             <dt className="mt-1 truncate text-[10px] font-quick font-bold uppercase tracking-wider text-chblack/45">{label}</dt>

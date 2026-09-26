@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Pencil, Trash2, TrendingUp, X } from "lucide-react";
 import { getProgressLog, updateProgressLog, deleteProgressLog, type ProgressLogDetail } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
+import { useHiveScope } from "@/lib/hiveScope";
 import { useCurrentUser } from "@/lib/currentUser";
 import PostCard from "@/components/dashboard/PostCard";
 import Skeleton from "@/components/ui/Skeleton";
@@ -24,6 +25,7 @@ function ProgressLogView({ logId }: { logId: string }) {
   const router = useRouter();
   const { user: me } = useCurrentUser();
   const [log, setLog] = useState<ProgressLogDetail | null>(null);
+  useHiveScope(log?.hobby);
   const [error, setError] = useState("");
   const [editTitle, setEditTitle] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
@@ -102,7 +104,7 @@ function ProgressLogView({ logId }: { logId: string }) {
       >
         <TrendingUp size={150} className="pointer-events-none absolute -bottom-6 -right-4" style={{ color: withAlpha(color, 0.1) }} />
         <div className="relative">
-          <p className="text-xs font-quick font-bold uppercase tracking-[0.14em]" style={{ color }}>
+          <p className="text-xs font-quick font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
             Progress log · <HobbyIcon name={log.hobby.name} className="-translate-y-px" /> {log.hobby.name}
           </p>
           {editTitle !== null ? (
@@ -184,7 +186,7 @@ function ProgressLogView({ logId }: { logId: string }) {
               <li key={entry.id} className="relative pl-9">
                 <span
                   className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white ring-4 ring-canvas"
-                  style={{ backgroundColor: color }}
+                  style={{ backgroundColor: color, color: getHobbyInk(color) }}
                 >
                   {i + 1}
                 </span>

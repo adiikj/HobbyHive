@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, MessageSquareHeart, Send, Check, Pin, Trophy, TrendingUp } from "lucide-react";
 import { likePost, unlikePost, type Post } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import MentionText from "@/components/posts/MentionText";
 import PhotoCarousel from "@/components/posts/PhotoCarousel";
 import CommentThread from "@/components/posts/CommentThread";
@@ -67,7 +67,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
     <article className="flex gap-3 px-4 py-4 sm:px-5">
       <Link
         href={`/profile/${post.author.username}`}
-        className="shrink-0 self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className="shrink-0 self-start rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={post.author.avatarUrl || "/images/5.png"} alt={post.author.name} className="w-10 h-10 rounded-full object-cover" />
@@ -116,7 +116,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
               </span>
             )}
             {showHobby && (
-              <Link href={`/hobbies/${post.hobby.slug}`} style={{ color: hobbyColor }} className="inline-flex items-center gap-1 text-[11px] font-quick font-bold hover:underline">
+              <Link href={`/hobbies/${post.hobby.slug}`} style={{ color: getHobbyText(hobbyColor) }} className="inline-flex items-center gap-1 text-[11px] font-quick font-bold hover:underline">
                 <HobbyIcon name={post.hobby.name} size={13} /> {post.hobby.name}
               </Link>
             )}
@@ -163,7 +163,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
             onClick={toggleLike}
             aria-pressed={post.isLiked}
             aria-label={post.isLiked ? "Unlike" : "Like"}
-            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive ${
               post.isLiked
                 ? "text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
                 : "hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500"
@@ -184,7 +184,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
             onClick={() => setShowComments((s) => !s)}
             aria-expanded={showComments}
             aria-label="Comments"
-            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors hover:bg-sky-50 dark:hover:bg-sky-500/10 hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors hover:bg-sky-50 dark:hover:bg-sky-500/10 hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive ${
               showComments ? "text-sky-600" : ""
             }`}
           >
@@ -193,7 +193,7 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
           </button>
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive"
             aria-label="Copy link to post"
           >
             {isCopied ? <Check size={18} className="text-emerald-600" /> : <Send size={18} />}

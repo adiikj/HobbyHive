@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Clock, Flame, Sparkles, Trophy, Users } from "lucide-react";
 import { getChallenge, getChallengeEntries, type Challenge, type Post } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
+import { useHiveScope } from "@/lib/hiveScope";
 import { timeLeft } from "@/lib/time";
 import PostCard from "@/components/dashboard/PostCard";
 import Skeleton from "@/components/ui/Skeleton";
@@ -19,6 +20,7 @@ type Sort = "top" | "new";
 function ChallengeDetail({ challengeId }: { challengeId: string }) {
   const router = useRouter();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
+  useHiveScope(challenge?.hobby);
   const [error, setError] = useState("");
   const [sort, setSort] = useState<Sort>("top");
   const [entries, setEntries] = useState<Post[] | null>(null);
@@ -71,7 +73,7 @@ function ChallengeDetail({ challengeId }: { challengeId: string }) {
     );
   }
 
-  const color = challenge ? getHobbyColor(challenge.hobby.name) : "#DB2777";
+  const color = challenge ? getHobbyColor(challenge.hobby.name) : BRAND_COLOR;
 
   return (
     <PageContainer width="narrow">
@@ -91,7 +93,7 @@ function ChallengeDetail({ challengeId }: { challengeId: string }) {
         >
           <Trophy size={160} className="pointer-events-none absolute -bottom-8 -right-6 rotate-12" style={{ color: withAlpha(color, 0.12) }} />
           <div className="relative">
-            <Link href={`/hobbies/${challenge.hobby.slug}?tab=challenges`} className="text-xs font-quick font-bold uppercase tracking-[0.14em] hover:underline" style={{ color }}>
+            <Link href={`/hobbies/${challenge.hobby.slug}?tab=challenges`} className="text-xs font-quick font-bold uppercase tracking-[0.14em] hover:underline" style={{ color: getHobbyText(color) }}>
               <HobbyIcon name={challenge.hobby.name} className="mr-1 -translate-y-px" /> {challenge.hobby.name} challenge
             </Link>
             <h1 className="mt-1 font-bnt text-5xl leading-[0.9] text-chblack sm:text-6xl">{challenge.title.toUpperCase()}</h1>
@@ -113,7 +115,7 @@ function ChallengeDetail({ challengeId }: { challengeId: string }) {
                 <Link
                   href={`/dashboard?hive=${challenge.hobby.slug}&challenge=${challenge.id}`}
                   className="ml-auto rounded-full px-5 py-2 text-sm font-quick font-bold text-white hover:opacity-90"
-                  style={{ backgroundColor: color }}
+                  style={{ backgroundColor: color, color: getHobbyInk(color) }}
                 >
                   Enter the challenge
                 </Link>

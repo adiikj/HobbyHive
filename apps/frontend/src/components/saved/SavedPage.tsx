@@ -17,6 +17,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import { PageContainer, PageHeader, inputClass, secondaryButtonClass } from "@/components/ui/Page";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
 import { roundedHexagonPath } from "@/lib/hexagon";
+import { BRAND_COLOR, withAlpha } from "@/lib/hobbyTheme";
 
 const HEX = roundedHexagonPath(50, 50, 40, 11);
 
@@ -28,7 +29,7 @@ function CoverTile({ imageUrl, isActive }: { imageUrl: string | null; isActive: 
         <img src={imageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
       ) : (
         <svg viewBox="0 0 100 100" className="absolute inset-0 m-auto h-3/5 w-3/5" aria-hidden="true">
-          <path d={HEX} style={{ fill: isActive ? "#DB277733" : "rgb(var(--c-line))" }} />
+          <path d={HEX} style={{ fill: isActive ? withAlpha(BRAND_COLOR, 0.2) : "var(--line-color)" }} />
         </svg>
       )}
     </span>

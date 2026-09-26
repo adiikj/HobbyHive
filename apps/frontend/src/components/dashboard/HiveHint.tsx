@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { suggestHive, type HiveSuggestion } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
 const DEBOUNCE_MS = 700;
@@ -58,21 +58,21 @@ function HiveHint({ text, hobbyId, joinedSlugs, onSwitchHive }: HiveHintProps) {
       className="mx-4 mb-2 flex items-start gap-2 rounded-xl border px-3 py-2 text-xs"
       style={{ borderColor: withAlpha(color, 0.3), backgroundColor: withAlpha(color, 0.08) }}
     >
-      <Sparkles size={14} className="mt-0.5 shrink-0" style={{ color }} />
+      <Sparkles size={14} className="mt-0.5 shrink-0" style={{ color: getHobbyText(color) }} />
       <p className="flex-1 leading-relaxed text-chblack/75">
         {other ? (
           <>
             This sounds more like{" "}
             <span className="font-bold text-chblack">
-              <HobbyIcon name={other.name} className="-translate-y-px" style={{ color }} /> {other.name}
+              <HobbyIcon name={other.name} className="-translate-y-px" style={{ color: getHobbyText(color) }} /> {other.name}
             </span>{" "}
             ({Math.round(other.confidence * 100)}% sure). Hives stay on-topic, so it may reach more of the right people there.{" "}
             {canSwitch ? (
-              <button type="button" onClick={() => onSwitchHive(other.slug)} className="font-bold underline" style={{ color }}>
+              <button type="button" onClick={() => onSwitchHive(other.slug)} className="font-bold underline" style={{ color: getHobbyText(color) }}>
                 Post in {other.name} instead
               </button>
             ) : (
-              <Link href={`/hobbies/${other.slug}`} className="font-bold underline" style={{ color }}>
+              <Link href={`/hobbies/${other.slug}`} className="font-bold underline" style={{ color: getHobbyText(color) }}>
                 Check out the {other.name} hive
               </Link>
             )}

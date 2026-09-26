@@ -6,7 +6,7 @@ import { CalendarDays, Clock, MapPin, Plus, Users } from "lucide-react";
 import { getHobbyEvents, createEvent, rsvpToEvent, cancelRsvp, type HobbyEvent } from "@/api/api";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 
 interface HobbyEventsProps {
   slug: string;
@@ -166,7 +166,7 @@ function HobbyEvents({ slug, color }: HobbyEventsProps) {
         </div>
       ) : events.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
-          <CalendarDays size={28} className="mx-auto" style={{ color }} />
+          <CalendarDays size={28} className="mx-auto" style={{ color: getHobbyText(color) }} />
           <p className="mt-2 font-bnt text-3xl text-chblack">NO EVENTS YET</p>
           <p className="mt-1 text-sm text-chblack/55">Jam session, meetup, watch party: be the first to organise one.</p>
         </div>
@@ -209,7 +209,7 @@ function HobbyEvents({ slug, color }: HobbyEventsProps) {
                         className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-quick font-bold transition-colors disabled:opacity-50 ${
                           event.isAttending ? "border border-line text-chblack hover:bg-canvas" : "text-white hover:opacity-90"
                         }`}
-                        style={event.isAttending ? undefined : { backgroundColor: color }}
+                        style={event.isAttending ? undefined : { backgroundColor: color, color: getHobbyInk(color) }}
                       >
                         {event.isAttending ? "Going ✓" : "RSVP"}
                       </button>

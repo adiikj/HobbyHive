@@ -5,7 +5,7 @@ import { Check, CircleDot, Users } from "lucide-react";
 import { getHobbySkills, type SkillNode } from "@/api/api";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card, secondaryButtonClass } from "@/components/ui/Page";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { PRACTICE_LOGGED_EVENT } from "@/lib/practiceTimer";
 import { formatMinutes } from "@/lib/time";
 import SkillPanel from "./SkillPanel";
@@ -32,13 +32,13 @@ function SkillCard({ skill, color, onOpen, cardRef }: { skill: SkillNode; color:
       ref={cardRef}
       type="button"
       onClick={onOpen}
-      className="group relative w-[9.5rem] shrink-0 rounded-2xl border-2 p-3 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:w-40"
+      className="group relative w-[9.5rem] shrink-0 rounded-2xl border-2 p-3 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive sm:w-40"
       style={
         done
-          ? { backgroundColor: color, borderColor: color, color: "#fff" }
+          ? { backgroundColor: color, borderColor: color, color: getHobbyInk(color) }
           : learning
             ? { backgroundColor: withAlpha(color, 0.08), borderColor: color }
-            : { backgroundColor: "rgb(var(--c-surface))", borderColor: "rgb(var(--c-line))" }
+            : { backgroundColor: "rgb(var(--c-surface))", borderColor: "var(--line-color)" }
       }
     >
       <span className="flex items-start justify-between gap-1.5">
@@ -46,7 +46,7 @@ function SkillCard({ skill, color, onOpen, cardRef }: { skill: SkillNode; color:
         {done ? (
           <Check size={16} strokeWidth={3} className="mt-0.5 shrink-0" />
         ) : learning ? (
-          <CircleDot size={15} className="mt-0.5 shrink-0" style={{ color }} />
+          <CircleDot size={15} className="mt-0.5 shrink-0" style={{ color: getHobbyText(color) }} />
         ) : null}
       </span>
       <span className={`mt-1.5 block text-[11px] ${done ? "text-white/80" : "text-chblack/50"}`}>
@@ -163,7 +163,7 @@ function SkillTree({
   if (skills.length === 0) {
     return (
       <Card className="p-10 text-center">
-        <p className="font-bnt text-3xl" style={{ color }}>
+        <p className="font-bnt text-3xl" style={{ color: getHobbyText(color) }}>
           NO SKILL MAP YET
         </p>
         <p className="mt-1 text-sm text-chblack/60">This hive&apos;s skills are still being mapped out.</p>
@@ -221,7 +221,7 @@ function SkillTree({
                     key={l.key}
                     d={`M ${l.x1} ${l.y1} C ${l.x1} ${mid}, ${l.x2} ${mid}, ${l.x2} ${l.y2}`}
                     fill="none"
-                    stroke={l.done ? color : "rgb(var(--c-line))"}
+                    stroke={l.done ? color : "var(--line-color)"}
                     strokeWidth={l.done ? 2.5 : 2}
                     strokeDasharray={l.done ? undefined : "4 4"}
                   />

@@ -140,7 +140,7 @@ function CommentThread({ postId, onCommentAdded }: CommentThreadProps) {
             onBlur={mentions.close}
             placeholder={replyTo ? `Reply to ${replyTo.author.name}…` : "Add a comment…"}
             aria-label="Add a comment"
-            className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full rounded-full border border-line bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-hive"
           />
           {mentions.picker}
         </div>

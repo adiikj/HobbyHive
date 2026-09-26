@@ -27,7 +27,7 @@ import { useCurrentUser } from "@/lib/currentUser";
 import Skeleton from "@/components/ui/Skeleton";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { PageContainer, Card, SectionTitle, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import ProfilePosts from "./ProfilePosts";
 import ProfileSkills, { type ReputationByHive, type SkillsByHive } from "./ProfileSkills";
 
@@ -230,7 +230,7 @@ function ProfileView({ username }: ProfileViewProps) {
     );
   }
 
-  const coverColor = profile.hobbies[0] ? getHobbyColor(profile.hobbies[0].name) : "#DB2777";
+  const coverColor = profile.hobbies[0] ? getHobbyColor(profile.hobbies[0].name) : BRAND_COLOR;
   const joined = new Date(profile.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   // Followers still exist, but a profile leads with what someone has learned

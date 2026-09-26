@@ -87,7 +87,7 @@ function HiveSwitcher({ myHobbies, activeKey, onSelect }: HiveSwitcherProps) {
         aria-pressed={isFollowing}
         className={`${cellButtonClass} ${isFollowing ? "text-chblack" : "text-chblack/50 hover:text-chblack"}`}
       >
-        <HiveCell label="Following" fill={isFollowing ? "rgb(var(--c-ink))" : "rgb(var(--c-line))"} ring={isFollowing ? "rgb(var(--c-ink))" : undefined}>
+        <HiveCell label="Following" fill={isFollowing ? "rgb(var(--c-ink))" : "var(--line-color)"} ring={isFollowing ? "rgb(var(--c-ink))" : undefined}>
           <Users size={20} className={isFollowing ? "text-canvas" : "text-chblack/60"} />
         </HiveCell>
       </button>

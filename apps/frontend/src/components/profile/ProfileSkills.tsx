@@ -4,7 +4,7 @@ import type { Hobby, MentorLevel, UserSkillItem } from "@/api/api";
 import { MentorBadge } from "@/components/posts/FeedbackThread";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import { HexIcon, SectionTitle } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { formatMinutes } from "@/lib/time";
 
 export type SkillsByHive = Map<string, { learning: UserSkillItem[]; done: UserSkillItem[] }>;
@@ -38,7 +38,7 @@ function ProfileSkills({
             return (
               <div key={hobby.id} className="rounded-2xl border p-3.5" style={{ backgroundColor: withAlpha(color, 0.06), borderColor: withAlpha(color, 0.18) }}>
                 <Link href={`/hobbies/${hobby.slug}?tab=skills`} className="flex items-center gap-3">
-                  <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={40} />
+                  <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color: getHobbyText(color) }} />} size={40} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
                       <span className="truncate font-semibold text-chblack">{hobby.name}</span>
@@ -62,7 +62,7 @@ function ProfileSkills({
                         key={s.id}
                         title={s.completedAt ? `Done ${new Date(s.completedAt).toLocaleDateString()}` : undefined}
                         className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
-                        style={{ backgroundColor: color }}
+                        style={{ backgroundColor: color, color: getHobbyInk(color) }}
                       >
                         <Check size={12} strokeWidth={3} /> {s.name}
                       </span>
@@ -80,7 +80,7 @@ function ProfileSkills({
                   </div>
                 )}
                 {isOwnProfile && skills !== null && done.length === 0 && learning.length === 0 && (
-                  <Link href={`/hobbies/${hobby.slug}?tab=skills`} className="mt-2 inline-block text-xs font-quick font-bold hover:underline" style={{ color }}>
+                  <Link href={`/hobbies/${hobby.slug}?tab=skills`} className="mt-2 inline-block text-xs font-quick font-bold hover:underline" style={{ color: getHobbyText(color) }}>
                     Pick a skill to work on →
                   </Link>
                 )}

@@ -81,7 +81,7 @@ function PostMenu({ postId, isOwn, canModerate, isPinned, onPinnedChange, onDele
         aria-label="Post options"
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        className="-mr-1.5 -mt-1 rounded-full p-1.5 text-chblack/35 transition-colors hover:bg-canvas hover:text-chblack focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className="-mr-1.5 -mt-1 rounded-full p-1.5 text-chblack/35 transition-colors hover:bg-canvas hover:text-chblack focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hive"
       >
         <MoreHorizontal size={18} />
       </button>

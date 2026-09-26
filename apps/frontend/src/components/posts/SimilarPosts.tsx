@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { getSimilarPosts, type Post } from "@/api/api";
-import { getHobbyColor } from "@/lib/hobbyTheme";
+import { getHobbyColor, getHobbyText } from "@/lib/hobbyTheme";
 import Skeleton from "@/components/ui/Skeleton";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
@@ -43,8 +43,8 @@ function SimilarPosts({ postId }: { postId: string }) {
                     <img src={image} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
                   )}
                   <span className="min-w-0">
-                    <span className="flex items-center gap-1 text-[11px] font-quick font-bold" style={{ color }}>
-                      <HobbyIcon name={p.hobby.name} size={12} style={{ color }} /> {p.hobby.name} · {p.author.name}
+                    <span className="flex items-center gap-1 text-[11px] font-quick font-bold" style={{ color: getHobbyText(color) }}>
+                      <HobbyIcon name={p.hobby.name} size={12} style={{ color: getHobbyText(color) }} /> {p.hobby.name} · {p.author.name}
                     </span>
                     <span className="mt-0.5 line-clamp-2 text-sm text-chblack/80">{p.content}</span>
                   </span>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlarmClock, CalendarCheck, Flag, Lock, Play, RefreshCw, Sparkles, TrendingDown, Unlock } from "lucide-react";
 import { getCoachPlan, type CoachFocusKind, type CoachPlan } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk } from "@/lib/hobbyTheme";
 import { startPractice, usePracticeTimer } from "@/lib/practiceTimer";
 import BeaAvatar from "./BeaAvatar";
 
@@ -165,7 +165,7 @@ function CoachCard({ hive, hobbyId, autoStart = false }: { hive: { name: string;
                       disabled={Boolean(running)}
                       title={running ? "A practice session is already running" : undefined}
                       className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-quick font-bold text-white disabled:opacity-50"
-                      style={{ backgroundColor: color }}
+                      style={{ backgroundColor: color, color: getHobbyInk(color) }}
                     >
                       <Play size={11} className="fill-current" /> Practise {f.skill.name}
                     </button>

@@ -6,7 +6,7 @@ import { BookOpen, Crosshair, Heart, Lightbulb, MessageSquareHeart, ThumbsUp, X 
 import { getHiveGuide, removeFromGuide, type GuideSection, type HiveGuide as Guide } from "@/api/api";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card } from "@/components/ui/Page";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import { MentorBadge } from "@/components/posts/FeedbackThread";
 
 const excerpt = (text: string, n = 160) => (text.length > n ? `${text.slice(0, n - 1).trimEnd()}…` : text);
@@ -28,7 +28,7 @@ function Section({ section, color, onRemoved }: { section: GuideSection; color: 
       <div className="space-y-4 p-4">
         {section.curated.length > 0 && (
           <div>
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-quick font-bold uppercase tracking-wider" style={{ color }}>
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-quick font-bold uppercase tracking-wider" style={{ color: getHobbyText(color) }}>
               <BookOpen size={12} /> Recommended
             </p>
             <ul className="space-y-2">
@@ -159,7 +159,7 @@ function HiveGuide({ slug, hobbyName, color }: { slug: string; hobbyName: string
     <div className="space-y-4">
       <Card className="p-4">
         <p className="flex items-center gap-2 font-bnt text-2xl leading-none text-chblack">
-          <BookOpen size={18} style={{ color }} /> THE {hobbyName.toUpperCase()} GUIDE
+          <BookOpen size={18} style={{ color: getHobbyText(color) }} /> THE {hobbyName.toUpperCase()} GUIDE
         </p>
         <p className="mt-1.5 text-sm text-chblack/65">
           Written by the hive: feedback people found helpful, the posts members liked most, and picks from moderators and mentors, sorted by skill.
@@ -171,11 +171,11 @@ function HiveGuide({ slug, hobbyName, color }: { slug: string; hobbyName: string
 
       {sections.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
-          <p className="font-bnt text-3xl" style={{ color }}>
+          <p className="font-bnt text-3xl" style={{ color: getHobbyText(color) }}>
             NOTHING HERE YET
           </p>
           <p className="mt-1 text-sm text-chblack/60">The guide fills up as people give feedback that helps, and as mentors pick the best posts.</p>
-          <Link href={`/hobbies/${slug}?tab=feedback`} className="mt-4 inline-block text-sm font-quick font-bold hover:underline" style={{ color }}>
+          <Link href={`/hobbies/${slug}?tab=feedback`} className="mt-4 inline-block text-sm font-quick font-bold hover:underline" style={{ color: getHobbyText(color) }}>
             Answer a feedback request →
           </Link>
         </div>

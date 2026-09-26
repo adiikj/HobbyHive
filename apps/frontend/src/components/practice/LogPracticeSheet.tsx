@@ -17,7 +17,7 @@ import {
 } from "@/api/api";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { announcePracticeLogged, formatMinutes } from "@/lib/practiceTimer";
 
 const QUICK_MINUTES = [15, 30, 45, 60];
@@ -180,7 +180,7 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSk
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+                <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
                   Practice session
                 </p>
                 <h2 id="log-practice-title" className="mt-0.5 font-bnt text-4xl leading-none text-chblack">
@@ -207,7 +207,7 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSk
                         aria-pressed={on}
                         onClick={() => setHobbyId(h.id)}
                         className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-quick text-sm font-bold transition-colors"
-                        style={on ? { backgroundColor: c, borderColor: c, color: "#fff" } : { borderColor: withAlpha(c, 0.3), color: c }}
+                        style={on ? { backgroundColor: c, borderColor: c, color: getHobbyInk(c) } : { borderColor: withAlpha(c, 0.3), color: getHobbyText(c) }}
                       >
                         <HobbyIcon name={h.name} size={15} />
                         {h.name}
@@ -303,7 +303,7 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSk
                       aria-pressed={on}
                       onClick={() => setFeel(on ? null : f.value)}
                       className="rounded-2xl border px-3 py-2.5 text-left transition-colors"
-                      style={on ? { backgroundColor: withAlpha(color, 0.12), borderColor: color } : { borderColor: "rgb(var(--c-line))" }}
+                      style={on ? { backgroundColor: withAlpha(color, 0.12), borderColor: color } : { borderColor: "var(--line-color)" }}
                     >
                       <span className="block font-quick text-sm font-bold text-chblack">{f.label}</span>
                       <span className="block text-[11px] text-chblack/50">{f.hint}</span>
@@ -330,14 +330,14 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSk
             <div className="mt-5 rounded-2xl border border-line p-3.5">
               <label className="flex cursor-pointer items-center justify-between gap-3">
                 <span className="flex items-center gap-2">
-                  <Share2 size={16} style={{ color }} />
+                  <Share2 size={16} style={{ color: getHobbyText(color) }} />
                   <span>
                     <span className="block text-sm font-semibold text-chblack">Share to {hobby?.name ?? "your hive"}</span>
                     <span className="block text-xs text-chblack/50">Let the hive see your progress and cheer you on.</span>
                   </span>
                 </span>
                 <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} className="peer sr-only" />
-                <span className="relative h-6 w-11 shrink-0 rounded-full bg-line transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-brand" />
+                <span className="relative h-6 w-11 shrink-0 rounded-full bg-line transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-emerald-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-hive" />
               </label>
 
               {share && (
@@ -393,7 +393,7 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSk
               <button type="button" onClick={onClose} disabled={saving} className={secondaryButtonClass}>
                 Cancel
               </button>
-              <button type="submit" disabled={saving || uploading} className={`${primaryButtonClass} min-w-[9rem]`} style={{ backgroundColor: color }}>
+              <button type="submit" disabled={saving || uploading} className={`${primaryButtonClass} min-w-[9rem]`} style={{ backgroundColor: color, color: getHobbyInk(color) }}>
                 {saving ? <span className="h-4 w-4 animate-spin rounded-full border-t-2 border-white" /> : share ? "Save & share" : "Save session"}
               </button>
             </div>
@@ -436,7 +436,7 @@ function SkillPicker({
               aria-pressed={on}
               onClick={() => onChange(on ? null : s.id, s.name)}
               className="rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors"
-              style={on ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: withAlpha(color, 0.35), color }}
+              style={on ? { backgroundColor: color, borderColor: color, color: getHobbyInk(color) } : { borderColor: withAlpha(color, 0.35), color: getHobbyText(color) }}
             >
               {s.name}
             </button>
@@ -449,7 +449,7 @@ function SkillPicker({
             const skill = skills.find((s) => s.id === e.target.value);
             onChange(skill?.id ?? null, skill?.name ?? "");
           }}
-          className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-chblack/60 focus:outline-none focus:ring-2 focus:ring-brand"
+          className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-chblack/60 focus:outline-none focus:ring-2 focus:ring-hive"
         >
           <option value="">{chips.length ? "Other skill…" : "Pick a skill…"}</option>
           {rest.map((s) => (

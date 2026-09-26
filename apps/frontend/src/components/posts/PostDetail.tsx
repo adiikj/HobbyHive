@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { getPost, type Post } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { useHiveScope } from "@/lib/hiveScope";
 import PostCard from "@/components/dashboard/PostCard";
 import SimilarPosts from "./SimilarPosts";
 import FeedbackThread from "./FeedbackThread";
@@ -17,6 +18,7 @@ import HobbyIcon from "@/components/brand/HobbyIcon";
 function PostDetail({ postId }: { postId: string }) {
   const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
+  useHiveScope(post?.hobby);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -31,7 +33,7 @@ function PostDetail({ postId }: { postId: string }) {
     };
   }, [postId]);
 
-  const color = post ? getHobbyColor(post.hobby.name) : "#DB2777";
+  const color = post ? getHobbyColor(post.hobby.name) : BRAND_COLOR;
 
   return (
     <PageContainer width="narrow">

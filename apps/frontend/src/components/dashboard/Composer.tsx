@@ -9,7 +9,7 @@ import {
   Plus,
   Check, MessageSquareHeart } from "lucide-react";
 import type { Challenge, Hobby, ProgressLogSummary } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { MAX_POST_IMAGES, type ComposerImage } from "./useDashboardData";
 import HiveHint from "./HiveHint";
 import { useMentions } from "@/components/posts/MentionPicker";
@@ -296,7 +296,7 @@ function Composer({
                 onClick={() => onEnterChallengeChange(!enterChallenge)}
                 aria-pressed={enterChallenge}
                 className={chipClass(enterChallenge)}
-                style={enterChallenge ? { backgroundColor: color } : undefined}
+                style={enterChallenge ? { backgroundColor: color, color: getHobbyInk(color) } : undefined}
               >
                 <Trophy size={13} />{" "}
                 {enterChallenge ? "Challenge entry" : "Enter challenge"}
@@ -443,7 +443,7 @@ function Composer({
             <p className="text-xs text-red-600 truncate">{error}</p>
           ) : (
             <span className="flex items-center gap-1.5 text-xs font-quick font-semibold text-chblack/50 truncate">
-              <HobbyIcon name={hobby.name} size={14} style={{ color }} /> Posting to {hobby.name}
+              <HobbyIcon name={hobby.name} size={14} style={{ color: getHobbyText(color) }} /> Posting to {hobby.name}
             </span>
           )}
         </div>

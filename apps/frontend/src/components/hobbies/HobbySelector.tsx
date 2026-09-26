@@ -8,7 +8,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import Logo from "@/components/brand/Logo";
 import BeaAvatar from "@/components/bea/BeaAvatar";
 import { HexIcon, primaryButtonClass } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface HobbySelectorProps {
@@ -112,16 +112,16 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
             whileTap={{ scale: 0.97 }}
             className="relative flex flex-col items-center justify-center gap-2.5 rounded-2xl border-2 bg-surface p-5 font-pop font-semibold text-chblack transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             style={{
-              borderColor: isSelected ? color : "rgb(var(--c-line))",
+              borderColor: isSelected ? color : "var(--line-color)",
               backgroundColor: isSelected ? withAlpha(color, 0.1) : "rgb(var(--c-surface))",
             }}
           >
             {isSelected && (
-              <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ backgroundColor: color }}>
+              <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ backgroundColor: color, color: getHobbyInk(color) }}>
                 <Check size={13} strokeWidth={3} />
               </span>
             )}
-            <HexIcon fill={isSelected ? "rgb(var(--c-surface))" : withAlpha(color, 0.14)} icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={56} />
+            <HexIcon fill={isSelected ? "rgb(var(--c-surface))" : withAlpha(color, 0.14)} icon={<HobbyIcon name={hobby.name} style={{ color: getHobbyText(color) }} />} size={56} />
             <span>{hobby.name}</span>
           </motion.button>
         );
@@ -156,7 +156,7 @@ function HobbySelector({ title, subtitle, submitLabel, initialSelectedIds, onSav
   }
 
   return (
-    <div className="min-h-screen bg-canvas font-pop">
+    <div className="min-h-screen font-pop">
       <div className="mx-auto w-full max-w-3xl px-4 pb-10 pt-8 sm:px-6 sm:pt-14">
         <div className="mb-8 text-center">
           <Logo size={44} className="mx-auto" />

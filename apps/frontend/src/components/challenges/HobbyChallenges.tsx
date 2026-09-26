@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Trophy, Users } from "lucide-react";
 import { getHobbyChallenges, createChallenge, type HobbyChallenges as ChallengesData } from "@/api/api";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card, inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
 import ChallengeBanner from "./ChallengeBanner";
@@ -63,7 +63,7 @@ function HobbyChallenges({ slug, color, isModerator }: HobbyChallengesProps) {
         <ChallengeBanner challenge={data.active} />
       ) : (
         <div className="rounded-2xl border border-dashed border-chblack/15 p-8 text-center">
-          <Trophy size={28} className="mx-auto" style={{ color }} />
+          <Trophy size={28} className="mx-auto" style={{ color: getHobbyText(color) }} />
           <p className="mt-2 font-bnt text-3xl text-chblack">NO CHALLENGE THIS WEEK</p>
           <p className="mt-1 text-sm text-chblack/55">
             {isModerator ? "Kick one off: a prompt everyone in the hive can answer with a post." : "A moderator will start the next one soon."}

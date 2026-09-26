@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Flame, Plus, Sparkles, Timer, TrendingUp } from "lucide-react";
 import { getJourney, type Hobby, type Journey } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import { formatMinutes, timeAgo } from "@/lib/time";
 import { PRACTICE_LOGGED_EVENT } from "@/lib/practiceTimer";
 import LogPracticeSheet from "@/components/practice/LogPracticeSheet";
@@ -58,7 +58,7 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
   return (
     <section data-tour="journey" className="rounded-2xl border border-line bg-surface p-4">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-xs font-quick font-bold uppercase tracking-[0.14em]" style={{ color }}>
+        <p className="text-xs font-quick font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
           Your journey{day ? ` · day ${day}` : ""}
         </p>
         <Link href={`/profile/${username}?tab=journey`} className="flex items-center gap-0.5 text-xs font-quick font-bold text-chblack/50 hover:text-chblack">
@@ -141,7 +141,7 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
           href={`/progress/${log.id}`}
           className="mt-3 flex items-center gap-2.5 rounded-xl border border-line px-3 py-2 text-sm transition-colors hover:bg-canvas"
         >
-          <TrendingUp size={16} style={{ color }} />
+          <TrendingUp size={16} style={{ color: getHobbyText(color) }} />
           <span className="min-w-0 flex-1 truncate">
             <span className="font-semibold text-chblack">{log.title}</span>
             <span className="text-chblack/50">

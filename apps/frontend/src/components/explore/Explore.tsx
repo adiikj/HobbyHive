@@ -8,7 +8,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import PostCard from "@/components/dashboard/PostCard";
 import { PageContainer, PageHeader, Card, SectionTitle, HexIcon, secondaryButtonClass } from "@/components/ui/Page";
 import { PhotoGridSkeleton, PostListSkeleton } from "@/components/ui/Skeletons";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import {
   getHobbies,
   getMyHobbies,
@@ -173,7 +173,7 @@ function Explore() {
         className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-quick font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
           isActive ? `border-transparent ${color ? "text-white" : "text-canvas"}` : "border-line bg-surface text-chblack/65 hover:text-chblack"
         }`}
-        style={isActive ? { backgroundColor: color ?? "rgb(var(--c-ink))" } : undefined}
+        style={isActive ? { backgroundColor: color ?? "rgb(var(--c-ink))", color: color ? getHobbyInk(color) : undefined } : undefined}
       >
         {icon}
         {label}
@@ -323,7 +323,7 @@ function Explore() {
                         <span className="absolute right-3 top-2 font-bnt text-3xl leading-none" style={{ color: withAlpha(color, 0.45) }}>
                           #{i + 1}
                         </span>
-                        <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={h.name} style={{ color }} />} size={44} />
+                        <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={h.name} style={{ color: getHobbyText(color) }} />} size={44} />
                         <span className="mt-4 truncate font-bnt text-2xl leading-none text-chblack">{h.name.toUpperCase()}</span>
                         <span className="mt-1 text-xs text-chblack/55">
                           {h.postCount} {h.postCount === 1 ? "post" : "posts"} this week
@@ -378,7 +378,7 @@ function Explore() {
                     return (
                       <Card key={h.id} as="div" className="flex items-center gap-3 p-3.5 transition-shadow hover:shadow-sm">
                         <Link href={`/hobbies/${h.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
-                          <HexIcon fill={withAlpha(color, 0.16)} icon={<HobbyIcon name={h.name} style={{ color }} />} size={48} />
+                          <HexIcon fill={withAlpha(color, 0.16)} icon={<HobbyIcon name={h.name} style={{ color: getHobbyText(color) }} />} size={48} />
                           <span className="min-w-0">
                             <span className="block truncate font-semibold text-chblack">{h.name}</span>
                             <span className="block truncate text-xs text-chblack/50">

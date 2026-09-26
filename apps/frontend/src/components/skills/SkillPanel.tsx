@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, CornerLeftUp, Flag, Play, Users, X } from "lucide-react";
 import { createGoal, setSkillStatus, type Goal, type SkillNode, type SkillStatus } from "@/api/api";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { startPractice, usePracticeTimer } from "@/lib/practiceTimer";
 import { formatMinutes } from "@/lib/time";
 
@@ -131,7 +131,7 @@ function SkillPanel({ skill, parent, hobby, color, canTrack, onClose, onChanged,
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+                <p className="font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
                   {hobby.name} · Tier {skill.tier}
                 </p>
                 <h2 id="skill-panel-title" className="mt-0.5 font-bnt text-4xl leading-none text-chblack">
@@ -148,7 +148,7 @@ function SkillPanel({ skill, parent, hobby, color, canTrack, onClose, onChanged,
             {parent && (
               <p className="mt-3 flex items-center gap-1.5 text-sm text-chblack/55">
                 <CornerLeftUp size={14} /> Builds on <span className="font-semibold text-chblack">{parent.name}</span>
-                {parent.my?.status === "DONE" && <Check size={14} style={{ color }} />}
+                {parent.my?.status === "DONE" && <Check size={14} style={{ color: getHobbyText(color) }} />}
               </p>
             )}
 
@@ -182,7 +182,7 @@ function SkillPanel({ skill, parent, hobby, color, canTrack, onClose, onChanged,
                 </label>
                 <input id="goal-date" type="date" min={tomorrow} value={targetDate} onChange={(e) => setTargetDate(e.target.value)} className={`${inputClass} mt-2`} />
                 <div className="mt-2.5 flex gap-2">
-                  <button type="button" onClick={saveGoal} disabled={busy} className={`${primaryButtonClass} py-1.5`} style={{ backgroundColor: color }}>
+                  <button type="button" onClick={saveGoal} disabled={busy} className={`${primaryButtonClass} py-1.5`} style={{ backgroundColor: color, color: getHobbyInk(color) }}>
                     Set goal
                   </button>
                   <button type="button" onClick={() => setGoalOpen(false)} className={`${secondaryButtonClass} py-1.5`}>
@@ -213,7 +213,7 @@ function SkillPanel({ skill, parent, hobby, color, canTrack, onClose, onChanged,
                   disabled={Boolean(running)}
                   title={running ? "A practice session is already running" : undefined}
                   className={`${primaryButtonClass} disabled:opacity-50`}
-                  style={{ backgroundColor: color }}
+                  style={{ backgroundColor: color, color: getHobbyInk(color) }}
                 >
                   <Play size={13} className="fill-current" /> Practise this
                 </button>

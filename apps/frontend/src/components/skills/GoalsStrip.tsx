@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, Check, Flag, Plus, X } from "lucide-react";
 import { createGoal, getMyGoals, updateGoal, type Goal } from "@/api/api";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { PRACTICE_LOGGED_EVENT } from "@/lib/practiceTimer";
 import { formatMinutes } from "@/lib/time";
 
@@ -38,7 +38,7 @@ function GoalCard({ goal, color, onChange, compact }: { goal: Goal; color: strin
 
   return (
     <div className="flex min-w-0 items-start gap-2.5 rounded-2xl border px-3 py-2.5" style={{ borderColor: withAlpha(color, 0.25), backgroundColor: withAlpha(color, 0.05) }}>
-      <Flag size={16} className="mt-0.5 shrink-0" style={{ color }} />
+      <Flag size={16} className="mt-0.5 shrink-0" style={{ color: getHobbyText(color) }} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-chblack">{goal.title}</p>
         <p className="text-xs text-chblack/55">
@@ -141,7 +141,7 @@ function GoalsStrip({ slug, hobbyId, hobbyName, color, refreshKey = 0, compact =
   return (
     <section className="rounded-2xl border border-line bg-surface p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="flex items-center gap-1.5 font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color }}>
+        <h2 className="flex items-center gap-1.5 font-quick text-xs font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
           <Flag size={13} /> Your goals in {hobbyName}
         </h2>
         {goals.length < 3 && !adding && (
@@ -176,7 +176,7 @@ function GoalsStrip({ slug, hobbyId, hobbyName, color, refreshKey = 0, compact =
           />
           <input type="date" min={tomorrow} value={targetDate} onChange={(e) => setTargetDate(e.target.value)} aria-label="Target date (optional)" className={`${inputClass} sm:w-44`} />
           <div className="flex shrink-0 gap-2">
-            <button type="submit" disabled={busy || !title.trim()} className={primaryButtonClass} style={{ backgroundColor: color }}>
+            <button type="submit" disabled={busy || !title.trim()} className={primaryButtonClass} style={{ backgroundColor: color, color: getHobbyInk(color) }}>
               Add
             </button>
             <button type="button" onClick={() => setAdding(false)} className={secondaryButtonClass}>

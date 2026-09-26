@@ -8,7 +8,7 @@ import { getRecap, shareRecap, type HiveWeek, type PersonalBest, type WeeklyReca
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card, PageContainer, inputClass, secondaryButtonClass } from "@/components/ui/Page";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
 import { formatMinutes } from "@/lib/time";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -67,7 +67,7 @@ function HiveCard({ week, weekDate }: { week: HiveWeek; weekDate: string }) {
             {week.topFocus && ` · mostly ${week.topFocus}`}
           </p>
         </div>
-        <p className="font-bnt text-3xl leading-none" style={{ color }}>
+        <p className="font-bnt text-3xl leading-none" style={{ color: getHobbyText(color) }}>
           {week.minutes ? formatMinutes(week.minutes).toUpperCase() : "–"}
         </p>
       </div>
@@ -75,7 +75,7 @@ function HiveCard({ week, weekDate }: { week: HiveWeek; weekDate: string }) {
       {(week.skillsDone.length > 0 || week.goalsAchieved.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-1.5 px-4">
           {week.skillsDone.map((s) => (
-            <span key={s} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ backgroundColor: color }}>
+            <span key={s} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ backgroundColor: color, color: getHobbyInk(color) }}>
               <Check size={12} strokeWidth={3} /> {s}
             </span>
           ))}
@@ -105,7 +105,7 @@ function HiveCard({ week, weekDate }: { week: HiveWeek; weekDate: string }) {
                 autoFocus
               />
               <div className="flex gap-2">
-                <button type="button" onClick={share} disabled={busy} className="rounded-full px-4 py-1.5 text-sm font-quick font-bold text-white disabled:opacity-60" style={{ backgroundColor: color }}>
+                <button type="button" onClick={share} disabled={busy} className="rounded-full px-4 py-1.5 text-sm font-quick font-bold text-white disabled:opacity-60" style={{ backgroundColor: color, color: getHobbyInk(color) }}>
                   {busy ? "Sharing…" : `Share to ${week.hobby.name}`}
                 </button>
                 <button type="button" onClick={() => setOpen(false)} className={`${secondaryButtonClass} py-1.5`}>
@@ -115,7 +115,7 @@ function HiveCard({ week, weekDate }: { week: HiveWeek; weekDate: string }) {
               <p className="text-[11px] text-chblack/45">Shares your numbers for this hive only. Notes stay private.</p>
             </div>
           ) : (
-            <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-quick font-bold" style={{ color }}>
+            <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-quick font-bold" style={{ color: getHobbyText(color) }}>
               <Share2 size={14} /> Share this week to {week.hobby.name}
             </button>
           )}

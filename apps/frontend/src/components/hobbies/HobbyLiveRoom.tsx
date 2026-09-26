@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SendHorizontal } from "lucide-react";
 import { getHobbyRoomMessages, type HobbyRoomMessage } from "@/api/api";
 import { getSocket } from "@/lib/socket";
+import { getHobbyInk } from "@/lib/hobbyTheme";
 import Skeleton from "@/components/ui/Skeleton";
 import { Card } from "@/components/ui/Page";
 import { useCurrentUser } from "@/lib/currentUser";
@@ -87,8 +88,8 @@ function HobbyLiveRoom({ hobbyId, slug, color }: HobbyLiveRoomProps) {
     <Card as="div" className="flex h-[32rem] flex-col overflow-hidden">
       <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
         <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inset-0 animate-ping rounded-full opacity-60" style={{ backgroundColor: color }} />
-          <span className="relative h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+          <span className="absolute inset-0 animate-ping rounded-full opacity-60" style={{ backgroundColor: color, color: getHobbyInk(color) }} />
+          <span className="relative h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color, color: getHobbyInk(color) }} />
         </span>
         <p className="shrink-0 text-sm font-semibold text-chblack">Live room</p>
         <p className="hidden truncate text-xs text-chblack/45 sm:block">Messages appear for everyone in the hive instantly</p>
@@ -130,7 +131,7 @@ function HobbyLiveRoom({ hobbyId, slug, color }: HobbyLiveRoomProps) {
                     className={`whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-left text-sm leading-relaxed ${
                       isMine ? "rounded-br-md text-white" : "rounded-bl-md border border-line bg-surface text-chblack"
                     }`}
-                    style={isMine ? { backgroundColor: color } : undefined}
+                    style={isMine ? { backgroundColor: color, color: getHobbyInk(color) } : undefined}
                   >
                     {m.content}
                   </p>
@@ -157,14 +158,14 @@ function HobbyLiveRoom({ hobbyId, slug, color }: HobbyLiveRoomProps) {
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Message the hive…"
           aria-label="Message"
-          className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-4 py-2.5 text-sm focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand"
+          className="min-w-0 flex-1 rounded-full border border-line bg-canvas px-4 py-2.5 text-sm focus:bg-surface focus:outline-none focus:ring-2 focus:ring-hive"
         />
         <button
           type="submit"
           disabled={isSending || !draft.trim()}
           aria-label="Send"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity disabled:opacity-40"
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: color, color: getHobbyInk(color) }}
         >
           <SendHorizontal size={18} />
         </button>

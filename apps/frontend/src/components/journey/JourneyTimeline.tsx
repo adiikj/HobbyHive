@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Award, Camera, Clock, Flame, PenLine, Timer, TrendingUp, Trophy, UserPlus, type LucideIcon } from "lucide-react";
 import { getJourney, type Journey, type JourneyMilestone } from "@/api/api";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import Skeleton from "@/components/ui/Skeleton";
 import { formatMinutes } from "@/lib/time";
 import ActivityStrip from "./ActivityStrip";
 
-const BRAND = "#DB2777";
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 const monthOf = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -134,7 +133,7 @@ function JourneyTimeline({ username, firstName, isOwnProfile }: { username: stri
             ? `${streak.current}-week streak${streak.activeThisWeek ? "" : " (post or practise this week to keep it)"}`
             : "No active streak"}
         </p>
-        <ActivityStrip weeks={streak.weeks} color={BRAND} />
+        <ActivityStrip weeks={streak.weeks} color={BRAND_COLOR} />
       </section>
 
       {thenNow && (

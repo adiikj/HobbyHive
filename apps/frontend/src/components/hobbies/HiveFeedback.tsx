@@ -7,7 +7,7 @@ import { getFeedbackRequests, getHiveMentors, type MentorLevel, type Post } from
 import PostCard from "@/components/dashboard/PostCard";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
 import { Card } from "@/components/ui/Page";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import { MentorBadge } from "@/components/posts/FeedbackThread";
 
 type Mentor = { user: { id: string; name: string; username: string; avatarUrl: string | null }; helpful: number; level: MentorLevel | null };
@@ -53,7 +53,7 @@ function HiveFeedback({ slug, hobbyName, color }: { slug: string; hobbyName: str
         </p>
         {mentors.length > 0 && (
           <div className="mt-3 border-t border-line pt-3">
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-quick font-bold uppercase tracking-[0.14em]" style={{ color }}>
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-quick font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
               <Award size={13} /> Most helpful in {hobbyName}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -85,7 +85,7 @@ function HiveFeedback({ slug, hobbyName, color }: { slug: string; hobbyName: str
         <PostListSkeleton />
       ) : posts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-chblack/15 p-10 text-center">
-          <p className="font-bnt text-3xl" style={{ color }}>
+          <p className="font-bnt text-3xl" style={{ color: getHobbyText(color) }}>
             {onlyOpen ? "ALL CAUGHT UP" : "NO REQUESTS YET"}
           </p>
           <p className="mt-1 text-sm text-chblack/60">

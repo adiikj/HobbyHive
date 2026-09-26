@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, Compass, MessageCircle, User, Plus, type LucideIcon } from "lucide-react";
 import { useCurrentUser } from "@/lib/currentUser";
 import { roundedHexagonPath } from "@/lib/hexagon";
+import { BRAND_COLOR } from "@/lib/hobbyTheme";
 
 const HEX = roundedHexagonPath(50, 50, 46, 12);
 
@@ -46,7 +47,7 @@ function MobileNav() {
           className="relative -mt-5 flex w-14 h-14 items-center justify-center transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-full"
         >
           <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full drop-shadow-md" aria-hidden="true">
-            <path d={HEX} fill="#DB2777" />
+            <path d={HEX} fill={BRAND_COLOR} />
           </svg>
           <Plus size={26} strokeWidth={2.6} className="relative text-white" />
         </button>

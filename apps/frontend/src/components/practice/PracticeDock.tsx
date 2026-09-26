@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Square, X } from "lucide-react";
 import HobbyIcon from "@/components/brand/HobbyIcon";
-import { getHobbyColor } from "@/lib/hobbyTheme";
+import { BRAND_COLOR, getHobbyColor, getHobbyInk } from "@/lib/hobbyTheme";
 import { clearPractice, elapsedMinutes, formatElapsed, usePracticeTimer } from "@/lib/practiceTimer";
 import LogPracticeSheet from "./LogPracticeSheet";
 
@@ -27,7 +27,7 @@ function PracticeDock() {
     setFinishing({ minutes: elapsedMinutes(running.startedAt), startedAt: new Date(running.startedAt).toISOString() });
   };
 
-  const color = running ? getHobbyColor(running.hobby.name) : "#DB2777";
+  const color = running ? getHobbyColor(running.hobby.name) : BRAND_COLOR;
 
   return (
     <>
@@ -40,8 +40,8 @@ function PracticeDock() {
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
           >
             <div className="flex items-center gap-3 rounded-full bg-[#17161c] py-2 pl-2 pr-2 text-white shadow-2xl shadow-black/30 ring-1 ring-white/10">
-              <span className="relative flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: color }}>
-                <span className="absolute inset-0 animate-ping rounded-full opacity-30" style={{ backgroundColor: color }} />
+              <span className="relative flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: color, color: getHobbyInk(color) }}>
+                <span className="absolute inset-0 animate-ping rounded-full opacity-30" style={{ backgroundColor: color, color: getHobbyInk(color) }} />
                 <HobbyIcon name={running.hobby.name} size={18} className="relative" />
               </span>
               <div className="min-w-0" aria-live="off">
