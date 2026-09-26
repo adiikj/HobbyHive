@@ -8,6 +8,7 @@ import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import { formatMinutes, timeAgo } from "@/lib/time";
 import { PRACTICE_LOGGED_EVENT } from "@/lib/practiceTimer";
 import LogPracticeSheet from "@/components/practice/LogPracticeSheet";
+import GoalsStrip from "@/components/skills/GoalsStrip";
 import Skeleton from "@/components/ui/Skeleton";
 import ActivityStrip from "./ActivityStrip";
 
@@ -93,6 +94,10 @@ function JourneyCard({ username, hobby, refreshKey }: { username: string; hobby:
 
       <div className="mt-4">
         <ActivityStrip weeks={streak.weeks} color={color} />
+      </div>
+
+      <div className="mt-3">
+        <GoalsStrip slug={hobby.slug} hobbyId={hobby.id} hobbyName={hobby.name} color={color} refreshKey={practiceKey} compact />
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
