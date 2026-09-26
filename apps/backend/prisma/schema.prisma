@@ -42,6 +42,8 @@ model User {
   progressLogs          ProgressLog[]
   beaAnswers            BeaAnswer[]
   practiceSessions      PracticeSession[]
+  skills                UserSkill[]
+  goals                 Goal[]
 }
 
 model Hobby {
@@ -59,6 +61,8 @@ model Hobby {
   progressLogs ProgressLog[]
   beaAnswers   BeaAnswer[]
   practice     PracticeSession[]
+  skills       Skill[]
+  goals        Goal[]
 }
 
 model Post {
@@ -397,12 +401,89 @@ model PracticeSession {
   feel        String?
   // Set when the session was shared to the hive as a post
   postId      String?  @unique
+  // The skill this session worked on, if they tagged one
+  skillId     String?
   createdAt   DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  hobby Hobby @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
-  post  Post? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hobby Hobby  @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  post  Post?  @relation(fields: [postId], references: [id], onDelete: SetNull)
+  skill Skill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
 
   @@index([userId, startedAt])
   @@index([hobbyId, startedAt])
+  @@index([userId, skillId])
+}
+
+// A hive's curated skill map: small trees, each skill building on the one before it
+model Skill {
+  id          String  @id @default(cuid())
+  hobbyId     String
+  // Stable key used by the seed ("single-pirouette")
+  slug        String
+  name        String
+  description String
+  // 1 = first steps; higher tiers build on lower ones
+  tier        Int
+  // Display order within a tier
+  position    Int     @default(0)
+  // The skill this one builds on (null for roots)
+  parentId    String?
+
+  hobby    Hobby             @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  parent   Skill?            @relation("SkillTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Skill[]           @relation("SkillTree")
+  learners UserSkill[]
+  goals    Goal[]
+  sessions PracticeSession[]
+
+  @@unique([hobbyId, slug])
+  @@index([hobbyId, tier])
+}
+
+enum SkillStatus {
+  LEARNING
+  DONE
+}
+
+// Where someone is with a skill
+model UserSkill {
+  id          String      @id @default(cuid())
+  userId      String
+  skillId     String
+  status      SkillStatus @default(LEARNING)
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([skillId])
+}
+
+enum GoalStatus {
+  ACTIVE
+  ACHIEVED
+  DROPPED
+}
+
+// Something to work towards in a hive, usually a skill, optionally by a date
+model Goal {
+  id         String     @id @default(cuid())
+  userId     String
+  hobbyId    String
+  skillId    String?
+  title      String
+  targetDate DateTime?
+  status     GoalStatus @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+  achievedAt DateTime?
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hobby Hobby  @relation(fields: [hobbyId], references: [id], onDelete: Cascade)
+  skill Skill? @relation(fields: [skillId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([hobbyId])
 }
