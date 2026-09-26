@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
+import { otpEmail } from "../emails/otpEmail.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -118,26 +119,26 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
-const generateOTP = async (email: string) => {
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+const OTP_MINUTES = 10;
 
-  await sendOTP(email, otp);
+const generateOTP = async (email: string, name?: string) => {
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const otpExpiry = new Date(Date.now() + OTP_MINUTES * 60 * 1000);
+
+  await sendOTP(email, otp, name);
 
   return { otp, otpExpiry };
 };
 
-const sendOTP = async (email: string, otp: string) => {
+const sendOTP = async (email: string, otp: string, name?: string) => {
   if (!email) {
     throw new ApiError(400, "Email is required for OTP method 'email'");
   }
 
   const mailOptions = {
-    from: process.env.GOOGLE_GMAIL_ID,
+    from: `HobbyHive <${process.env.GOOGLE_GMAIL_ID}>`,
     to: email,
-    subject: "Welcome to HobbyHive",
-    html: `<h3>Your OTP Code for HobbyHive Registration is <b>${otp}</b>. It is valid for 10 minutes.</h3>`,
-    text: `Your OTP Code for HobbyHive Registration is ${otp}. It is valid for 10 minutes.`,
+    ...otpEmail({ otp, name, minutes: OTP_MINUTES }),
   };
 
   try {
@@ -165,7 +166,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     throw new ApiError(400, "Email, phone number, or username is already registered.");
   }
 
-  const { otp, otpExpiry } = await generateOTP(email);
+  const { otp, otpExpiry } = await generateOTP(email, name);
   const hashedPassword = await bcrypt.hash(password, 10);
 
   await prisma.pendingUser.upsert({
