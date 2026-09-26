@@ -41,13 +41,14 @@ const parseTargetDate = (raw: unknown, now = new Date()) => {
   return date;
 };
 
-/** How much you've practised towards a goal: sessions on its skill since you set it. */
+/** How much you've practised towards a goal: sessions on its skill logged since you set it. (Not `startedAt`:
+ * a session logged right after setting a goal starts before it, since it's backdated by its length.) */
 const withProgress = async (userId: string, goals: RawGoal[]) =>
   Promise.all(
     goals.map(async (goal) => {
       if (!goal.skill) return { ...goal, progress: null };
       const agg = await prisma.practiceSession.aggregate({
-        where: { userId, skillId: goal.skill.id, startedAt: { gte: goal.createdAt } },
+        where: { userId, skillId: goal.skill.id, createdAt: { gte: goal.createdAt } },
         _sum: { durationMin: true },
         _count: { _all: true },
       });
