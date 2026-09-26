@@ -6,6 +6,7 @@ import { Home, Compass, MessageCircle, User, Plus, type LucideIcon } from "lucid
 import { useCurrentUser } from "@/lib/currentUser";
 import { roundedHexagonPath } from "@/lib/hexagon";
 import { BRAND_COLOR } from "@/lib/hobbyTheme";
+import { MobileHiveTag } from "./CurrentHiveChip";
 
 const HEX = roundedHexagonPath(50, 50, 46, 12);
 
@@ -36,6 +37,7 @@ function MobileNav() {
       aria-label="Main"
       className="lg:hidden fixed inset-x-0 bottom-0 z-40 flex items-end border-t border-line bg-surface/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-md"
     >
+      <MobileHiveTag />
       <NavLink href="/dashboard" label="Home" icon={Home} active={pathname === "/dashboard"} />
       <NavLink href="/explore" label="Explore" icon={Compass} active={pathname.startsWith("/explore")} tour="nav-explore" />
 

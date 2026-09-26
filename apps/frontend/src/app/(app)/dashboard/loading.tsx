@@ -3,7 +3,7 @@ import { CardRowsSkeleton, ComposerSkeleton, HiveHeaderSkeleton, PostListSkeleto
 
 export default function DashboardLoading() {
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen">
       <div className="mx-auto flex w-full max-w-[1080px] gap-8 lg:px-8">
         <div className="mx-auto w-full min-w-0 max-w-[640px] xl:mx-0 xl:flex-1">
           <div className="flex gap-3 overflow-hidden px-4 pb-3 pt-3 sm:px-0 lg:pt-6">
