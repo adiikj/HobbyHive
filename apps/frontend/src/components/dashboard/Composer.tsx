@@ -9,7 +9,7 @@ import {
   Plus,
   Check, MessageSquareHeart } from "lucide-react";
 import type { Challenge, Hobby, ProgressLogSummary } from "@/api/api";
-import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyInk, getHobbyText, getHobbyVoice } from "@/lib/hobbyTheme";
 import { MAX_POST_IMAGES, type ComposerImage } from "./useDashboardData";
 import HiveHint from "./HiveHint";
 import { useMentions } from "@/components/posts/MentionPicker";
@@ -192,7 +192,7 @@ function Composer({
           onClick={() => setIsExpanded(true)}
           className="flex-1 min-w-0 text-left rounded-full bg-canvas px-4 py-2.5 text-sm text-chblack/45 truncate transition-colors hover:bg-line/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          Share something with {hobby.name}…
+          {getHobbyVoice(hobby.name).prompt}
         </button>
         <button
           type="button"
@@ -247,7 +247,7 @@ function Composer({
               placeholder={
                 enterChallenge && challenge
                   ? challenge.prompt
-                  : `What's new in your ${hobby.name.toLowerCase()} world?`
+                  : getHobbyVoice(hobby.name).prompt
               }
               aria-label={`Post to ${hobby.name}`}
               rows={3}

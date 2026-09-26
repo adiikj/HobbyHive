@@ -16,21 +16,102 @@ export const HOBBY_COLORS: Record<string, string> = {
   Writing: "#A0714F",
 };
 
-/** What an empty hive feed says, in each hobby's own words. */
-export const HOBBY_EMPTY: Record<string, { title: string; body: string }> = {
-  Dance: { title: "No moves shared yet", body: "Post a clip of what you're drilling — the first move sets the floor." },
-  Fitness: { title: "No workouts logged yet", body: "Share today's session, PR or rest day and start the streak." },
-  Art: { title: "The wall is still blank", body: "Hang the first piece — sketches and works in progress count." },
-  Anime: { title: "No takes yet", body: "Start the first thread: what are you watching this season?" },
-  Gaming: { title: "No clips yet", body: "Drop a highlight, a build or a question to start the lobby." },
-  Singing: { title: "No covers yet", body: "Share a take — warm-ups and rough recordings are welcome." },
-  Coding: { title: "Nothing shipped yet", body: "Post what you're building, stuck on, or just got working." },
-  Cooking: { title: "The kitchen's quiet", body: "Share what you cooked today, even the ones that flopped." },
-  Music: { title: "No tracks yet", body: "Post a loop, a riff or a practice recording to start the jam." },
-  Photography: { title: "No shots yet", body: "Share a frame you're proud of, or one you want feedback on." },
-  Travel: { title: "No trips yet", body: "Post a place you've been, or one you're planning." },
-  Writing: { title: "The page is blank", body: "Share a paragraph, a poem or the line you can't get right." },
+export interface HobbyVoice {
+  /** Empty feed heading and line */
+  emptyTitle: string;
+  emptyBody: string;
+  /** Composer prompt */
+  prompt: string;
+  /** End of the feed */
+  caughtUp: string;
+}
+
+/** How each hive talks — empty feeds, the composer and the end of the feed, in the hobby's own words. */
+export const HOBBY_VOICE: Record<string, HobbyVoice> = {
+  Dance: {
+    emptyTitle: "No moves shared yet",
+    emptyBody: "Post a clip of what you're drilling — the first move sets the floor.",
+    prompt: "What are you drilling today?",
+    caughtUp: "That's the whole floor for now",
+  },
+  Fitness: {
+    emptyTitle: "No workouts logged yet",
+    emptyBody: "Share today's session, PR or rest day and start the streak.",
+    prompt: "How did today's session go?",
+    caughtUp: "That's every rep for now",
+  },
+  Art: {
+    emptyTitle: "The wall is still blank",
+    emptyBody: "Hang the first piece — sketches and works in progress count.",
+    prompt: "What are you making?",
+    caughtUp: "You've seen the whole wall",
+  },
+  Anime: {
+    emptyTitle: "No takes yet",
+    emptyBody: "Start the first thread: what are you watching this season?",
+    prompt: "What are you watching?",
+    caughtUp: "You're caught up on this season",
+  },
+  Gaming: {
+    emptyTitle: "No clips yet",
+    emptyBody: "Drop a highlight, a build or a question to start the lobby.",
+    prompt: "What are you playing?",
+    caughtUp: "That's the whole lobby",
+  },
+  Singing: {
+    emptyTitle: "No covers yet",
+    emptyBody: "Share a take — warm-ups and rough recordings are welcome.",
+    prompt: "What are you singing lately?",
+    caughtUp: "That's every take for now",
+  },
+  Coding: {
+    emptyTitle: "Nothing shipped yet",
+    emptyBody: "Post what you're building, stuck on, or just got working.",
+    prompt: "What are you building?",
+    caughtUp: "Nothing left in the queue",
+  },
+  Cooking: {
+    emptyTitle: "The kitchen's quiet",
+    emptyBody: "Share what you cooked today, even the ones that flopped.",
+    prompt: "What did you cook today?",
+    caughtUp: "That's the whole menu for now",
+  },
+  Music: {
+    emptyTitle: "No tracks yet",
+    emptyBody: "Post a loop, a riff or a practice recording to start the jam.",
+    prompt: "What are you playing lately?",
+    caughtUp: "That's the whole setlist",
+  },
+  Photography: {
+    emptyTitle: "No shots yet",
+    emptyBody: "Share a frame you're proud of, or one you want feedback on.",
+    prompt: "What did you shoot lately?",
+    caughtUp: "That's the whole roll",
+  },
+  Travel: {
+    emptyTitle: "No trips yet",
+    emptyBody: "Post a place you've been, or one you're planning.",
+    prompt: "Where have you been?",
+    caughtUp: "That's every stop for now",
+  },
+  Writing: {
+    emptyTitle: "The page is blank",
+    emptyBody: "Share a paragraph, a poem or the line you can't get right.",
+    prompt: "What are you writing?",
+    caughtUp: "That's the last page for now",
+  },
 };
+
+export function getHobbyVoice(hobby: string): HobbyVoice {
+  return (
+    HOBBY_VOICE[hobby] ?? {
+      emptyTitle: "Quiet for now",
+      emptyBody: `Nothing in ${hobby} yet. Be the first to share something.`,
+      prompt: `What's new in your ${hobby.toLowerCase()} world?`,
+      caughtUp: "You're all caught up",
+    }
+  );
+}
 
 export function getHobbyColor(hobby: string): string {
   return HOBBY_COLORS[hobby] ?? BRAND_COLOR;
@@ -89,6 +170,11 @@ function oklabToHex([L, a, b]: Lab): string {
 export function hobbyChroma(hex: string): number {
   const [, a, b] = hexToOklab(hex);
   return Math.hypot(a, b);
+}
+
+/** How strongly a hive tints the canvas: greys and teals need more than violet or fuchsia to read as coloured; 1 ≈ a typical hive. */
+export function hobbyTintStrength(hex: string): number {
+  return Math.min(1.6, Math.max(0.75, (0.16 / hobbyChroma(hex)) ** 0.8));
 }
 
 /** Moves a colour's lightness (keeping its hue) until its luminance passes `ok`. */
