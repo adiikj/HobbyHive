@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { seedSkills } from "./skills";
 
 const prisma = new PrismaClient();
 
@@ -25,6 +26,7 @@ async function main() {
       create: hobby,
     });
   }
+  await seedSkills(prisma);
 }
 
 main()
