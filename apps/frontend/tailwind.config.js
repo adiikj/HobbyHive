@@ -40,6 +40,10 @@ export default {
           "0%": { transform: "translateX(100%)", opacity: "0" },
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
+        marqueeY: {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(-50%)" },
+        },
         borderRun: {
           "0%": { backgroundPosition: "0% 50%" },
           "100%": { backgroundPosition: "100% 50%" },
@@ -49,6 +53,9 @@ export default {
         slideInLeft: "slideInLeft 2s ease-out",
         slideInRight: "slideInRight 2s ease-out",
         border: "border-run 2s linear infinite",
+        // Vertical feed scroll: the list is rendered twice, so -50% loops seamlessly
+        "feed-slow": "marqueeY 38s linear infinite",
+        "feed-fast": "marqueeY 22s linear infinite",
       },
     },
   },

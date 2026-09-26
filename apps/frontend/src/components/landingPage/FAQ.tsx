@@ -6,12 +6,16 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 
 const QUESTIONS = [
   {
-    q: "Can I pick more than one hobby?",
-    a: "Yes. Pick as many as you're into. Your feed blends just those, nothing else.",
+    q: "Can I join more than one hive?",
+    a: "Yes, join as many as you're into. Each hive keeps its own feed, and you switch between them in a tap.",
   },
   {
-    q: "What if my hobby isn't listed yet?",
-    a: "We're launching with six communities and adding more as they grow. Request yours from settings once you're in.",
+    q: "Who is Bea, and is she making things up?",
+    a: "Bea is our resident bee. She answers only from what your hive has posted, links every answer to its source posts, and tells you when nobody has covered something yet.",
+  },
+  {
+    q: "How do streaks and challenges work?",
+    a: "Post in a hive at least once a week to keep your streak. Each hive also runs a weekly challenge: enter with a post before it ends and browse everyone's entries.",
   },
   {
     q: "Does it cost anything to join?",
@@ -19,11 +23,7 @@ const QUESTIONS = [
   },
   {
     q: "Do I need to follow people to see content?",
-    a: "No. Your feed is scoped by hobby, not by who you follow. Follow people if you want a curated \"following\" view too, but the hobby feed works from day one.",
-  },
-  {
-    q: "Can I change my hobbies later?",
-    a: "Yes, add or drop hobbies anytime from settings. No penalty, your feed just follows.",
+    a: "No. Your feed is scoped by hive, not by who you follow, so it works from day one. Follow people if you want to keep up with them too.",
   },
 ];
 
@@ -82,7 +82,7 @@ function FAQItem({ q, a, index, start, reduceMotion }: FAQItemProps) {
       {/* Question: incoming message */}
       <motion.div
         className="flex items-end gap-2"
-        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={visible ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
@@ -99,7 +99,7 @@ function FAQItem({ q, a, index, start, reduceMotion }: FAQItemProps) {
         {showBubble && (
           <motion.div
             className="bg-pink-600 text-white rounded-2xl rounded-br-sm shadow-sm max-w-[85%]"
-            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
           >
@@ -119,7 +119,7 @@ function FAQ() {
   return (
     <section className="w-full bg-gradient-to-r from-somig to-beige py-16 sm:py-24 px-6 sm:px-10 md:px-16 lg:px-20">
       <div className="max-w-xl mx-auto">
-        <h2 className="font-bnt text-chblack text-3xl sm:text-4xl text-center mb-10 sm:mb-14">
+        <h2 className="font-bnt text-chblack text-4xl sm:text-5xl text-center mb-10 sm:mb-14">
           Questions people actually ask
         </h2>
 

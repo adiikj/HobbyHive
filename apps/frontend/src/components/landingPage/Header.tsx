@@ -6,6 +6,13 @@ import { motion } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa";
 import Logo from "@/components/brand/Logo";
 
+const SECTIONS = [
+  { href: "/#features", label: "Features" },
+  { href: "/#bea", label: "Ask Bea" },
+  { href: "/#hives", label: "Hives" },
+  { href: "/#faq", label: "FAQ" },
+];
+
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -26,6 +33,14 @@ function Header() {
               {menuOpen ? <FaTimes className="text-2xl text-chblack" /> : <FaBars className="text-2xl text-chblack" />}
             </button>
           </div>
+
+          <nav className="hidden md:flex items-center gap-7" aria-label="Sections">
+            {SECTIONS.map((s) => (
+              <Link key={s.href} href={s.href} className="font-quick font-semibold text-sm text-chblack/70 hover:text-pink-600 transition-colors">
+                {s.label}
+              </Link>
+            ))}
+          </nav>
 
           <div className="hidden sm:flex flex-row gap-4">
             <Link href="/signin">
@@ -59,6 +74,14 @@ function Header() {
             <FaTimes className="text-2xl text-chblack" />
           </button>
         </div>
+
+        <nav className="flex flex-col items-center gap-5 mb-10" aria-label="Sections">
+          {SECTIONS.map((s) => (
+            <Link key={s.href} href={s.href} onClick={handleMenuClose} className="font-quick font-semibold text-lg text-chblack/80">
+              {s.label}
+            </Link>
+          ))}
+        </nav>
 
         <Link href="/signin">
           <button
