@@ -1,15 +1,27 @@
 import Link from "next/link";
 import { Check, CircleDot } from "lucide-react";
-import type { Hobby, UserSkillItem } from "@/api/api";
+import type { Hobby, MentorLevel, UserSkillItem } from "@/api/api";
+import { MentorBadge } from "@/components/posts/FeedbackThread";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import { HexIcon, SectionTitle } from "@/components/ui/Page";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import { formatMinutes } from "@/lib/time";
 
 export type SkillsByHive = Map<string, { learning: UserSkillItem[]; done: UserSkillItem[] }>;
+export type ReputationByHive = Map<string, { helpful: number; level: MentorLevel | null }>;
 
 /** Each hive someone is in, with the skills they've done and the ones they're working on. */
-function ProfileSkills({ hobbies, skills, isOwnProfile }: { hobbies: Hobby[]; skills: SkillsByHive | null; isOwnProfile: boolean }) {
+function ProfileSkills({
+  hobbies,
+  skills,
+  reputation,
+  isOwnProfile,
+}: {
+  hobbies: Hobby[];
+  skills: SkillsByHive | null;
+  reputation: ReputationByHive;
+  isOwnProfile: boolean;
+}) {
   return (
     <section>
       <SectionTitle>HIVES &amp; SKILLS</SectionTitle>
@@ -22,18 +34,23 @@ function ProfileSkills({ hobbies, skills, isOwnProfile }: { hobbies: Hobby[]; sk
             const mine = skills?.get(hobby.id);
             const done = mine?.done ?? [];
             const learning = mine?.learning ?? [];
+            const rep = reputation.get(hobby.id);
             return (
               <div key={hobby.id} className="rounded-2xl border p-3.5" style={{ backgroundColor: withAlpha(color, 0.06), borderColor: withAlpha(color, 0.18) }}>
                 <Link href={`/hobbies/${hobby.slug}?tab=skills`} className="flex items-center gap-3">
                   <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={40} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold text-chblack">{hobby.name}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate font-semibold text-chblack">{hobby.name}</span>
+                      {rep?.level && <MentorBadge level={rep.level} hive={hobby.name} />}
+                    </span>
                     <span className="block text-xs text-chblack/50">
                       {skills === null
                         ? " "
                         : done.length || learning.length
                           ? `${done.length} done · ${learning.length} learning`
                           : "Just getting started"}
+                      {rep?.helpful ? ` · ${rep.helpful} helpful ${rep.helpful === 1 ? "answer" : "answers"}` : ""}
                     </span>
                   </span>
                 </Link>

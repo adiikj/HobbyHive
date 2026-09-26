@@ -17,6 +17,7 @@ import {
   getFollowingUsers,
   getOrCreateConversation,
   getUserSkills,
+  getUserReputation,
   type Profile,
   type FollowRelationship,
   type FollowRequest,
@@ -28,7 +29,7 @@ import HobbyGlyph from "@/components/brand/HobbyGlyph";
 import { PageContainer, Card, SectionTitle, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import ProfilePosts from "./ProfilePosts";
-import ProfileSkills, { type SkillsByHive } from "./ProfileSkills";
+import ProfileSkills, { type ReputationByHive, type SkillsByHive } from "./ProfileSkills";
 
 interface ProfileViewProps {
   username: string;
@@ -42,6 +43,7 @@ function ProfileView({ username }: ProfileViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [skills, setSkills] = useState<SkillsByHive | null>(null);
+  const [reputation, setReputation] = useState<ReputationByHive>(new Map());
 
   const [followStatus, setFollowStatus] = useState<FollowRelationship | null>(null);
   const [isFollowActionLoading, setIsFollowActionLoading] = useState(false);
@@ -71,6 +73,10 @@ function ProfileView({ username }: ProfileViewProps) {
     getUserSkills(username)
       .then((r) => !cancelled && setSkills(new Map(r.hives.map((h) => [h.hobby.id, { learning: h.learning, done: h.done }]))))
       .catch(() => !cancelled && setSkills(new Map()));
+    setReputation(new Map());
+    getUserReputation(username)
+      .then((r) => !cancelled && setReputation(new Map(r.map((x) => [x.hobbyId, { helpful: x.helpful, level: x.level }]))))
+      .catch(() => {});
 
     return () => {
       cancelled = true;
@@ -428,7 +434,7 @@ function ProfileView({ username }: ProfileViewProps) {
           </Card>
         )}
 
-        <ProfileSkills hobbies={profile.hobbies} skills={skills} isOwnProfile={isOwnProfile} />
+        <ProfileSkills hobbies={profile.hobbies} skills={skills} reputation={reputation} isOwnProfile={isOwnProfile} />
 
         <ProfilePosts username={profile.username} name={profile.name} isOwnProfile={isOwnProfile} />
       </motion.div>
