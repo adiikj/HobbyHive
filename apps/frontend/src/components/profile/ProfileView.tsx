@@ -16,6 +16,7 @@ import {
   getFollowers,
   getFollowingUsers,
   getOrCreateConversation,
+  getUserSkills,
   type Profile,
   type FollowRelationship,
   type FollowRequest,
@@ -24,10 +25,10 @@ import {
 import { useCurrentUser } from "@/lib/currentUser";
 import Skeleton from "@/components/ui/Skeleton";
 import HobbyGlyph from "@/components/brand/HobbyGlyph";
-import { PageContainer, Card, SectionTitle, HexIcon, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
+import { PageContainer, Card, SectionTitle, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import ProfilePosts from "./ProfilePosts";
-import HobbyIcon from "@/components/brand/HobbyIcon";
+import ProfileSkills, { type SkillsByHive } from "./ProfileSkills";
 
 interface ProfileViewProps {
   username: string;
@@ -40,6 +41,7 @@ function ProfileView({ username }: ProfileViewProps) {
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [skills, setSkills] = useState<SkillsByHive | null>(null);
 
   const [followStatus, setFollowStatus] = useState<FollowRelationship | null>(null);
   const [isFollowActionLoading, setIsFollowActionLoading] = useState(false);
@@ -64,6 +66,11 @@ function ProfileView({ username }: ProfileViewProps) {
       .then((p) => !cancelled && setProfile(p))
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : "Failed to load profile"))
       .finally(() => !cancelled && setIsLoading(false));
+
+    setSkills(null);
+    getUserSkills(username)
+      .then((r) => !cancelled && setSkills(new Map(r.hives.map((h) => [h.hobby.id, { learning: h.learning, done: h.done }]))))
+      .catch(() => !cancelled && setSkills(new Map()));
 
     return () => {
       cancelled = true;
@@ -220,15 +227,20 @@ function ProfileView({ username }: ProfileViewProps) {
   const coverColor = profile.hobbies[0] ? getHobbyColor(profile.hobbies[0].name) : "#DB2777";
   const joined = new Date(profile.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
+  // Followers still exist, but a profile leads with what someone has learned
   const statButton = (type: "followers" | "following", count: number, label: string) => (
     <button
       onClick={() => toggleList(type)}
       aria-expanded={listPanel === type}
-      className={`rounded-xl px-3 py-2 text-left transition-colors hover:bg-canvas ${listPanel === type ? "bg-canvas" : ""}`}
+      className={`rounded-full px-3 py-1.5 text-sm transition-colors hover:bg-canvas ${listPanel === type ? "bg-canvas" : ""}`}
     >
-      <span className="block font-bnt text-3xl leading-none text-chblack">{count}</span>
-      <span className="text-xs font-quick font-bold text-chblack/50">{label}</span>
+      <span className="font-semibold text-chblack">{count}</span> <span className="text-chblack/50">{label}</span>
     </button>
+  );
+
+  const skillTotals = [...(skills?.values() ?? [])].reduce(
+    (t, h) => ({ done: t.done + h.done.length, learning: t.learning + h.learning.length }),
+    { done: 0, learning: 0 }
   );
 
   let actions: React.ReactNode;
@@ -322,12 +334,20 @@ function ProfileView({ username }: ProfileViewProps) {
               </div>
             )}
 
-            <div className="-mx-3 mt-4 flex gap-1">
-              {statButton("followers", profile.followersCount, "Followers")}
-              {statButton("following", profile.followingCount, "Following")}
-              <div className="px-3 py-2">
-                <span className="block font-bnt text-3xl leading-none text-chblack">{profile.hobbies.length}</span>
-                <span className="text-xs font-quick font-bold text-chblack/50">Hives</span>
+            <div className="-mx-3 mt-4 flex flex-wrap items-end gap-1">
+              {[
+                ["Skills done", skillTotals.done],
+                ["Learning", skillTotals.learning],
+                ["Hives", profile.hobbies.length],
+              ].map(([label, value]) => (
+                <div key={label} className="px-3 py-2">
+                  <span className="block font-bnt text-3xl leading-none text-chblack">{skills ? value : "–"}</span>
+                  <span className="text-xs font-quick font-bold text-chblack/50">{label}</span>
+                </div>
+              ))}
+              <div className="ml-auto flex gap-1 pb-1">
+                {statButton("followers", profile.followersCount, "followers")}
+                {statButton("following", profile.followingCount, "following")}
               </div>
             </div>
           </div>
@@ -408,29 +428,7 @@ function ProfileView({ username }: ProfileViewProps) {
           </Card>
         )}
 
-        <section>
-          <SectionTitle>HIVES</SectionTitle>
-          {profile.hobbies.length === 0 ? (
-            <p className="text-sm text-chblack/50">No hobbies picked yet.</p>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {profile.hobbies.map((hobby) => {
-                const color = getHobbyColor(hobby.name);
-                return (
-                  <Link
-                    key={hobby.id}
-                    href={`/hobbies/${hobby.slug}`}
-                    className="flex items-center gap-3 rounded-2xl border p-3 transition-transform hover:-translate-y-0.5"
-                    style={{ backgroundColor: withAlpha(color, 0.08), borderColor: withAlpha(color, 0.18) }}
-                  >
-                    <HexIcon fill="rgb(var(--c-surface))" icon={<HobbyIcon name={hobby.name} style={{ color }} />} size={40} />
-                    <span className="truncate font-semibold text-chblack">{hobby.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        <ProfileSkills hobbies={profile.hobbies} skills={skills} isOwnProfile={isOwnProfile} />
 
         <ProfilePosts username={profile.username} name={profile.name} isOwnProfile={isOwnProfile} />
       </motion.div>
