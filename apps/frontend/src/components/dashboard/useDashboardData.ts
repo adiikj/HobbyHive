@@ -79,6 +79,7 @@ export function useDashboardData() {
   // Per-hive context: the running challenge, pinned posts, and your progress logs here
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [enterChallenge, setEnterChallenge] = useState(false);
+  const [feedbackAsk, setFeedbackAsk] = useState<string | null>(null);
   const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [progressLogs, setProgressLogs] = useState<ProgressLogSummary[]>([]);
   const [progressLogId, setProgressLogId] = useState<string | null>(null);
@@ -243,11 +244,13 @@ export function useDashboardData() {
         images,
         challengeId: enterChallenge && activeChallenge ? activeChallenge.id : null,
         progressLogId,
+        feedbackAsk: feedbackAsk?.trim() || null,
       });
       setPosts((prev) => [post, ...prev]);
       setNewPostContent("");
       clearPostImages();
       setEnterChallenge(false);
+      setFeedbackAsk(null);
       if (progressLogId) {
         setProgressLogs((prev) =>
           prev.map((l) => (l.id === progressLogId ? { ...l, entryCount: l.entryCount + 1, lastEntryAt: post.createdAt } : l))
@@ -308,6 +311,8 @@ export function useDashboardData() {
     activeChallenge,
     enterChallenge,
     setEnterChallenge,
+    feedbackAsk,
+    setFeedbackAsk,
     progressLogs,
     progressLogId,
     setProgressLogId,

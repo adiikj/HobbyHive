@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { AtSign, Bell, CornerDownRight, Heart, MessageCircle, Sparkles, UserPlus, type LucideIcon } from "lucide-react";
+import { AtSign, Award, Bell, CornerDownRight, Heart, MessageCircle, MessageSquareHeart, Sparkles, UserPlus, type LucideIcon } from "lucide-react";
 import {
   getNotifications,
   getUnreadNotificationCount,
@@ -34,6 +34,10 @@ function notificationMessage(n: Notification): string {
       return `${actorName} mentioned you`;
     case "REPLY":
       return `${actorName} replied to your comment`;
+    case "FEEDBACK":
+      return `${actorName} gave you feedback`;
+    case "FEEDBACK_HELPFUL":
+      return `${actorName} found your feedback helpful`;
     default:
       return "New notification";
   }
@@ -53,6 +57,8 @@ const TYPE_BADGE: Record<Notification["type"], { icon: LucideIcon; className: st
   NEW_POST: { icon: Sparkles, className: "bg-amber-500" },
   MENTION: { icon: AtSign, className: "bg-violet-500" },
   REPLY: { icon: CornerDownRight, className: "bg-sky-500" },
+  FEEDBACK: { icon: MessageSquareHeart, className: "bg-emerald-500" },
+  FEEDBACK_HELPFUL: { icon: Award, className: "bg-amber-500" },
 };
 
 type RequestState = "pending" | "accepted" | "declined" | "busy";

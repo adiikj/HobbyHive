@@ -6,6 +6,7 @@ const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
 const PRACTICE_URL = BASE_URL.replace(/\/users$/, "/practice");
 const SKILLS_URL = BASE_URL.replace(/\/users$/, "/skills");
 const GOALS_URL = BASE_URL.replace(/\/users$/, "/goals");
+const FEEDBACK_URL = BASE_URL.replace(/\/users$/, "/feedback");
 const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
 const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
 const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
@@ -70,6 +71,9 @@ export interface Post {
   canModerate?: boolean;
   /** The viewer wrote this post. */
   isOwn?: boolean;
+  /** Set when the author asked for feedback: their specific question. */
+  feedbackAsk?: string | null;
+  feedbackCount?: number;
 }
 
 export interface Challenge {
@@ -110,6 +114,8 @@ export interface CreatePostOptions {
   images?: string[];
   challengeId?: string | null;
   progressLogId?: string | null;
+  /** Ask the hive for feedback on something specific. */
+  feedbackAsk?: string | null;
 }
 
 export interface SaveResult {
@@ -182,7 +188,7 @@ export interface FollowRequest {
   follower: FollowUser;
 }
 
-export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW" | "NEW_POST" | "MENTION" | "REPLY";
+export type NotificationType = "LIKE" | "COMMENT" | "FOLLOW" | "NEW_POST" | "MENTION" | "REPLY" | "FEEDBACK" | "FEEDBACK_HELPFUL";
 
 export interface Notification {
   id: string;
@@ -1411,3 +1417,68 @@ export const updateGoal = (goalId: string, input: { title?: string; targetDate?:
 
 export const deleteGoal = (goalId: string) =>
   request<{ id: string }>(() => axios.delete(`${GOALS_URL}/${goalId}`, authConfig()), "Couldn't delete this goal");
+
+// ---------- Feedback requests ----------
+
+export type MentorLevel = "Helper" | "Mentor" | "Guide";
+
+export interface Feedback {
+  id: string;
+  /** What's working. */
+  working: string;
+  /** One thing to try. */
+  tryNext: string;
+  /** Where to look: a clip timestamp or a photo. */
+  at: string | null;
+  helpfulAt: string | null;
+  createdAt: string;
+  author: { id: string; name: string; username: string; avatarUrl: string | null };
+  isOwn: boolean;
+  /** The giver's level in this post's hive, from feedback others marked helpful. */
+  mentorLevel: MentorLevel | null;
+}
+
+export const getPostFeedback = (postId: string) =>
+  request<{ ask: string | null; canGive: boolean; canMarkHelpful: boolean; feedback: Feedback[] }>(
+    () => axios.get(`${POSTS_URL}/${postId}/feedback`, authConfig()),
+    "Couldn't load feedback"
+  );
+
+export const giveFeedback = (postId: string, input: { working: string; tryNext: string; at?: string }) =>
+  request<Feedback>(() => axios.post(`${POSTS_URL}/${postId}/feedback`, input, authConfig()), "Couldn't send your feedback");
+
+export const markFeedbackHelpful = (feedbackId: string, helpful: boolean) =>
+  request<{ id: string; helpfulAt: string | null }>(
+    () => axios.put(`${FEEDBACK_URL}/${feedbackId}/helpful`, { helpful }, authConfig()),
+    "Couldn't update this feedback"
+  );
+
+export const deleteFeedback = (feedbackId: string) =>
+  request<{ id: string }>(() => axios.delete(`${FEEDBACK_URL}/${feedbackId}`, authConfig()), "Couldn't delete this feedback");
+
+/** Open (a question) or close (null) your post's feedback request. */
+export const setFeedbackAsk = (postId: string, ask: string | null) =>
+  request<{ id: string; feedbackAsk: string | null }>(
+    () => axios.put(`${POSTS_URL}/${postId}/feedback-ask`, { ask }, authConfig()),
+    "Couldn't update this request"
+  );
+
+/** A hive's feedback requests; `open` for ones nobody has answered yet. */
+export const getFeedbackRequests = (slug: string, open = false) =>
+  request<(Post & { hasHelpfulFeedback: boolean })[]>(
+    () => axios.get(`${HOBBIES_URL}/${slug}/feedback-requests`, authConfig(open ? { open: 1 } : undefined)),
+    "Couldn't load feedback requests"
+  );
+
+export const getHiveMentors = (slug: string) =>
+  request<{ user: { id: string; name: string; username: string; avatarUrl: string | null }; helpful: number; level: MentorLevel | null }[]>(
+    () => axios.get(`${HOBBIES_URL}/${slug}/mentors`, authConfig()),
+    "Couldn't load mentors"
+  );
+
+/** Someone's helpful-feedback count and mentor level, per hive. */
+export const getUserReputation = (username: string) =>
+  request<{ hobbyId: string; helpful: number; level: MentorLevel | null }[]>(
+    () => axios.get(`${BASE_URL}/${username}/reputation`, authConfig()),
+    "Couldn't load reputation"
+  );

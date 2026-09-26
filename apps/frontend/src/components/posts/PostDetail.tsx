@@ -8,6 +8,7 @@ import { getPost, type Post } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import PostCard from "@/components/dashboard/PostCard";
 import SimilarPosts from "./SimilarPosts";
+import FeedbackThread from "./FeedbackThread";
 import { PageContainer, secondaryButtonClass } from "@/components/ui/Page";
 import { PostListSkeleton } from "@/components/ui/Skeletons";
 import HobbyIcon from "@/components/brand/HobbyIcon";
@@ -65,8 +66,9 @@ function PostDetail({ postId }: { postId: string }) {
       ) : (
         <>
           <div className="rounded-2xl border border-line bg-surface">
-            <PostCard post={post} autoOpenComments />
+            <PostCard key={post.feedbackAsk ?? "no-ask"} post={post} autoOpenComments />
           </div>
+          <FeedbackThread post={post} onAskChange={(ask) => setPost((p) => (p ? { ...p, feedbackAsk: ask } : p))} />
           <SimilarPosts postId={post.id} />
         </>
       )}

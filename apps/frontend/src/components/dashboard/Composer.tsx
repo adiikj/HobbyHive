@@ -7,8 +7,7 @@ import {
   Trophy,
   TrendingUp,
   Plus,
-  Check,
-} from "lucide-react";
+  Check, MessageSquareHeart } from "lucide-react";
 import type { Challenge, Hobby, ProgressLogSummary } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import { MAX_POST_IMAGES, type ComposerImage } from "./useDashboardData";
@@ -33,6 +32,9 @@ interface ComposerProps {
   progressLogId: string | null;
   onProgressLogChange: (id: string | null) => void;
   onCreateProgressLog: (title: string) => Promise<void>;
+  /** null = not asking; a string (possibly empty while typing) = asking the hive for feedback on this. */
+  feedbackAsk: string | null;
+  onFeedbackAskChange: (value: string | null) => void;
   isPosting: boolean;
   error: string;
   onSubmit: () => Promise<boolean>;
@@ -60,6 +62,8 @@ function Composer({
   progressLogId,
   onProgressLogChange,
   onCreateProgressLog,
+  feedbackAsk,
+  onFeedbackAskChange,
   isPosting,
   error,
   onSubmit,
@@ -385,7 +389,34 @@ function Composer({
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => onFeedbackAskChange(feedbackAsk === null ? "" : null)}
+              aria-pressed={feedbackAsk !== null}
+              className={chipClass(feedbackAsk !== null)}
+              style={feedbackAsk !== null ? { backgroundColor: "#059669" } : undefined}
+            >
+              <MessageSquareHeart size={13} /> {feedbackAsk !== null ? "Asking for feedback" : "Ask for feedback"}
+            </button>
           </div>
+
+          {feedbackAsk !== null && (
+            <div className="mt-2.5">
+              <label htmlFor="feedback-ask" className="sr-only">
+                What do you want feedback on?
+              </label>
+              <input
+                id="feedback-ask"
+                value={feedbackAsk}
+                onChange={(e) => onFeedbackAskChange(e.target.value)}
+                maxLength={140}
+                placeholder="What do you want feedback on? e.g. is my spotting late?"
+                className="w-full rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm text-chblack placeholder:text-chblack/40 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+              />
+              <p className="mt-1 text-[11px] text-chblack/45">A specific question gets better answers. Replies come as what&apos;s working and one thing to try.</p>
+            </div>
+          )}
         </div>
       </div>
 

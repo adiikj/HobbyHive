@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Send, Check, Pin, Trophy, TrendingUp } from "lucide-react";
+import { Heart, MessageCircle, MessageSquareHeart, Send, Check, Pin, Trophy, TrendingUp } from "lucide-react";
 import { likePost, unlikePost, type Post } from "@/api/api";
 import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
 import MentionText from "@/components/posts/MentionText";
@@ -140,6 +140,22 @@ function PostCard({ post: initialPost, showHobby = true, autoOpenComments = fals
           <MentionText text={post.content} />
         </p>
         <PhotoCarousel images={images} alt={`Photo from ${post.author.name}`} />
+
+        {post.feedbackAsk && (
+          <Link
+            href={`/posts/${post.id}#feedback`}
+            className="mt-2.5 flex items-center gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] px-3.5 py-2.5 transition-colors hover:bg-emerald-500/10"
+          >
+            <MessageSquareHeart size={18} className="shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-quick font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Feedback wanted</span>
+              <span className="block text-sm text-chblack">{post.feedbackAsk}</span>
+            </span>
+            <span className="shrink-0 rounded-full bg-emerald-600 px-3 py-1 text-xs font-quick font-bold text-white">
+              {post.isOwn ? `See feedback${post.feedbackCount ? ` · ${post.feedbackCount}` : ""}` : `Give feedback${post.feedbackCount ? ` · ${post.feedbackCount}` : ""}`}
+            </span>
+          </Link>
+        )}
 
         <div className="flex items-center gap-1 mt-2 -ml-2 text-chblack/50">
           <button

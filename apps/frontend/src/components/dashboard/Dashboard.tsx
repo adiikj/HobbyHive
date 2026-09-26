@@ -131,6 +131,8 @@ function Dashboard() {
     activeChallenge,
     enterChallenge,
     setEnterChallenge,
+    feedbackAsk,
+    setFeedbackAsk,
     progressLogs,
     progressLogId,
     setProgressLogId,
@@ -252,6 +254,8 @@ function Dashboard() {
                 progressLogId={progressLogId}
                 onProgressLogChange={setProgressLogId}
                 onCreateProgressLog={addProgressLog}
+                feedbackAsk={feedbackAsk}
+                onFeedbackAskChange={setFeedbackAsk}
                 isPosting={isPosting}
                 error={postError}
                 onSubmit={handleCreatePost}
