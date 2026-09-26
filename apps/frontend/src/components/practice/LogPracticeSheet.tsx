@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ImagePlus, Lock, Share2, X } from "lucide-react";
 import {
+  getHobbySkills,
   getMyHobbies,
   getMyPractice,
   logPractice,
@@ -12,6 +13,7 @@ import {
   type Hobby,
   type PracticeFeel,
   type PracticeSession,
+  type SkillNode,
 } from "@/api/api";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui/Page";
@@ -31,6 +33,8 @@ interface LogPracticeSheetProps {
   onClose: () => void;
   /** Pre-selected hive (e.g. the one the timer ran in). */
   hobby?: { id: string; name: string; slug: string } | null;
+  /** Pre-selected skill (e.g. started from a skill's "Practise this"). */
+  skill?: { id: string; name: string } | null;
   /** From the timer: how long it ran and when it started. */
   minutes?: number;
   startedAt?: string;
@@ -38,12 +42,14 @@ interface LogPracticeSheetProps {
 }
 
 /** Log a practice session: what you worked on, how long, how it went, and optionally share it. */
-function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initialMinutes, startedAt, onLogged }: LogPracticeSheetProps) {
+function LogPracticeSheet({ open, onClose, hobby: initialHobby, skill: initialSkill, minutes: initialMinutes, startedAt, onLogged }: LogPracticeSheetProps) {
   const [hobbies, setHobbies] = useState<Hobby[] | null>(null);
   const [hobbyId, setHobbyId] = useState<string | null>(initialHobby?.id ?? null);
   const [minutes, setMinutes] = useState<string>(initialMinutes ? String(initialMinutes) : "30");
   const [focus, setFocus] = useState("");
   const [recentFocus, setRecentFocus] = useState<string[]>([]);
+  const [skills, setSkills] = useState<SkillNode[]>([]);
+  const [skillId, setSkillId] = useState<string | null>(initialSkill?.id ?? null);
   const [feel, setFeel] = useState<PracticeFeel | null>(null);
   const [note, setNote] = useState("");
   const [share, setShare] = useState(false);
@@ -59,7 +65,8 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initial
     if (!open) return;
     setHobbyId(initialHobby?.id ?? null);
     setMinutes(initialMinutes ? String(initialMinutes) : "30");
-    setFocus("");
+    setFocus(initialSkill?.name ?? "");
+    setSkillId(initialSkill?.id ?? null);
     setFeel(null);
     setNote("");
     setShare(false);
@@ -72,7 +79,7 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initial
         setHobbyId((current) => current ?? list[0]?.id ?? null);
       })
       .catch(() => setHobbies([]));
-  }, [open, initialHobby?.id, initialMinutes]);
+  }, [open, initialHobby?.id, initialSkill?.id, initialSkill?.name, initialMinutes]);
 
   const hobby = hobbies?.find((h) => h.id === hobbyId) ?? null;
   const color = getHobbyColor(hobby?.name ?? initialHobby?.name ?? "");
@@ -84,6 +91,9 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initial
     getMyPractice(hobby.slug)
       .then((r) => !cancelled && setRecentFocus(r.recentFocus))
       .catch(() => !cancelled && setRecentFocus([]));
+    getHobbySkills(hobby.slug)
+      .then((r) => !cancelled && setSkills(r.skills))
+      .catch(() => !cancelled && setSkills([]));
     return () => {
       cancelled = true;
     };
@@ -122,7 +132,15 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initial
     setSaving(true);
     setError("");
     try {
-      const session = await logPractice({ hobbyId, durationMin, focus: focus.trim(), note: note.trim() || undefined, feel, startedAt });
+      const session = await logPractice({
+        hobbyId,
+        durationMin,
+        focus: focus.trim(),
+        note: note.trim() || undefined,
+        feel,
+        startedAt,
+        skillId: skills.some((s) => s.id === skillId) ? skillId : null,
+      });
       let result = session;
       if (share) {
         const post = await sharePractice(session.id, { caption: caption.trim() || undefined, images: photos });
@@ -226,6 +244,18 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initial
                   </button>
                 ))}
               </div>
+            )}
+
+            {skills.length > 0 && (
+              <SkillPicker
+                skills={skills}
+                value={skillId}
+                color={color}
+                onChange={(id, name) => {
+                  setSkillId(id);
+                  if (id && !focus.trim()) setFocus(name);
+                }}
+              />
             )}
 
             <label htmlFor="practice-minutes" className="mb-2 mt-5 block text-xs font-quick font-bold uppercase tracking-wider text-chblack/45">
@@ -371,6 +401,65 @@ function LogPracticeSheet({ open, onClose, hobby: initialHobby, minutes: initial
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/** Optional: which skill this session counts towards. Skills you're learning come first. */
+function SkillPicker({
+  skills,
+  value,
+  color,
+  onChange,
+}: {
+  skills: SkillNode[];
+  value: string | null;
+  color: string;
+  onChange: (id: string | null, name: string) => void;
+}) {
+  const learning = skills.filter((s) => s.my?.status === "LEARNING");
+  const rest = skills.filter((s) => s.my?.status !== "LEARNING" && s.my?.status !== "DONE");
+  const selected = skills.find((s) => s.id === value) ?? null;
+  const chips = selected && !learning.includes(selected) ? [selected, ...learning] : learning;
+
+  return (
+    <div className="mt-5">
+      <p className="mb-2 text-xs font-quick font-bold uppercase tracking-wider text-chblack/45">
+        Skill <span className="font-pop font-normal normal-case tracking-normal">(optional, counts towards it)</span>
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {chips.map((s) => {
+          const on = s.id === value;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onChange(on ? null : s.id, s.name)}
+              className="rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors"
+              style={on ? { backgroundColor: color, borderColor: color, color: "#fff" } : { borderColor: withAlpha(color, 0.35), color }}
+            >
+              {s.name}
+            </button>
+          );
+        })}
+        <select
+          aria-label="Pick another skill"
+          value={selected && !chips.includes(selected) ? selected.id : ""}
+          onChange={(e) => {
+            const skill = skills.find((s) => s.id === e.target.value);
+            onChange(skill?.id ?? null, skill?.name ?? "");
+          }}
+          className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs text-chblack/60 focus:outline-none focus:ring-2 focus:ring-brand"
+        >
+          <option value="">{chips.length ? "Other skill…" : "Pick a skill…"}</option>
+          {rest.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
   );
 }
 

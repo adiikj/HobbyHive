@@ -9,6 +9,8 @@ import { useSyncExternalStore } from "react";
 export interface RunningPractice {
   startedAt: number;
   hobby: { id: string; name: string; slug: string };
+  /** Set when started from a skill ("Practise this"), so the log form pre-selects it. */
+  skill?: { id: string; name: string } | null;
 }
 
 const KEY = "hh:practice-timer";
@@ -60,7 +62,8 @@ export function usePracticeTimer() {
   return useSyncExternalStore(subscribe, read, () => null);
 }
 
-export const startPractice = (hobby: RunningPractice["hobby"]) => write({ startedAt: Date.now(), hobby });
+export const startPractice = (hobby: RunningPractice["hobby"], skill: RunningPractice["skill"] = null) =>
+  write({ startedAt: Date.now(), hobby, skill });
 export const clearPractice = () => write(null);
 
 /** Whole minutes since `startedAt`, at least 1. */

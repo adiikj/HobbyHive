@@ -4,6 +4,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 const HOBBIES_URL = BASE_URL.replace(/\/users$/, "/hobbies");
 const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
 const PRACTICE_URL = BASE_URL.replace(/\/users$/, "/practice");
+const SKILLS_URL = BASE_URL.replace(/\/users$/, "/skills");
+const GOALS_URL = BASE_URL.replace(/\/users$/, "/goals");
 const FEED_URL = BASE_URL.replace(/\/users$/, "/feed");
 const NOTIFICATIONS_URL = BASE_URL.replace(/\/users$/, "/notifications");
 const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
@@ -1300,10 +1302,12 @@ export interface PracticeSession {
   postId: string | null;
   createdAt: string;
   hobby: JourneyHobby;
+  skill: { id: string; name: string } | null;
 }
 
 export interface LogPracticeInput {
   hobbyId: string;
+  skillId?: string | null;
   durationMin: number;
   focus: string;
   note?: string;
@@ -1330,3 +1334,80 @@ export const sharePractice = (sessionId: string, { caption, images }: { caption?
     () => axios.post(`${PRACTICE_URL}/${sessionId}/share`, { caption, images }, authConfig()),
     "Couldn't share this session"
   );
+
+// ---------- Skills & goals ----------
+
+export type SkillStatus = "LEARNING" | "DONE";
+
+export interface SkillNode {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  /** 1 = first steps; higher tiers build on lower ones. */
+  tier: number;
+  position: number;
+  parentId: string | null;
+  membersDone: number;
+  membersLearning: number;
+  /** You: status (null if you've only practised it) and practice time tagged to it. */
+  my: { status: SkillStatus | null; startedAt: string | null; completedAt: string | null; minutes: number; sessions: number } | null;
+}
+
+export type GoalStatus = "ACTIVE" | "ACHIEVED" | "DROPPED";
+
+export interface Goal {
+  id: string;
+  title: string;
+  targetDate: string | null;
+  status: GoalStatus;
+  createdAt: string;
+  achievedAt: string | null;
+  hobby: JourneyHobby;
+  skill: { id: string; name: string } | null;
+  /** Practice on the goal's skill since it was set (null for goals without a skill). */
+  progress: { minutes: number; sessions: number } | null;
+}
+
+export const getHobbySkills = (slug: string) =>
+  request<{ hobby: JourneyHobby; skills: SkillNode[]; goals: { id: string; title: string; targetDate: string | null; skillId: string | null; createdAt: string }[] }>(
+    () => axios.get(`${HOBBIES_URL}/${slug}/skills`, authConfig()),
+    "Couldn't load this hive's skills"
+  );
+
+export const setSkillStatus = (skillId: string, status: SkillStatus | null) =>
+  request<{ skillId: string; status: SkillStatus | null; achievedGoals?: number }>(
+    () => axios.put(`${SKILLS_URL}/${skillId}/status`, { status }, authConfig()),
+    "Couldn't update this skill"
+  );
+
+export interface UserSkillItem {
+  id: string;
+  name: string;
+  tier: number;
+  startedAt: string;
+  completedAt: string | null;
+  minutes: number;
+}
+
+/** Someone's skills, grouped by hive: what they're learning and what they've done. */
+export const getUserSkills = (username: string) =>
+  request<{ hives: { hobby: JourneyHobby; learning: UserSkillItem[]; done: UserSkillItem[] }[] }>(
+    () => axios.get(`${BASE_URL}/${username}/skills`, authConfig()),
+    "Couldn't load skills"
+  );
+
+export const getMyGoals = (params: { hobbySlug?: string | null; status?: GoalStatus } = {}) =>
+  request<Goal[]>(
+    () => axios.get(GOALS_URL, authConfig({ hobby: params.hobbySlug ?? undefined, status: params.status })),
+    "Couldn't load your goals"
+  );
+
+export const createGoal = (input: { hobbyId: string; skillId?: string | null; title?: string; targetDate?: string | null }) =>
+  request<Goal>(() => axios.post(GOALS_URL, input, authConfig()), "Couldn't set this goal");
+
+export const updateGoal = (goalId: string, input: { title?: string; targetDate?: string | null; status?: GoalStatus }) =>
+  request<Goal>(() => axios.patch(`${GOALS_URL}/${goalId}`, input, authConfig()), "Couldn't update this goal");
+
+export const deleteGoal = (goalId: string) =>
+  request<{ id: string }>(() => axios.delete(`${GOALS_URL}/${goalId}`, authConfig()), "Couldn't delete this goal");

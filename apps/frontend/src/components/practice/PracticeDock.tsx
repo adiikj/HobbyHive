@@ -45,7 +45,9 @@ function PracticeDock() {
                 <HobbyIcon name={running.hobby.name} size={18} className="relative" />
               </span>
               <div className="min-w-0" aria-live="off">
-                <p className="text-[10px] font-quick font-bold uppercase tracking-wider text-white/55">Practising {running.hobby.name}</p>
+                <p className="max-w-[11rem] truncate text-[10px] font-quick font-bold uppercase tracking-wider text-white/55">
+                  Practising {running.skill?.name ?? running.hobby.name}
+                </p>
                 <p className="font-mons text-lg font-bold tabular-nums leading-none">{formatElapsed(now - running.startedAt)}</p>
               </div>
               {confirmDiscard ? (
@@ -92,6 +94,7 @@ function PracticeDock() {
         open={finishing !== null}
         onClose={() => setFinishing(null)}
         hobby={running?.hobby}
+        skill={running?.skill ?? null}
         minutes={finishing?.minutes}
         startedAt={finishing?.startedAt}
         onLogged={() => clearPractice()}

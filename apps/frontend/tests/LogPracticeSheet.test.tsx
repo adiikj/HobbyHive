@@ -8,6 +8,13 @@ const sharePracticeMock = vi.fn();
 vi.mock("@/api/api", () => ({
   getMyHobbies: () => Promise.resolve([{ id: "hobby_dance", name: "Dance", slug: "dance", icon: null }]),
   getMyPractice: () => Promise.resolve({ sessions: [], recentFocus: ["turns"] }),
+  getHobbySkills: () =>
+    Promise.resolve({
+      skills: [
+        { id: "sk_spot", name: "Spotting", my: { status: "LEARNING" } },
+        { id: "sk_double", name: "Double pirouette", my: null },
+      ],
+    }),
   logPractice: (...args: unknown[]) => logPracticeMock(...args),
   sharePractice: (...args: unknown[]) => sharePracticeMock(...args),
   uploadPostImage: vi.fn(),
@@ -60,5 +67,17 @@ describe("LogPracticeSheet", () => {
 
     expect(await screen.findByText("Say what you worked on")).toBeInTheDocument();
     expect(logPracticeMock).not.toHaveBeenCalled();
+  });
+
+  it("tags the session with a skill you're learning", async () => {
+    const user = userEvent.setup();
+    render(<LogPracticeSheet open onClose={vi.fn()} hobby={dance} minutes={30} />);
+
+    await user.click(await screen.findByRole("button", { name: "Spotting" }));
+    // Picking a skill with an empty "worked on" fills it in
+    expect(screen.getByLabelText("What did you work on?")).toHaveValue("Spotting");
+    await user.click(screen.getByRole("button", { name: "Save session" }));
+
+    await waitFor(() => expect(logPracticeMock).toHaveBeenCalledWith(expect.objectContaining({ skillId: "sk_spot", focus: "Spotting" })));
   });
 });
