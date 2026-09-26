@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { BadgeAlert, Heart, Megaphone, MessageCircle, Sparkles, TrendingUp } from "lucide-react";
-import { getHobbyColor } from "@/lib/hobbyTheme";
+import { getHobbyColor, getHobbyText } from "@/lib/hobbyTheme";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface NoisyPost {
@@ -83,7 +83,7 @@ function HiveFeed() {
               <Image src={p.avatar} alt="" fill sizes="28px" className="object-cover" />
             </span>
             <p className="flex-1 truncate text-xs font-semibold text-chblack">{p.user}</p>
-            <span className="flex items-center gap-1 text-[10px] font-bold" style={{ color: DANCE }}>
+            <span className="flex items-center gap-1 text-[10px] font-bold" style={{ color: getHobbyText(DANCE) }}>
               <HobbyIcon name="Dance" size={12} /> Dance
             </span>
           </div>
@@ -93,7 +93,7 @@ function HiveFeed() {
           </div>
           <div className="mt-2 flex gap-3 text-[11px] font-semibold text-chblack/50">
             <span className="flex items-center gap-1">
-              <Heart size={12} className="fill-current" style={{ color: DANCE }} /> {p.likes}
+              <Heart size={12} className="fill-current" style={{ color: getHobbyText(DANCE) }} /> {p.likes}
             </span>
             <span className="flex items-center gap-1">
               <MessageCircle size={12} /> {p.comments}

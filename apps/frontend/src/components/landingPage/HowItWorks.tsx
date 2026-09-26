@@ -3,11 +3,11 @@
 import { useRef } from "react";
 import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { Check, Flame, TrendingUp, Trophy } from "lucide-react";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyText, BRAND_COLOR } from "@/lib/hobbyTheme";
 import { useLoop } from "./useLoop";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
-const PINK = "#DB2777";
+const PINK = BRAND_COLOR;
 
 /* ---------- 1. Pick: hives light up one by one ---------- */
 
@@ -36,7 +36,7 @@ function PickVisual() {
               }
               transition={{ duration: 0.3 }}
             >
-              {on ? <Check size={11} /> : <HobbyIcon name={name} size={13} style={{ color }} />}
+              {on ? <Check size={11} /> : <HobbyIcon name={name} size={13} style={{ color: getHobbyText(color) }} />}
               {name}
             </motion.div>
           );

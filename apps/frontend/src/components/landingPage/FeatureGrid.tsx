@@ -4,10 +4,10 @@ import { useRef } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { AtSign, Bookmark, CalendarDays, Check, Compass, Flame, Heart, MessageCircle, Radio, Trophy, Users } from "lucide-react";
-import { withAlpha } from "@/lib/hobbyTheme";
+import { withAlpha, getHobbyText, BRAND_COLOR } from "@/lib/hobbyTheme";
 import { useLoop } from "./useLoop";
 
-const PINK = "#DB2777";
+const PINK = BRAND_COLOR;
 const VIOLET = "#8B5CF6";
 const TEAL = "#2C7A7B";
 const AMBER = "#D97706";
@@ -45,7 +45,7 @@ function Tile({
         className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-60 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
         style={{ backgroundColor: withAlpha(color, 0.14) }}
       />
-      <p className="relative flex items-center gap-1.5 font-quick text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color }}>
+      <p className="relative flex items-center gap-1.5 font-quick text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
         {icon} {label}
       </p>
       <h3 className="relative mt-2 font-quick text-lg font-bold leading-snug text-chblack">{title}</h3>
@@ -239,7 +239,7 @@ function LiveRoomVisual() {
 
   return (
     <div ref={ref} className="flex h-full min-h-[260px] flex-col rounded-2xl bg-beige p-3">
-      <p className="flex items-center gap-1.5 font-quick text-[10px] font-bold uppercase tracking-wider" style={{ color: VIOLET }}>
+      <p className="flex items-center gap-1.5 font-quick text-[10px] font-bold uppercase tracking-wider" style={{ color: getHobbyText(VIOLET) }}>
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: VIOLET }} />
           <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: VIOLET }} />

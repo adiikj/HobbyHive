@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Trophy } from "lucide-react";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyText } from "@/lib/hobbyTheme";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
 interface Hive {
@@ -83,7 +83,7 @@ function HiveCard({ hive, index }: { hive: Hive; index: number }) {
               big ? "mt-3 max-h-10" : "max-h-0 group-hover:mt-2 group-hover:max-h-10 group-focus-visible:mt-2 group-focus-visible:max-h-10"
             }`}
           >
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold" style={{ color }}>
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold" style={{ color: getHobbyText(color) }}>
               <Trophy size={11} /> This week: {hive.challenge}
             </span>
           </div>
@@ -131,7 +131,7 @@ function Featured() {
                     className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-quick text-sm font-semibold text-chblack/75 transition-all hover:-translate-y-0.5 hover:bg-[var(--hive)] hover:text-white"
                     style={{ borderColor: withAlpha(color, 0.35), ["--hive" as string]: color }}
                   >
-                    <HobbyIcon name={name} size={16} style={{ color }} />
+                    <HobbyIcon name={name} size={16} style={{ color: getHobbyText(color) }} />
                     {name}
                   </Link>
                 );

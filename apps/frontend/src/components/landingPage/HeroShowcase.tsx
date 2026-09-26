@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Flame, Heart, MessageCircle, Trophy } from "lucide-react";
 import BeaAvatar from "@/components/bea/BeaAvatar";
-import { getHobbyColor, withAlpha } from "@/lib/hobbyTheme";
+import { getHobbyColor, withAlpha, getHobbyText, getHobbyInk } from "@/lib/hobbyTheme";
 import { roundedHexagonPath } from "@/lib/hexagon";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
@@ -203,7 +203,7 @@ function HeroShowcase() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10" />
 
           <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1 font-quick text-xs font-bold text-chblack backdrop-blur">
-            <HobbyIcon name={slide.hobby} size={15} style={{ color }} />
+            <HobbyIcon name={slide.hobby} size={15} style={{ color: getHobbyText(color) }} />
             <Swap k={slide.hobby}>{slide.hobby} hive</Swap>
           </div>
 
@@ -215,7 +215,7 @@ function HeroShowcase() {
                 </span>
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold text-chblack">{slide.user}</p>
                 <span className="flex items-center gap-1 text-xs font-semibold text-chblack/50">
-                  <Heart size={13} className="fill-current" style={{ color }} /> {slide.likes}
+                  <Heart size={13} className="fill-current" style={{ color: getHobbyText(color) }} /> {slide.likes}
                 </span>
                 <span className="flex items-center gap-1 text-xs font-semibold text-chblack/50">
                   <MessageCircle size={13} /> {slide.comments}
@@ -229,7 +229,7 @@ function HeroShowcase() {
         {/* Floating cards */}
         <Float className="right-0 top-0 sm:-right-4" delay={0}>
           <div className="w-[170px] rounded-2xl bg-white p-3 shadow-xl shadow-black/10 sm:w-[190px]">
-            <p className="flex items-center gap-1 font-quick text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color }}>
+            <p className="flex items-center gap-1 font-quick text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: getHobbyText(color) }}>
               <Trophy size={12} /> This week
             </p>
             <Swap k={slide.challenge}>
@@ -336,11 +336,11 @@ function HeroShowcase() {
               aria-pressed={isActive}
               onClick={() => setActive(i)}
               className={`relative flex items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 font-quick text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600 ${
-                isActive ? "text-white" : "bg-white/70 text-chblack/60 hover:text-chblack"
+                isActive ? "" : "bg-white/70 text-chblack/60 hover:text-chblack"
               }`}
-              style={isActive ? { backgroundColor: c } : undefined}
+              style={isActive ? { backgroundColor: c, color: getHobbyInk(c) } : undefined}
             >
-              <HobbyIcon name={s.hobby} size={14} style={{ color: isActive ? "#fff" : c }} />
+              <HobbyIcon name={s.hobby} size={14} style={{ color: isActive ? getHobbyInk(c) : getHobbyText(c) }} />
               {s.hobby}
               {/* Progress bar for the auto-advance */}
               {isActive && playing && (
