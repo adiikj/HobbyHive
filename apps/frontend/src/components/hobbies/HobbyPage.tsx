@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Sparkles, Trophy, Route } from "lucide-react";
+import { ArrowLeft, CalendarDays, Check, Newspaper, Pin, Plus, Radio, ShieldAlert, ShieldCheck, Sparkles, Trophy, Route, MessageSquareHeart } from "lucide-react";
 import {
   getHobbyBySlug,
   getHobbyPosts,
@@ -24,11 +24,12 @@ import HobbyLiveRoom from "./HobbyLiveRoom";
 import HobbyEvents from "./HobbyEvents";
 import HobbyChallenges from "@/components/challenges/HobbyChallenges";
 import SkillTree from "@/components/skills/SkillTree";
+import HiveFeedback from "./HiveFeedback";
 import FlaggedQueue from "./FlaggedQueue";
 import AskBea from "@/components/bea/AskBea";
 import HobbyIcon from "@/components/brand/HobbyIcon";
 
-type HobbyTab = "posts" | "skills" | "ask" | "room" | "events" | "challenges" | "review";
+type HobbyTab = "posts" | "skills" | "feedback" | "ask" | "room" | "events" | "challenges" | "review";
 
 interface HobbyPageProps {
   slug: string;
@@ -43,7 +44,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get("tab");
   const tabFromUrl: HobbyTab =
-    requestedTab === "skills" || requestedTab === "ask" || requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
+    requestedTab === "skills" || requestedTab === "feedback" || requestedTab === "ask" || requestedTab === "room" || requestedTab === "events" || requestedTab === "challenges" || requestedTab === "review"
       ? requestedTab
       : "posts";
   const [tab, setTab] = useState<HobbyTab>(tabFromUrl);
@@ -155,6 +156,7 @@ function HobbyPage({ slug }: HobbyPageProps) {
   const tabs: { key: HobbyTab; label: string; icon: typeof Newspaper }[] = [
     { key: "posts", label: "Posts", icon: Newspaper },
     { key: "skills", label: "Skills", icon: Route },
+    { key: "feedback", label: "Feedback", icon: MessageSquareHeart },
     { key: "ask", label: "Ask Bea", icon: Sparkles },
     { key: "room", label: "Live room", icon: Radio },
     { key: "events", label: "Events", icon: CalendarDays },
@@ -269,6 +271,8 @@ function HobbyPage({ slug }: HobbyPageProps) {
 
       {tab === "skills" ? (
         <SkillTree slug={hobby.slug} hobbyId={hobby.id} hobbyName={hobby.name} color={color} isMember={Boolean(hobby.isMember)} />
+      ) : tab === "feedback" ? (
+        <HiveFeedback slug={hobby.slug} hobbyName={hobby.name} color={color} />
       ) : tab === "room" ? (
         <HobbyLiveRoom hobbyId={hobby.id} slug={hobby.slug} color={color} />
       ) : tab === "events" ? (
