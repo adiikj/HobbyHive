@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { app } from "../src/app.js";
 import { detectImageType } from "../src/middlewares/upload.middleware.js";
+import { createRateLimiter } from "../src/utils/rateLimit.js";
 import { mockAuthenticatedUser, prismaMock } from "./testUtils.js";
 
 const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
@@ -127,5 +128,74 @@ describe("login", () => {
     const res = await request(app).post("/api/v1/users/login").send({ emailOrUsername: "a", password: "  spaced out  " });
 
     expect(res.status).toBe(200);
+  });
+});
+
+describe("auth rate limits", () => {
+  it("stops password guessing on one account after 10 tries in 15 minutes", async () => {
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    const attempt = () => request(app).post("/api/v1/users/login").send({ emailOrUsername: "Target@Example.com", password: "guess" });
+    for (let i = 0; i < 10; i++) expect((await attempt()).status).toBe(401);
+
+    const blocked = await attempt();
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers["retry-after"])).toBeGreaterThan(0);
+
+    // Case and spacing don't give an attacker a fresh budget; other accounts are unaffected
+    const variant = await request(app).post("/api/v1/users/login").send({ emailOrUsername: " target@example.com ", password: "x" });
+    expect(variant.status).toBe(429);
+    const other = await request(app).post("/api/v1/users/login").send({ emailOrUsername: "someone-else", password: "x" });
+    expect(other.status).toBe(401);
+  });
+
+  it("limits how many sign-up codes can be sent to one address", async () => {
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    prismaMock.pendingUser.upsert.mockResolvedValue({ id: "pending_1" } as never);
+    const signUp = () =>
+      request(app).post("/api/v1/users/register").send({ name: "A", username: "a", email: "spam@example.com", password: "secret123" });
+    for (let i = 0; i < 5; i++) expect((await signUp()).status).toBe(200);
+    expect((await signUp()).status).toBe(429);
+  });
+});
+
+describe("createRateLimiter", () => {
+  it("allows up to the limit per key, then frees up as the window slides, and forgets idle keys", async () => {
+    vi.useFakeTimers();
+    try {
+      const limiter = createRateLimiter({ limit: 2, windowMs: 1000 });
+      expect([limiter.hit("a"), limiter.hit("a"), limiter.hit("a")]).toEqual([true, true, false]);
+      expect(limiter.hit("b")).toBe(true);
+      vi.advanceTimersByTime(1001);
+      expect(limiter.hit("a")).toBe(true);
+      vi.advanceTimersByTime(2001); // two sweeps with nothing recent
+      expect(limiter.size()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("hive membership", () => {
+  it("only members can create events in a hive", async () => {
+    const token = mockAuthenticatedUser();
+    prismaMock.hobby.findUnique.mockResolvedValueOnce({ id: "hobby_dance" } as never);
+    prismaMock.userHobby.findUnique.mockResolvedValueOnce(null);
+
+    const res = await request(app)
+      .post("/api/v1/hobbies/dance/events")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ title: "Jam", startsAt: new Date(Date.now() + 86_400_000).toISOString() });
+
+    expect(res.status).toBe(403);
+    expect(prismaMock.event.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("security headers", () => {
+  it("sends helmet's headers on API responses", async () => {
+    const res = await request(app).get("/api/v1/nope");
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["x-frame-options"]).toBe("SAMEORIGIN");
+    expect(res.headers["content-security-policy"]).toContain("default-src 'self'");
   });
 });
