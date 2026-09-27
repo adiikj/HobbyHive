@@ -26,13 +26,38 @@ import { getUserSkills } from "../controllers/skill.controller.js";
 import { getUserReputation } from "../controllers/feedback.controller.js";
 import { listUserProgressLogs } from "../controllers/progress.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { rateLimit } from "../utils/rateLimit.js";
 
 const router = Router();
 
+const MINUTE = 60 * 1000;
+const normalised = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim().toLowerCase() : null);
+
+// Keyed by the account, not the IP: behind the frontend's proxy every request can come from the same address.
+// Guessing one account's password, or mailing codes to one address, is what these stop.
+export const loginLimit = rateLimit({
+  limit: 10,
+  windowMs: 15 * MINUTE,
+  key: (req) => normalised(req.body?.emailOrUsername),
+  message: "Too many sign-in attempts. Please wait a few minutes and try again.",
+});
+export const registerLimit = rateLimit({
+  limit: 5,
+  windowMs: 60 * MINUTE,
+  key: (req) => normalised(req.body?.email),
+  message: "Too many sign-up attempts for this email. Please try again in an hour.",
+});
+export const verifyOtpLimit = rateLimit({
+  limit: 10,
+  windowMs: 15 * MINUTE,
+  key: (req) => normalised(req.body?.email),
+  message: "Too many attempts. Please wait a few minutes and try again.",
+});
+
 // Public Routes
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.post("/verify-otp", verifyOTP);
+router.post("/register", registerLimit, registerUser);
+router.post("/login", loginLimit, loginUser);
+router.post("/verify-otp", verifyOtpLimit, verifyOTP);
 // Authenticated by the httpOnly refresh cookie, not the (possibly expired) access token
 router.post("/refresh", refreshAccessToken);
 

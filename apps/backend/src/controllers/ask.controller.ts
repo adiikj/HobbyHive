@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { prisma } from "../db/prisma.js";
 import { askBea } from "../services/ml.service.js";
+import { createRateLimiter } from "../utils/rateLimit.js";
 import { getViewerState, postSelect, toPostResponse } from "./post.controller.js";
 
 export const ASSISTANT_NAME = "Bea";
@@ -12,22 +13,15 @@ const MAX_QUESTION = 500;
 const RATE_LIMIT = 20; // questions per user…
 const RATE_WINDOW_MS = 60 * 60 * 1000; // …per hour — answers run a local model on the server's CPU
 
-const recentAsks = new Map<string, number[]>();
+const askLimiter = createRateLimiter({ limit: RATE_LIMIT, windowMs: RATE_WINDOW_MS });
 
-function withinRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const recent = (recentAsks.get(userId) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  const allowed = recent.length < RATE_LIMIT;
-  if (allowed) recent.push(now);
-  recentAsks.set(userId, recent);
-  return allowed;
-}
+const withinRateLimit = (userId: string) => askLimiter.hit(userId);
 
 /** Shared with the practice coach, which runs the same local retrieval. */
 export const withinAskRateLimit = withinRateLimit;
 
 /** Test hook: forget rate-limit history. */
-export const resetAskRateLimit = () => recentAsks.clear();
+export const resetAskRateLimit = askLimiter.reset;
 
 // Ask Bea: local retrieval-augmented answers from the hive's posts and comments (apps/ml /ask)
 export const ask = asyncHandler(async (req: Request, res: Response) => {
