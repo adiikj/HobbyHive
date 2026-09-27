@@ -52,9 +52,10 @@ describe("POST /api/v1/users/verify-otp", () => {
   it("rejects a wrong OTP", async () => {
     prismaMock.pendingUser.findUnique.mockResolvedValueOnce({
       id: "pending_1",
-      otp: "111111",
+      otp: await bcrypt.hash("111111", 4),
       otpExpiry: new Date(Date.now() + 60_000),
     } as never);
+    prismaMock.pendingUser.updateMany.mockResolvedValueOnce({ count: 1 });
 
     const res = await request(app)
       .post("/api/v1/users/verify-otp")
@@ -84,16 +85,12 @@ describe("POST /api/v1/users/verify-otp", () => {
       username: "a",
       email: "a@example.com",
       password: "hashed",
-      otp: "111111",
+      otp: await bcrypt.hash("111111", 4),
       otpExpiry: new Date(Date.now() + 60_000),
     } as never);
-    prismaMock.user.create.mockResolvedValueOnce({
-      id: "user_1",
-      name: "A",
-      username: "a",
-      email: "a@example.com",
-    } as never);
-    prismaMock.pendingUser.delete.mockResolvedValueOnce({} as never);
+    prismaMock.pendingUser.updateMany.mockResolvedValueOnce({ count: 1 });
+    // create User + delete PendingUser run together in one transaction
+    prismaMock.$transaction.mockResolvedValueOnce([{ id: "user_1", name: "A", username: "a", email: "a@example.com" }, {}] as never);
     // generateAccessAndRefreshTokens looks the user back up, then updates it with a refresh token
     prismaMock.user.findUnique.mockResolvedValueOnce({
       id: "user_1",

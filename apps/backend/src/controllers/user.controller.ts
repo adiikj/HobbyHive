@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -67,7 +68,9 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(404, "User not found");
   }
 
-  const isPasswordValid = await bcrypt.compare(password.trim(), user.password);
+  // Compared exactly as typed: registration hashes the password untrimmed, so trimming here locked out
+  // anyone whose password starts or ends with a space
+  const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid credentials");
@@ -120,14 +123,17 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const OTP_MINUTES = 10;
+/** Wrong guesses allowed per code: 5 out of a million, instead of unlimited tries for 10 minutes. */
+const MAX_OTP_ATTEMPTS = 5;
 
+/** Emails a fresh 6-digit code and returns its bcrypt hash (the code itself is never stored). */
 const generateOTP = async (email: string, name?: string) => {
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  const otp = String(crypto.randomInt(100000, 1000000));
   const otpExpiry = new Date(Date.now() + OTP_MINUTES * 60 * 1000);
 
   await sendOTP(email, otp, name);
 
-  return { otp, otpExpiry };
+  return { otpHash: await bcrypt.hash(otp, 10), otpExpiry };
 };
 
 const sendOTP = async (email: string, otp: string, name?: string) => {
@@ -166,13 +172,14 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     throw new ApiError(400, "Email, phone number, or username is already registered.");
   }
 
-  const { otp, otpExpiry } = await generateOTP(email, name);
+  const { otpHash, otpExpiry } = await generateOTP(email, name);
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // A new code resets the wrong-guess count
   await prisma.pendingUser.upsert({
     where: { email },
-    create: { name, username, email, password: hashedPassword, otp, otpExpiry },
-    update: { name, username, password: hashedPassword, otp, otpExpiry, otpVerified: false },
+    create: { name, username, email, password: hashedPassword, otp: otpHash, otpExpiry },
+    update: { name, username, password: hashedPassword, otp: otpHash, otpExpiry, otpAttempts: 0, otpVerified: false },
   });
 
   res.status(200).json({
@@ -197,26 +204,38 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(404, "No pending user found.");
   }
 
-  if (pendingUser.otp !== otp) {
-    throw new ApiError(400, "Invalid OTP.");
-  }
-
   if (Date.now() > pendingUser.otpExpiry.getTime()) {
     throw new ApiError(400, "OTP has expired.");
   }
 
-  const user = await prisma.user.create({
-    data: {
-      name: pendingUser.name,
-      username: pendingUser.username,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      otp: pendingUser.otp,
-      otpVerified: true,
-    },
+  // Use up one attempt before checking the code. The conditional update is atomic, so firing many guesses
+  // in parallel can't slip past the limit.
+  const { count } = await prisma.pendingUser.updateMany({
+    where: { id: pendingUser.id, otpAttempts: { lt: MAX_OTP_ATTEMPTS } },
+    data: { otpAttempts: { increment: 1 } },
   });
+  if (count === 0) {
+    throw new ApiError(429, "Too many wrong codes. Sign up again to get a new one.");
+  }
 
-  await prisma.pendingUser.delete({ where: { id: pendingUser.id } });
+  if (typeof otp !== "string" || !(await bcrypt.compare(otp, pendingUser.otp))) {
+    throw new ApiError(400, "Invalid OTP.");
+  }
+
+  // Together, so two verifies racing can't both create the account
+  const [user] = await prisma.$transaction([
+    prisma.user.create({
+      data: {
+        name: pendingUser.name,
+        username: pendingUser.username,
+        email: pendingUser.email,
+        password: pendingUser.password,
+        otp: pendingUser.otp,
+        otpVerified: true,
+      },
+    }),
+    prisma.pendingUser.delete({ where: { id: pendingUser.id } }),
+  ]);
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
 
