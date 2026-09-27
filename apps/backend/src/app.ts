@@ -1,6 +1,7 @@
 import path from "path";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 import { IMAGE_EXTENSIONS } from "./middlewares/upload.middleware.js";
@@ -31,6 +32,8 @@ const corsOptions = {
   credentials: true,
 };
 
+// Security headers (nosniff, HSTS, no framing, a locked-down CSP for API responses, …)
+app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
