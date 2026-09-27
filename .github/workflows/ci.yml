@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Backend + frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version from package.json "packageManager"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile # postinstall generates the Prisma client
+
+      - name: Backend types
+        run: pnpm --filter @hobbyhive/backend lint
+      - name: Backend tests
+        run: pnpm --filter @hobbyhive/backend test
+
+      - name: Frontend types
+        run: pnpm --filter @hobbyhive/frontend exec tsc --noEmit
+      - name: Frontend lint
+        run: pnpm --filter @hobbyhive/frontend exec eslint src
+      - name: Frontend tests
+        run: pnpm --filter @hobbyhive/frontend test
+
+  ml:
+    name: ML service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/ml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      # The embedding model (~30 MB) is downloaded from Hugging Face on first use
+      - uses: actions/cache@v4
+        with:
+          path: apps/ml/.model_cache
+          key: ml-models-bge-small-en-v1.5-onnx-q
+      # Runtime + test dependencies only: training and the optional local LLM aren't needed to run the tests
+      - run: uv sync --frozen --no-default-groups --group dev
+      - run: uv run --frozen --no-default-groups --group dev pytest -q
