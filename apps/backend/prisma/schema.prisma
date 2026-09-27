@@ -46,6 +46,11 @@ model User {
   goals                 Goal[]
   feedbackGiven         Feedback[]
   guideEntries          GuideEntry[]
+
+  // Fuzzy people search (pg_trgm similarity). Declared here so Prisma keeps them: when they only lived in a
+  // hand-written migration, a later generated migration dropped them as drift.
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_name_trgm_idx")
+  @@index([username(ops: raw("gin_trgm_ops"))], type: Gin, map: "User_username_trgm_idx")
 }
 
 model Hobby {
@@ -66,6 +71,8 @@ model Hobby {
   skills       Skill[]
   goals        Goal[]
   guide        GuideEntry[]
+
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "Hobby_name_trgm_idx")
 }
 
 model Post {
@@ -368,6 +375,8 @@ model PendingUser {
   password    String
   otp         String
   otpExpiry   DateTime
+  // Wrong guesses at the current code; the code stops working after a few (see verifyOTP)
+  otpAttempts Int      @default(0)
   otpVerified Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
