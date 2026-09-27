@@ -71,9 +71,13 @@ export const initSocket = (httpServer: HttpServer) => {
             return ack?.({ error: "Invalid message" });
           }
 
-          const hobby = await prisma.hobby.findUnique({ where: { id: hobbyId }, select: { id: true } });
-          if (!hobby) {
-            return ack?.({ error: "Hobby not found" });
+          // Anyone can watch a hive's room; only its members can talk in it
+          const membership = await prisma.userHobby.findUnique({
+            where: { userId_hobbyId: { userId: socket.data.userId, hobbyId } },
+            select: { id: true },
+          });
+          if (!membership) {
+            return ack?.({ error: "Join this hive to chat in its live room" });
           }
 
           const message = await prisma.hobbyRoomMessage.create({

@@ -88,6 +88,14 @@ export const createEvent = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(404, "Hobby not found");
   }
 
+  const membership = await prisma.userHobby.findUnique({
+    where: { userId_hobbyId: { userId: req.user!.id, hobbyId: hobby.id } },
+    select: { id: true },
+  });
+  if (!membership) {
+    throw new ApiError(403, "Join this hive to create events in it");
+  }
+
   const event = await prisma.event.create({
     data: {
       hobbyId: hobby.id,
