@@ -1,7 +1,10 @@
+import path from "path";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
+import { IMAGE_EXTENSIONS } from "./middlewares/upload.middleware.js";
+import { ApiError } from "./utils/ApiError.js";
 import userRouter from "./routes/user.routes.js";
 import hobbyRouter from "./routes/hobby.routes.js";
 import postRouter from "./routes/post.routes.js";
@@ -31,7 +34,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(express.static("public"));
+// User uploads are served as images only: anything else under /uploads (e.g. a file from before uploads were
+// type-checked) is a 404, and nosniff stops browsers from guessing a different, executable type
+app.use("/uploads", (req, _res, next) =>
+  IMAGE_EXTENSIONS.has(path.extname(req.path).toLowerCase()) ? next() : next(new ApiError(404, "That image doesn't exist."))
+);
+app.use(
+  express.static("public", {
+    setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+  })
+);
 app.use(cookieParser());
 app.options("*", cors(corsOptions));
 

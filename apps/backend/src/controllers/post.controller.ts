@@ -7,6 +7,7 @@ import { prisma } from "../db/prisma.js";
 import { notifyLike, notifyNewPost, notifyMentions } from "../services/notification.service.js";
 import { analyzePostInBackground } from "../services/ml.service.js";
 import { MENTOR_MIN_HELPFUL } from "../utils/reputation.js";
+import { saveUploadedImage } from "../middlewares/upload.middleware.js";
 
 export const postSelect = {
   id: true,
@@ -143,8 +144,9 @@ export const uploadPostImage = asyncHandler(async (req: Request, res: Response) 
     throw new ApiError(400, "No image file provided");
   }
 
+  const filename = await saveUploadedImage(req.file);
   // Relative, so it loads through whichever origin serves the app (the frontend proxies /uploads)
-  const url = `/uploads/${req.file.filename}`;
+  const url = `/uploads/${filename}`;
   res.status(201).json(new ApiResponse(201, { url }, "Image uploaded successfully"));
 });
 
