@@ -117,14 +117,16 @@ describe("POST /api/v1/users/login", () => {
     expect(res.status).toBe(400);
   });
 
-  it("404s when no user matches", async () => {
+  it("answers an unknown account exactly like a wrong password (no account enumeration)", async () => {
     prismaMock.user.findFirst.mockResolvedValueOnce(null);
+    const unknown = await request(app).post("/api/v1/users/login").send({ emailOrUsername: "nobody", password: "secret123" });
 
-    const res = await request(app)
-      .post("/api/v1/users/login")
-      .send({ emailOrUsername: "a", password: "secret123" });
+    const hashed = await bcrypt.hash("correct-password", 4);
+    prismaMock.user.findFirst.mockResolvedValueOnce({ id: "user_1", password: hashed } as never);
+    const wrong = await request(app).post("/api/v1/users/login").send({ emailOrUsername: "a", password: "secret123" });
 
-    expect(res.status).toBe(404);
+    expect(unknown.status).toBe(401);
+    expect(unknown.body.message).toBe(wrong.body.message);
   });
 
   it("rejects an incorrect password", async () => {

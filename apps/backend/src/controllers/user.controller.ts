@@ -77,6 +77,10 @@ const setSessionCookies = (res: Response, accessToken: string, refreshToken: str
 
 const SESSION_ENDED = "Your session has ended. Please sign in again.";
 
+const INVALID_LOGIN = "That email/username and password don't match. Please try again.";
+// Compared against when the account doesn't exist, so a wrong username takes as long as a wrong password
+const DUMMY_HASH = bcrypt.hashSync("no account has this password", 10);
+
 // User Login
 export const loginUser = asyncHandler(async (req: Request, res: Response) => {
   const { emailOrUsername, password } = req.body;
@@ -89,16 +93,13 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     where: { OR: [{ email: emailOrUsername }, { username: emailOrUsername }] },
   });
 
-  if (!user) {
-    throw new ApiError(404, "User not found");
-  }
-
   // Compared exactly as typed: registration hashes the password untrimmed, so trimming here locked out
   // anyone whose password starts or ends with a space
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  const isPasswordValid = await bcrypt.compare(String(password), user?.password ?? DUMMY_HASH);
 
-  if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid credentials");
+  // One answer for "no such account" and "wrong password", so sign-in can't be used to check who has an account
+  if (!user || !isPasswordValid) {
+    throw new ApiError(401, INVALID_LOGIN);
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
@@ -201,7 +202,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
   });
 
   if (existingUser) {
-    throw new ApiError(400, "Email, phone number, or username is already registered.");
+    throw new ApiError(400, "That email or username is already taken.");
   }
 
   const { otpHash, otpExpiry } = await generateOTP(email, name);
