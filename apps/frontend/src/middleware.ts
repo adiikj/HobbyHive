@@ -23,7 +23,8 @@ function hasUnexpiredToken(token: string | undefined): boolean {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("accessToken")?.value;
-  const isAuthenticated = hasUnexpiredToken(token);
+  // A live refresh token (httpOnly, set by the API) also counts: the page's first API call renews the access token
+  const isAuthenticated = hasUnexpiredToken(token) || hasUnexpiredToken(request.cookies.get("refreshToken")?.value);
 
   let response: NextResponse;
   if ((pathname === "/" || AUTH_PAGES.includes(pathname)) && isAuthenticated) {
@@ -35,7 +36,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Drop a stale cookie so the client-side code doesn't keep treating it as a session either
-  if (token && !isAuthenticated) response.cookies.delete("accessToken");
+  if (token && !hasUnexpiredToken(token)) response.cookies.delete("accessToken");
   return response;
 }
 

@@ -38,6 +38,9 @@ const generateRefreshToken = (user: User) =>
     expiresIn: process.env.REFRESH_TOKEN_EXPIRY as jwt.SignOptions["expiresIn"],
   });
 
+/** Only a hash of the refresh token is stored, so a leaked database row can't be replayed as a session. */
+const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+
 const generateAccessAndRefreshTokens = async (userId: string) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
@@ -47,10 +50,32 @@ const generateAccessAndRefreshTokens = async (userId: string) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  await prisma.user.update({ where: { id: userId }, data: { refreshToken } });
+  await prisma.user.update({ where: { id: userId }, data: { refreshToken: hashToken(refreshToken) } });
 
   return { accessToken, refreshToken };
 };
+
+/**
+ * Session cookies: httpOnly (scripts can't read them), SameSite=Lax, and alive exactly as long as the token inside.
+ * The frontend proxies the API, so they're first-party. Secure only in production: browsers drop Secure cookies
+ * over plain http, which is how local dev runs.
+ */
+const cookieOptions = (expires?: Date) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  ...(expires ? { expires } : {}),
+});
+
+const tokenExpiry = (token: string) => new Date(((jwt.decode(token) as { exp: number }).exp ?? 0) * 1000);
+
+const setSessionCookies = (res: Response, accessToken: string, refreshToken: string) =>
+  res
+    .cookie("accessToken", accessToken, cookieOptions(tokenExpiry(accessToken)))
+    .cookie("refreshToken", refreshToken, cookieOptions(tokenExpiry(refreshToken)));
+
+const SESSION_ENDED = "Your session has ended. Please sign in again.";
 
 // User Login
 export const loginUser = asyncHandler(async (req: Request, res: Response) => {
@@ -83,23 +108,36 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
     select: { id: true, name: true, username: true, email: true, createdAt: true, updatedAt: true },
   });
 
-  const options = {
-    httpOnly: true,
-    secure: false,
-    sameSite: "none" as const,
-    path: "/",
-    expires: new Date(Date.now() + 3600000),
-  };
+  setSessionCookies(res.status(200), accessToken, refreshToken).json({
+    status: 200,
+    data: { user: loggedInUser, accessToken },
+    message: "User logged in successfully",
+  });
+});
 
-  res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json({
-      status: 200,
-      data: { user: loggedInUser, accessToken, refreshToken },
-      message: "User logged in successfully",
-    });
+// Swap the refresh token (httpOnly cookie) for a new access token. Refresh tokens rotate: each one works once,
+// so a stolen token stops working as soon as the real user refreshes.
+export const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
+  const incoming: unknown = req.cookies?.refreshToken;
+  if (typeof incoming !== "string" || !incoming) {
+    throw new ApiError(401, SESSION_ENDED);
+  }
+
+  let userId: string;
+  try {
+    userId = (jwt.verify(incoming, process.env.REFRESH_TOKEN_SECRET as string) as { id: string }).id;
+  } catch {
+    throw new ApiError(401, SESSION_ENDED);
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, refreshToken: true } });
+  // No match: signed out, or an older token that has already been swapped for a newer one
+  if (!user || user.refreshToken !== hashToken(incoming)) {
+    throw new ApiError(401, SESSION_ENDED);
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
+  setSessionCookies(res.status(200), accessToken, refreshToken).json(new ApiResponse(200, { accessToken }, "Session refreshed"));
 });
 
 // User Logout
@@ -109,16 +147,10 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     data: { refreshToken: null },
   });
 
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict" as const,
-  };
-
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
+    .clearCookie("accessToken", cookieOptions())
+    .clearCookie("refreshToken", cookieOptions())
     .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
@@ -239,22 +271,10 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user.id);
 
-  const options = {
-    httpOnly: true,
-    secure: false,
-    sameSite: "none" as const,
-    path: "/",
-    expires: new Date(Date.now() + 3600000),
-  };
-
-  res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json({
-      message: "User verified and confirmed successfully. You can now log in.",
-      data: { accessToken, refreshToken },
-    });
+  setSessionCookies(res.status(200), accessToken, refreshToken).json({
+    message: "User verified and confirmed successfully. You can now log in.",
+    data: { accessToken },
+  });
 });
 
 const publicProfileSelect = {

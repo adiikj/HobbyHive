@@ -3,6 +3,7 @@ import {
   registerUser,
   loginUser,
   logoutUser,
+  refreshAccessToken,
   verifyOTP,
   getProfile,
   getPublicProfile,
@@ -32,6 +33,8 @@ const router = Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/verify-otp", verifyOTP);
+// Authenticated by the httpOnly refresh cookie, not the (possibly expired) access token
+router.post("/refresh", refreshAccessToken);
 
 // Protected Routes
 router.post("/logout", verifyJWT, logoutUser);

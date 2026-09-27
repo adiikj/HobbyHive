@@ -13,6 +13,39 @@ const SEARCH_URL = BASE_URL.replace(/\/users$/, "/search");
 const CONVERSATIONS_URL = BASE_URL.replace(/\/users$/, "/conversations");
 const EVENTS_URL = BASE_URL.replace(/\/users$/, "/events");
 
+// Access tokens expire after a day. When a request is rejected with 401, swap the httpOnly refresh cookie for a new
+// access token once and retry. Concurrent 401s share one refresh (refresh tokens rotate, so each works only once).
+const NO_REFRESH = /\/(login|register|verify-otp|refresh|logout)$/;
+let refreshing: Promise<string> | null = null;
+
+const refreshSession = () =>
+  (refreshing ??= axios
+    .post(`${BASE_URL}/refresh`, {}, { withCredentials: true })
+    .then((response) => {
+      const token: string = response.data.data.accessToken;
+      localStorage.setItem("authToken", token);
+      return token;
+    })
+    .finally(() => {
+      refreshing = null;
+    }));
+
+axios.interceptors.response.use(undefined, async (error) => {
+  const config = axios.isAxiosError(error) ? (error.config as (typeof error.config & { _retried?: boolean }) | undefined) : undefined;
+  if (!config || error.response?.status !== 401 || config._retried || NO_REFRESH.test(config.url ?? "") || typeof window === "undefined") {
+    return Promise.reject(error);
+  }
+  let token: string;
+  try {
+    token = await refreshSession();
+  } catch {
+    return Promise.reject(error); // refresh failed too: the caller's normal error handling applies
+  }
+  config._retried = true;
+  config.headers.Authorization = `Bearer ${token}`;
+  return axios(config);
+});
+
 interface RegisterPayload {
   name: string;
   username: string;

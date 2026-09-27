@@ -10,7 +10,12 @@ export function getSocket(): Socket | null {
   if (!token) return null;
 
   if (!socket) {
-    socket = io(SOCKET_URL, { auth: { token }, autoConnect: true, addTrailingSlash: false });
+    // Read the token on every (re)connect, so a reconnect after a session refresh uses the new one
+    socket = io(SOCKET_URL, {
+      auth: (cb) => cb({ token: localStorage.getItem("authToken") }),
+      autoConnect: true,
+      addTrailingSlash: false,
+    });
   }
 
   return socket;
