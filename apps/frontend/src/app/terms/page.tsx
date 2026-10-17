@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/HeaderFooterLayout";
 import LegalPage from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | HobbyHive",
+  title: "Terms & Conditions",
   description: "The terms that govern your use of HobbyHive.",
 };
 

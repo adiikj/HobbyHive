@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/HeaderFooterLayout";
 import LegalPage from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | HobbyHive",
+  title: "Privacy Policy",
   description: "How HobbyHive collects, uses, and protects your information.",
 };
 

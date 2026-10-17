@@ -6,7 +6,8 @@ import { THEME_BOOT_SCRIPT } from "@/lib/themeScript";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HobbyHive",
+  // Pages set a short title of their own ("Sign up"), shown in the tab as "Sign up | HobbyHive"
+  title: { default: "HobbyHive", template: "%s | HobbyHive" },
   description: "Unleash your passion and connect with hobby communities.",
 };
 

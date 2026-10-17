@@ -3,7 +3,7 @@ import MainLayout from "@/components/layout/HeaderFooterLayout";
 import LegalPage from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Community Guidelines | HobbyHive",
+  title: "Community Guidelines",
   description: "What's expected of you in HobbyHive's hobby communities.",
 };
 
