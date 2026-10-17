@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL as string;
+// Relative by default: requests go to this app's own origin, which proxies /api/v1 to the backend (next.config.mjs)
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1/users";
 const HOBBIES_URL = BASE_URL.replace(/\/users$/, "/hobbies");
 const POSTS_URL = BASE_URL.replace(/\/users$/, "/posts");
 const PRACTICE_URL = BASE_URL.replace(/\/users$/, "/practice");
