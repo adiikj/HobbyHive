@@ -22,3 +22,13 @@ describe("otpEmail", () => {
     expect(otpEmail({ otp: "123456" }).html).toContain("Hi there,");
   });
 });
+
+describe("otpEmail for a password reset", () => {
+  it("says what the code is for, and that ignoring it keeps the password", () => {
+    const email = otpEmail({ otp: "482913", name: "Priya", purpose: "reset" });
+    expect(email.subject).toBe("482913 is your HobbyHive password reset code");
+    expect(email.html).toContain("reset your HobbyHive password");
+    expect(email.html).not.toContain("finish joining");
+    expect(email.text).toContain("your password stays the same");
+  });
+});

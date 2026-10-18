@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
-import { otpEmail } from "../emails/otpEmail.js";
+import { otpEmail, type OtpPurpose } from "../emails/otpEmail.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -176,16 +176,16 @@ const OTP_MINUTES = 10;
 const MAX_OTP_ATTEMPTS = 5;
 
 /** Emails a fresh 6-digit code and returns its bcrypt hash (the code itself is never stored). */
-const generateOTP = async (email: string, name?: string) => {
+const generateOTP = async (email: string, name?: string, purpose: OtpPurpose = "signup") => {
   const otp = String(crypto.randomInt(100000, 1000000));
   const otpExpiry = new Date(Date.now() + OTP_MINUTES * 60 * 1000);
 
-  await sendOTP(email, otp, name);
+  await sendOTP(email, otp, name, purpose);
 
   return { otpHash: await bcrypt.hash(otp, 10), otpExpiry };
 };
 
-const sendOTP = async (email: string, otp: string, name?: string) => {
+const sendOTP = async (email: string, otp: string, name?: string, purpose: OtpPurpose = "signup") => {
   if (!email) {
     throw new ApiError(400, "Email is required for OTP method 'email'");
   }
@@ -193,7 +193,7 @@ const sendOTP = async (email: string, otp: string, name?: string) => {
   const mailOptions = {
     from: `HobbyHive <${process.env.GOOGLE_GMAIL_ID}>`,
     to: email,
-    ...otpEmail({ otp, name, minutes: OTP_MINUTES }),
+    ...otpEmail({ otp, name, minutes: OTP_MINUTES, purpose }),
   };
 
   try {
@@ -292,6 +292,75 @@ export const verifyOTP = asyncHandler(async (req: Request, res: Response) => {
     message: "User verified and confirmed successfully. You can now log in.",
     data: { accessToken },
   });
+});
+
+const MIN_PASSWORD = 8;
+const RESET_SENT = "If that email has an account, we've sent it a code to reset the password.";
+const RESET_INVALID = "That code is wrong or has expired. Request a new one and try again.";
+
+// Forgot password, step 1: email a reset code. Answers the same whether or not the account exists, and sends in
+// the background so the response time doesn't give it away either.
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!email) {
+    throw new ApiError(400, "Enter the email you signed up with.");
+  }
+
+  const user = await prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" } }, select: { id: true, name: true, email: true } });
+  if (user) {
+    generateOTP(user.email, user.name, "reset")
+      // A new code replaces the old one and resets the wrong-guess count
+      .then(({ otpHash, otpExpiry }) =>
+        prisma.user.update({ where: { id: user.id }, data: { resetOtp: otpHash, resetOtpExpiry: otpExpiry, resetOtpAttempts: 0 } })
+      )
+      .catch((error) => console.error("Password reset email failed:", error));
+  }
+
+  res.status(200).json(new ApiResponse(200, {}, RESET_SENT));
+});
+
+// Forgot password, step 2: the emailed code plus a new password. Signs out every existing session.
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { otp, password } = req.body ?? {};
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  if (!email || typeof otp !== "string" || !otp) {
+    throw new ApiError(400, "Enter your email and the code we sent you.");
+  }
+  if (typeof password !== "string" || password.length < MIN_PASSWORD) {
+    throw new ApiError(400, `Choose a password with at least ${MIN_PASSWORD} characters.`);
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" } },
+    select: { id: true, resetOtp: true, resetOtpExpiry: true },
+  });
+  // Same answer for no account, no code requested and an expired code
+  if (!user?.resetOtp || !user.resetOtpExpiry || Date.now() > user.resetOtpExpiry.getTime()) {
+    throw new ApiError(400, RESET_INVALID);
+  }
+
+  // Use up one attempt before checking, atomically, so parallel guesses can't slip past the limit
+  const { count } = await prisma.user.updateMany({
+    where: { id: user.id, resetOtpAttempts: { lt: MAX_OTP_ATTEMPTS } },
+    data: { resetOtpAttempts: { increment: 1 } },
+  });
+  if (count === 0) {
+    throw new ApiError(429, "Too many wrong codes. Request a new one and try again.");
+  }
+  if (!(await bcrypt.compare(otp, user.resetOtp))) {
+    throw new ApiError(400, RESET_INVALID);
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: await bcrypt.hash(password, 10), resetOtp: null, resetOtpExpiry: null, resetOtpAttempts: 0, refreshToken: null },
+  });
+
+  res
+    .status(200)
+    .clearCookie("accessToken", cookieOptions())
+    .clearCookie("refreshToken", cookieOptions())
+    .json(new ApiResponse(200, {}, "Password changed. Sign in with your new password."));
 });
 
 const publicProfileSelect = {

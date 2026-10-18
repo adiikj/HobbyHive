@@ -9,19 +9,23 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  username     String    @unique
-  email        String    @unique
-  password     String
-  bio          String?
-  avatarUrl    String?
-  otp          String
-  otpExpiry    DateTime?
-  otpVerified  Boolean   @default(false)
-  refreshToken String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  name             String
+  username         String    @unique
+  email            String    @unique
+  password         String
+  bio              String?
+  avatarUrl        String?
+  otp              String
+  otpExpiry        DateTime?
+  otpVerified      Boolean   @default(false)
+  refreshToken     String?
+  // Forgot password: bcrypt hash of the emailed code, when it expires, and wrong guesses at it so far
+  resetOtp         String?
+  resetOtpExpiry   DateTime?
+  resetOtpAttempts Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   hobbies               UserHobby[]
   posts                 Post[]
@@ -108,10 +112,10 @@ model Post {
   challenge   Challenge?   @relation(fields: [challengeId], references: [id], onDelete: SetNull)
   progressLog ProgressLog? @relation(fields: [progressLogId], references: [id], onDelete: SetNull)
 
-  likes         Like[]
-  comments      Comment[]
-  notifications Notification[]
-  saves         SavedPost[]
+  likes           Like[]
+  comments        Comment[]
+  notifications   Notification[]
+  saves           SavedPost[]
   // Set when this post was shared from a practice session
   practiceSession PracticeSession?
   feedback        Feedback[]
@@ -384,7 +388,7 @@ model PendingUser {
 
 // One Ask Bea answer, kept so users can rate it (👍/👎) and so answer quality can be measured over time
 model BeaAnswer {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   userId        String
   hobbyId       String?
   question      String
@@ -396,7 +400,7 @@ model BeaAnswer {
   // null = not rated yet
   helpful       Boolean?
   ratedAt       DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   hobby Hobby? @relation(fields: [hobbyId], references: [id], onDelete: SetNull)

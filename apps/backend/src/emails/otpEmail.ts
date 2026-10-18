@@ -1,5 +1,5 @@
 /**
- * The sign-up code email. Email clients strip <style> blocks and block SVG and data URIs, so this is
+ * The code email, for finishing sign-up or resetting a password. Email clients strip <style> blocks and block SVG and data URIs, so this is
  * table-based with inline styles only, and the brand is drawn with coloured cells and text rather than images.
  */
 
@@ -20,10 +20,44 @@ export interface OtpEmail {
   text: string;
 }
 
-export function otpEmail({ otp, name, minutes = 10 }: { otp: string; name?: string | null; minutes?: number }): OtpEmail {
+const COPY = {
+  signup: {
+    preheader: "finish joining HobbyHive",
+    intro: "Here's your code to finish joining HobbyHive.",
+    where: "Pop it into the sign-up page.",
+    next: "Next up: pick your hives, then start this week's challenge or log your first practice session.",
+    ignore: "Didn't try to sign up? You can safely ignore this email; no account is created without this code.",
+    subject: "is your HobbyHive code",
+  },
+  reset: {
+    preheader: "reset your HobbyHive password",
+    intro: "Here's your code to reset your HobbyHive password.",
+    where: "Pop it into the reset page, then choose a new password.",
+    next: "Once it's changed, you'll be signed out everywhere else, so sign back in with the new one.",
+    ignore: "Didn't ask to reset your password? You can safely ignore this email; your password stays the same without this code.",
+    subject: "is your HobbyHive password reset code",
+  },
+};
+
+export type OtpPurpose = keyof typeof COPY;
+
+export function otpEmail({
+  otp,
+  name,
+  minutes = 10,
+  purpose = "signup",
+}: {
+  otp: string;
+  name?: string | null;
+  minutes?: number;
+  purpose?: OtpPurpose;
+}): OtpEmail {
+  const copy = COPY[purpose];
   const firstName = name?.trim().split(/\s+/)[0] ?? "";
   const greeting = firstName ? `Hi ${escapeHtml(firstName)},` : "Hi there,";
-  const preheader = `Use this code within ${minutes} minutes to finish joining HobbyHive.`;
+  const preheader = `Use this code within ${minutes} minutes to ${copy.preheader}.`;
+  // The copy has apostrophes; HTML gets the typographic one
+  const toHtml = (t: string) => escapeHtml(t).replace(/&#39;/g, "&rsquo;");
 
   const strip = HIVE_COLORS.map((c) => `<td style="height:5px;background:${c};font-size:0;line-height:0;">&nbsp;</td>`).join("");
 
@@ -55,7 +89,7 @@ export function otpEmail({ otp, name, minutes = 10 }: { otp: string; name?: stri
         <tr>
           <td style="padding:16px 32px 0 32px;font-family:${FONT};color:${INK};">
             <p style="margin:0 0 8px 0;font-size:16px;line-height:24px;">${greeting}</p>
-            <p style="margin:0;font-size:16px;line-height:24px;color:#495057;">Here&rsquo;s your code to finish joining HobbyHive. Pop it into the sign-up page.</p>
+            <p style="margin:0;font-size:16px;line-height:24px;color:#495057;">${toHtml(copy.intro)} ${toHtml(copy.where)}</p>
           </td>
         </tr>
         <tr>
@@ -73,7 +107,7 @@ export function otpEmail({ otp, name, minutes = 10 }: { otp: string; name?: stri
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CANVAS};border-radius:14px;">
               <tr>
                 <td style="padding:14px 16px;font-size:14px;line-height:21px;color:#495057;">
-                  <strong style="color:${INK};">Next up:</strong> pick your hives, then start this week&rsquo;s challenge or log your first practice session.
+                  ${toHtml(copy.next)}
                 </td>
               </tr>
             </table>
@@ -81,7 +115,7 @@ export function otpEmail({ otp, name, minutes = 10 }: { otp: string; name?: stri
         </tr>
         <tr>
           <td style="padding:0 32px 32px 32px;font-family:${FONT};font-size:12px;line-height:18px;color:${MUTED};border-top:1px solid #F1F1EE;">
-            <p style="margin:20px 0 0 0;">Didn&rsquo;t try to sign up? You can safely ignore this email; no account is created without this code.</p>
+            <p style="margin:20px 0 0 0;">${toHtml(copy.ignore)}</p>
           </td>
         </tr>
       </table>
@@ -95,18 +129,18 @@ export function otpEmail({ otp, name, minutes = 10 }: { otp: string; name?: stri
   const text = [
     firstName ? `Hi ${firstName},` : "Hi there,",
     "",
-    "Here's your code to finish joining HobbyHive:",
+    copy.intro.replace(/\.$/, ":"),
     "",
     `    ${otp}`,
     "",
     `It expires in ${minutes} minutes.`,
     "",
-    "Next up: pick your hives, then start this week's challenge or log your first practice session.",
+    copy.next,
     "",
-    "Didn't try to sign up? You can safely ignore this email; no account is created without this code.",
+    copy.ignore,
     "",
     "HobbyHive",
   ].join("\n");
 
-  return { subject: `${otp} is your HobbyHive code`, html, text };
+  return { subject: `${otp} ${copy.subject}`, html, text };
 }

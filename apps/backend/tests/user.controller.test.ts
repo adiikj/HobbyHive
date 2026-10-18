@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { app } from "../src/app.js";
 import { prismaMock } from "./testUtils.js";
 
@@ -161,5 +162,110 @@ describe("POST /api/v1/users/login", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.accessToken).toBeTruthy();
+  });
+});
+
+const cookieHeader = (res: request.Response) => ([] as string[]).concat(res.headers["set-cookie"] ?? []).join("; ");
+
+describe("POST /api/v1/users/logout", () => {
+  it("clears the session cookies even with no valid token (an expired session must still sign out)", async () => {
+    const res = await request(app).post("/api/v1/users/logout").set("Cookie", "accessToken=expired.or.garbage");
+
+    expect(res.status).toBe(200);
+    expect(cookieHeader(res)).toMatch(/accessToken=;.*Expires=Thu, 01 Jan 1970/);
+    expect(cookieHeader(res)).toMatch(/refreshToken=;/);
+    expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("revokes the refresh token the cookie holds", async () => {
+    const refresh = jwt.sign({ id: "user_1" }, process.env.REFRESH_TOKEN_SECRET as string);
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
+
+    const res = await request(app).post("/api/v1/users/logout").set("Cookie", `refreshToken=${refresh}`);
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ id: "user_1" }), data: { refreshToken: null } })
+    );
+  });
+});
+
+describe("POST /api/v1/users/forgot-password", () => {
+  it("emails a code and stores only its hash when the account exists", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce({ id: "user_1", name: "Priya", email: "priya@example.com" } as never);
+    prismaMock.user.update.mockResolvedValueOnce({} as never);
+
+    const res = await request(app).post("/api/v1/users/forgot-password").send({ email: "Priya@example.com" });
+
+    expect(res.status).toBe(200);
+    await vi.waitFor(() => expect(prismaMock.user.update).toHaveBeenCalled());
+    const { data } = prismaMock.user.update.mock.calls[0][0];
+    expect(data).toMatchObject({ resetOtpAttempts: 0 });
+    expect(String(data.resetOtp)).toMatch(/^\$2[aby]\$/);
+  });
+
+  it("answers an unknown email exactly like a known one (no account enumeration)", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(null);
+
+    const res = await request(app).post("/api/v1/users/forgot-password").send({ email: "nobody@example.com" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/If that email has an account/);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing email", async () => {
+    expect((await request(app).post("/api/v1/users/forgot-password").send({})).status).toBe(400);
+  });
+});
+
+describe("POST /api/v1/users/reset-password", () => {
+  const withCode = async (overrides: Record<string, unknown> = {}) =>
+    ({ id: "user_1", resetOtp: await bcrypt.hash("123456", 10), resetOtpExpiry: new Date(Date.now() + 60_000), ...overrides }) as never;
+
+  it("sets the new password, clears the code and signs out every session", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(await withCode());
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
+    prismaMock.user.update.mockResolvedValueOnce({} as never);
+
+    const res = await request(app).post("/api/v1/users/reset-password").send({ email: "a1@example.com", otp: "123456", password: "new-password" });
+
+    expect(res.status).toBe(200);
+    const { data } = prismaMock.user.update.mock.calls[0][0];
+    expect(await bcrypt.compare("new-password", String(data.password))).toBe(true);
+    expect(data).toMatchObject({ resetOtp: null, resetOtpExpiry: null, refreshToken: null });
+  });
+
+  it("rejects a wrong code without changing the password", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(await withCode());
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 1 });
+
+    const res = await request(app).post("/api/v1/users/reset-password").send({ email: "a2@example.com", otp: "000000", password: "new-password" });
+
+    expect(res.status).toBe(400);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects an expired code", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(await withCode({ resetOtpExpiry: new Date(Date.now() - 1000) }));
+
+    const res = await request(app).post("/api/v1/users/reset-password").send({ email: "a3@example.com", otp: "123456", password: "new-password" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("stops accepting guesses after too many wrong codes", async () => {
+    prismaMock.user.findFirst.mockResolvedValueOnce(await withCode());
+    prismaMock.user.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    const res = await request(app).post("/api/v1/users/reset-password").send({ email: "a4@example.com", otp: "123456", password: "new-password" });
+
+    expect(res.status).toBe(429);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a short new password", async () => {
+    const res = await request(app).post("/api/v1/users/reset-password").send({ email: "a5@example.com", otp: "123456", password: "short" });
+    expect(res.status).toBe(400);
   });
 });

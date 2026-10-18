@@ -3,6 +3,8 @@ import {
   registerUser,
   loginUser,
   logoutUser,
+  forgotPassword,
+  resetPassword,
   refreshAccessToken,
   verifyOTP,
   getProfile,
@@ -53,6 +55,18 @@ export const verifyOtpLimit = rateLimit({
   key: (req) => normalised(req.body?.email),
   message: "Too many attempts. Please wait a few minutes and try again.",
 });
+export const forgotPasswordLimit = rateLimit({
+  limit: 5,
+  windowMs: 60 * MINUTE,
+  key: (req) => normalised(req.body?.email),
+  message: "Too many reset requests for this email. Please try again in an hour.",
+});
+export const resetPasswordLimit = rateLimit({
+  limit: 10,
+  windowMs: 15 * MINUTE,
+  key: (req) => normalised(req.body?.email),
+  message: "Too many attempts. Please wait a few minutes and try again.",
+});
 
 // Public Routes
 router.post("/register", registerLimit, registerUser);
@@ -62,6 +76,8 @@ router.post("/verify-otp", verifyOtpLimit, verifyOTP);
 router.post("/refresh", refreshAccessToken);
 // Clears whatever session the cookies hold, even with an expired access token
 router.post("/logout", logoutUser);
+router.post("/forgot-password", forgotPasswordLimit, forgotPassword);
+router.post("/reset-password", resetPasswordLimit, resetPassword);
 
 // Protected Routes
 router.get("/profile", verifyJWT, getProfile);
