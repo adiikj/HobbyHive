@@ -6,10 +6,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { PenSquare } from "lucide-react";
 import { getHobbyColor, getHobbyInk, getHobbyText, getHobbyVoice, withAlpha } from "@/lib/hobbyTheme";
 import HobbyIcon from "@/components/brand/HobbyIcon";
-import { HivePatternSvg } from "@/components/layout/HivePattern";
+import { HoneycombSvg } from "@/components/layout/HivePattern";
 
 /**
- * The moment you join a hive: a full-screen welcome in the hive's colour and pattern that sends you
+ * The moment you join a hive: a full-screen welcome in the hive's colour that sends you
  * straight to your first post there — posting is how you become part of a hive.
  */
 function HiveWelcome({ hobby, slug, onClose }: { hobby: string; slug: string; onClose: () => void }) {
@@ -39,8 +39,9 @@ function HiveWelcome({ hobby, slug, onClose }: { hobby: string; slug: string; on
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="pointer-events-none absolute inset-0 opacity-[0.14]">
-        <HivePatternSvg hobby={hobby} id="hive-welcome-pattern" />
+      {/* Honeycomb round the edges, clear behind the text */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.22] [mask-image:radial-gradient(circle_at_center,transparent_25%,black_75%)]">
+        <HoneycombSvg id="hive-welcome-pattern" />
       </div>
 
       <motion.div
