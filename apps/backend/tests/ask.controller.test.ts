@@ -76,6 +76,16 @@ describe("POST /api/v1/ask", () => {
     );
   });
 
+  it("replies to small talk without saving it as a rateable answer", async () => {
+    const token = mockAuthenticatedUser();
+    vi.mocked(ml.askBea).mockResolvedValueOnce({ mode: "chat", answer: [{ text: "Hi! What would you like to know?", evidence: [] }], evidence: [], trace: null });
+
+    const res = await request(app).post("/api/v1/ask").set(auth(token)).send({ question: "hello bea" });
+
+    expect(res.body.data).toEqual({ available: true, assistant: "Bea", mode: "chat", answer: [{ text: "Hi! What would you like to know?", evidence: [] }], evidence: [] });
+    expect(prismaMock.beaAnswer.create).not.toHaveBeenCalled();
+  });
+
   it("404s for an unknown hive", async () => {
     const token = mockAuthenticatedUser();
     prismaMock.hobby.findUnique.mockResolvedValueOnce(null);

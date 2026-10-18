@@ -1251,7 +1251,7 @@ export interface BeaReply {
   assistant: string;
   /** Id for rating this answer (👍/👎). */
   answerId?: string;
-  mode?: "none" | "extractive" | "generated" | "mixed";
+  mode?: "chat" | "none" | "extractive" | "generated" | "mixed";
   /** Answer text in segments; `evidence` holds indexes into `evidence` below. */
   answer?: { text: string; evidence: number[] }[];
   evidence?: BeaEvidence[];

@@ -45,8 +45,13 @@ export const ask = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json(new ApiResponse(200, { available: false, assistant: ASSISTANT_NAME }));
   }
 
+  // Small talk ("hi bea") isn't drawn from the hive: nothing to rate, trace or count in answer stats
+  if (result.mode === "chat") {
+    return res.status(200).json(new ApiResponse(200, { available: true, assistant: ASSISTANT_NAME, mode: result.mode, answer: result.answer, evidence: [] }));
+  }
+
   // Keep the answer so it can be rated (👍/👎) and answer quality tracked over time
-  const candidates = (result.trace as { candidates?: { meaning_score?: number }[] }).candidates ?? [];
+  const candidates = (result.trace as { candidates?: { meaning_score?: number }[] } | null)?.candidates ?? [];
   const saved = await prisma.beaAnswer.create({
     data: {
       userId,

@@ -58,10 +58,10 @@ export interface BeaEvidence {
 }
 
 export interface BeaResult {
-  mode: "none" | "extractive" | "generated" | "mixed";
+  mode: "chat" | "none" | "extractive" | "generated" | "mixed";
   answer: { text: string; evidence: number[] }[];
   evidence: BeaEvidence[];
-  trace: Record<string, unknown>;
+  trace: Record<string, unknown> | null;
 }
 
 /** Ask Bea (local RAG in apps/ml). Generous timeout: local rewriting takes a few seconds on CPU. */
