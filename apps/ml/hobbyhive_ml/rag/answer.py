@@ -8,9 +8,10 @@ from pathlib import Path
 
 import numpy as np
 
-from . import generate
+from . import generate, smalltalk
 from .faithfulness import check
 from .index import Candidate, get_index
+from .text import content_terms
 
 
 CONFIG_PATH = Path(__file__).resolve().parents[2] / "models" / "rag_config.json"
@@ -76,12 +77,21 @@ def intro(evidence: list[Candidate], hive_name: str | None) -> str:
     return f"A few people {where} have talked about this."
 
 
+def chat(text: str) -> dict:
+    """A reply that isn't drawn from the hive: no evidence, nothing to trace."""
+    return {"mode": "chat", "answer": [{"text": text, "evidence": []}], "evidence": [], "trace": None}
+
+
 def ask(question: str, hive: str | None = None) -> dict:
     config = load_config()
     timings: dict[str, float] = {}
     t0 = time.perf_counter()
 
     index = get_index()
+    if (found := smalltalk.intents(question)) or not content_terms(question):
+        hive_name = next((c.hive_name for c in index.chunks if c.hive_slug == hive), None) if hive else None
+        return chat(smalltalk.reply(found, hive_name) if found else smalltalk.unclear(hive_name))
+
     candidates = index.search(question, hive=hive, k=config["candidates"])
     timings["retrieve_ms"] = (time.perf_counter() - t0) * 1000
 

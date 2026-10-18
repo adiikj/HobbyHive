@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from hobbyhive_ml.rag import answer as answer_mod
-from hobbyhive_ml.rag import generate, index as index_mod
+from hobbyhive_ml.rag import generate, index as index_mod, smalltalk
 from hobbyhive_ml.rag.bm25 import BM25
 from hobbyhive_ml.rag.corpus import build_chunks, is_question
 from hobbyhive_ml.rag.faithfulness import check
@@ -114,3 +114,29 @@ def test_index_refresh_only_embeds_new_or_edited_chunks():
     second = KnowledgeIndex(*build_chunks(rows), previous=first)
     assert first.embedded_on_build == 1 and second.embedded_on_build == 1
     assert np.allclose(second.vectors[0], first.vectors[0])
+
+
+@pytest.mark.parametrize("message", ["hello bea", "Hiii!", "hey bea, how are you?", "thanks so much", "who are you?", "good morning everyone"])
+def test_small_talk_gets_a_reply_not_a_search(tiny_index, message):
+    result = answer_mod.ask(message, "dance")
+    assert result["mode"] == "chat" and result["evidence"] == [] and result["trace"] is None
+    assert "couldn't find anyone" not in result["answer"][0]["text"]
+
+
+def test_greeting_names_the_hive(tiny_index):
+    assert "Dance" in answer_mod.ask("hello bea", "dance")["answer"][0]["text"]
+
+
+def test_a_greeting_with_a_question_still_searches(tiny_index):
+    assert smalltalk.intents("hi bea, how do I stay on beat when freestyling?") is None
+    assert smalltalk.intents("hiking boots") is None
+    assert answer_mod.ask("hey bea any tips for staying on beat when freestyling", "dance")["mode"] == "extractive"
+
+
+def test_mixed_small_talk_picks_the_main_intent():
+    assert smalltalk.intents("hey bea, who are you?") == ["identity", "greeting"]
+    assert smalltalk.reply(["identity", "greeting"], "Anime").startswith("Hi! I'm Bea")
+
+
+def test_content_free_messages_ask_for_something_specific(tiny_index):
+    assert answer_mod.ask("what??", "dance")["answer"][0]["text"].startswith("I'm not sure")
