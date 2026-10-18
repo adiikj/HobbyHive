@@ -16,7 +16,7 @@ const EVENTS_URL = BASE_URL.replace(/\/users$/, "/events");
 
 // Access tokens expire after a day. When a request is rejected with 401, swap the httpOnly refresh cookie for a new
 // access token once and retry. Concurrent 401s share one refresh (refresh tokens rotate, so each works only once).
-const NO_REFRESH = /\/(login|register|verify-otp|refresh|logout)$/;
+const NO_REFRESH = /\/(login|register|verify-otp|refresh|logout|forgot-password|reset-password)$/;
 let refreshing: Promise<string> | null = null;
 
 const refreshSession = () =>
@@ -358,6 +358,25 @@ export const logoutUser = async (token?: string | null) => {
   } catch (error) {
     const message = getErrorMessage(error, "We couldn't sign you out. Please try again.");
     throw new Error(message);
+  }
+};
+
+/** Emails a reset code. Answers the same whether or not the email has an account. */
+export const requestPasswordReset = async (email: string) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/forgot-password`, { email });
+    return response.data as { message: string };
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "We couldn't send a reset code. Please try again."));
+  }
+};
+
+export const resetPassword = async (email: string, otp: string, password: string) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/reset-password`, { email, otp, password }, { withCredentials: true });
+    return response.data as { message: string };
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "We couldn't reset your password. Please try again."));
   }
 };
 

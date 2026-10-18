@@ -85,9 +85,14 @@ function SignIn() {
           </div>
         </div>
         <div>
-          <label htmlFor="password" className="mb-1.5 block font-quick text-sm font-semibold text-chblack/80">
-            Password
-          </label>
+          <div className="mb-1.5 flex items-baseline justify-between">
+            <label htmlFor="password" className="block font-quick text-sm font-semibold text-chblack/80">
+              Password
+            </label>
+            <Link href="/forgot-password" className="font-quick text-xs font-bold text-pink-600 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-chblack/35" />
             <input
