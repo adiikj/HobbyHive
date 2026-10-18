@@ -141,12 +141,28 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
   setSessionCookies(res.status(200), accessToken, refreshToken).json(new ApiResponse(200, { accessToken }, "Session refreshed"));
 });
 
-// User Logout
+/** The user id inside a token, if it verifies; null for a missing, expired or forged one. */
+const tokenUserId = (token: unknown, secret: string | undefined) => {
+  if (typeof token !== "string" || !token) return null;
+  try {
+    return (jwt.verify(token, secret as string) as { id: string }).id;
+  } catch {
+    return null;
+  }
+};
+
+// User Logout. No valid access token needed: it has often expired by the time someone signs out, and a 401 here
+// used to leave the session cookies in place, so the next page load signed them straight back in.
 export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
-  await prisma.user.update({
-    where: { id: req.user!.id },
-    data: { refreshToken: null },
-  });
+  const refreshToken: unknown = req.cookies?.refreshToken;
+  const refreshUserId = tokenUserId(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+  if (refreshUserId) {
+    // Only revoke if it's this session's token, so an old cookie can't sign someone out of a newer session
+    await prisma.user.updateMany({ where: { id: refreshUserId, refreshToken: hashToken(refreshToken as string) }, data: { refreshToken: null } });
+  } else {
+    const accessUserId = tokenUserId(req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", ""), process.env.ACCESS_TOKEN_SECRET);
+    if (accessUserId) await prisma.user.updateMany({ where: { id: accessUserId }, data: { refreshToken: null } });
+  }
 
   return res
     .status(200)

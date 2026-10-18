@@ -12,13 +12,13 @@ export function setSessionCookie(accessToken: string) {
 }
 
 /**
- * Ends the session on both sides. The backend also sets its own httpOnly `accessToken` cookie at
- * login, which `Cookies.remove` can't touch — only the /logout response can clear it (and revoke
- * the refresh token). Best-effort: a failed/expired logout call must not block signing out locally.
+ * Ends the session on both sides. The backend's session cookies are httpOnly (and the one above can't overwrite
+ * them), so scripts can't read or remove them: always call /logout, which clears them and revokes the refresh
+ * token, rather than only when a readable cookie exists. Best-effort: a failed call must not block signing out locally.
  */
 export async function signOut() {
-  const token = Cookies.get("accessToken");
-  if (token) await logoutUser(token).catch(() => undefined);
+  await logoutUser(localStorage.getItem("authToken")).catch(() => undefined);
+  localStorage.removeItem("authToken");
   Cookies.remove("accessToken");
   clearCurrentUser();
 }

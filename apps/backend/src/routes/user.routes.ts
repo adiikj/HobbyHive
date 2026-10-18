@@ -60,9 +60,10 @@ router.post("/login", loginLimit, loginUser);
 router.post("/verify-otp", verifyOtpLimit, verifyOTP);
 // Authenticated by the httpOnly refresh cookie, not the (possibly expired) access token
 router.post("/refresh", refreshAccessToken);
+// Clears whatever session the cookies hold, even with an expired access token
+router.post("/logout", logoutUser);
 
 // Protected Routes
-router.post("/logout", verifyJWT, logoutUser);
 router.get("/profile", verifyJWT, getProfile);
 router.get("/me/hobbies", verifyJWT, getMyHobbies);
 router.post("/me/hobbies", verifyJWT, setMyHobbies);

@@ -342,13 +342,14 @@ export const verifyOTP = async (email: string, otp: string) => {
   }
 };
 
-export const logoutUser = async (token: string) => {
+/** Works without a token too: the backend clears whatever session the httpOnly cookies hold. */
+export const logoutUser = async (token?: string | null) => {
   try {
     const response = await axios.post(
       `${BASE_URL}/logout`,
       {},
       {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         withCredentials: true,
       }
     );
